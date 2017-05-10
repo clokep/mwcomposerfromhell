@@ -1,0 +1,8 @@
+# For parsing articles from Wikipedia.
+mwparserfromhell==0.4.4
+
+# For running tests.
+pytest==3.0.7
+
+# Style checking.
+flake8==3.3.0
