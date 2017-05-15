@@ -14,6 +14,7 @@ class WikicodeToHtmlComposer(object):
     """
     Format HTML from Parsed Wikicode.
     Note that this is not currently re-usable.
+    https://en.wikipedia.org/wiki/Help:Wiki_markup
     """
     def __init__(self, base_url='https://en.wikipedia.org/wiki'):
         self._base_url = base_url
@@ -25,47 +26,45 @@ class WikicodeToHtmlComposer(object):
         safe_title = url_quote(title.encode('utf-8'))
         return self._article_url_format.format(safe_title)
 
-    def compose(self, obj):
-        """Converts Wikicode or Node objects to HTML."""
+    def _compose_parts(self, obj):
+        """Takes an object and returns a generator that will compose one more pieces of HTML."""
         if isinstance(obj, Wikicode):
-            result = u''
             for node in obj.ifilter(recursive=False):
-                result += self.compose(node)
-            return result
+                yield from self._compose_parts(node)
 
         elif isinstance(obj, Tag):
-            # Convert all the children to HTML.
-            inner = u''.join(map(self.compose, obj.__children__()))
+            # Create an HTML tag.
+            # TODO Handle attributes.
+            yield u'<{}>'.format(obj.tag)
+
+            for child in obj.__children__():
+                yield from self._compose_parts(child)
 
             # Self closing tags don't need an end tag, this produces "broken"
             # HTML, but readers should handle it fine.
             if not obj.self_closing:
-                template = u'<{tag}>{inner}</{closing_tag}>'
-            else:
-                template = u'<{tag}>{inner}'
-
-            # Create an HTML tag.
-            # TODO Handle attributes.
-            return template.format(tag=obj.tag, inner=inner, closing_tag=obj.closing_tag)
+                yield u'</{}>'.format(obj.closing_tag)
 
         elif isinstance(obj, Wikilink):
             # Different text can be specified, or falls back to the title.
             text = obj.text or obj.title
             url = self._get_url(obj.title)
-            return u'<a href="{}">{}</a>'.format(url, self.compose(text))
+            yield u'<a href="{}">{}</a>'.format(url, self.compose(text))
 
         elif isinstance(obj, ExternalLink):
             # Different text can be specified, or falls back to the URL.
             text = obj.title or obj.url
-            return u'<a href="{}">{}</a>'.format(obj.url, self.compose(text))
+            yield u'<a href="{}">{}</a>'.format(obj.url, self.compose(text))
 
         elif isinstance(obj, (list, tuple)):
             # If the object is iterable, just handle each item separately.
-            result = u''
             for node in obj:
-                result += self.compose(node)
-            return result
+                yield from self._compose_parts(self.compose(node))
 
         else:
              # TODO Raise?
-            return str(obj)
+            yield str(obj)
+
+    def compose(self, obj):
+        """Converts Wikicode or Node objects to HTML."""
+        return ''.join(self._compose_parts(obj))
