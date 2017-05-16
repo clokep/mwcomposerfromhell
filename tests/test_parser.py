@@ -35,14 +35,12 @@ def test_list():
     content = "* Foobar"
     wikicode = mwparserfromhell.parse(content)
     composer = WikicodeToHtmlComposer()
-    assert composer.compose(wikicode) == '<li> Foobar'
+    assert composer.compose(wikicode) == '<ul><li> Foobar</li></ul>'
 
 
 def test_subitem_list():
     content = "* Foobar\n** Subitem"
     wikicode = mwparserfromhell.parse(content)
     composer = WikicodeToHtmlComposer()
-
-    print(composer.compose(wikicode))
 
     assert composer.compose(wikicode) == '<ul><li> Foobar\n</li><ul><li> Subitem</li></ul></li></ul>'
