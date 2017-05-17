@@ -25,6 +25,8 @@ class WikicodeToHtmlComposer(object):
 
         self._article_url_format = base_url + '/{}'
 
+        self._wanted_lists = []
+
         # Track the currently open tags.
         self._stack = []
         # The result of calling this.
@@ -60,18 +62,36 @@ class WikicodeToHtmlComposer(object):
             if current_tag == tag:
                 break
 
-    def _require_parent(self, parent_tag, current_tag):
-        """Ensure a particular tag is open on the stack, opens it if not."""
-        child_after_parent = self._stack and self._stack[-1] == current_tag
-        if child_after_parent:
-            self._parts.pop()
-
-        if parent_tag not in self._stack or child_after_parent:
-            self._stack.append(parent_tag)
-            self._parts.append(u'<{}>'.format(parent_tag))
-
     def _add_part(self, part):
         """Append a part, closing any parts of the stack that should be closed here."""
+        if self._wanted_lists:
+            stack_lists = [node for node in self._stack if node in ['ul', 'ol', 'dl']]
+
+            # Remove the prefixed part of the lists that match.
+            i = 0
+            shortest = min([len(stack_lists), len(self._wanted_lists)])
+            for i in range(shortest):
+                if stack_lists[i] != self._wanted_lists[i]:
+                    break
+            else:
+                i = shortest
+
+            # Now close anything left in stack_lists.
+            for node in reversed(stack_lists[i:]):
+                self._close_stack(node)
+
+            # Open anything in wanted_lists.
+            for node in self._wanted_lists[i:]:
+                self._stack.append(node)
+                self._parts.append(u'<{}>'.format(node))
+
+            # Finally, open the list item.
+            self._stack.append('li')
+            self._parts.append(u'<{}>'.format('li'))
+
+            # Reset the list.
+            self._wanted_lists = []
+
         self._parts.append(part)
 
         # Certain tags get closed when there's a line break.
@@ -95,23 +115,24 @@ class WikicodeToHtmlComposer(object):
             # Some tags require a parent tag to be open first, but get grouped
             # if one is already open.
             if obj.wiki_markup == '*':
+                self._wanted_lists.append('ul')
                 # Don't allow a ul inside of a dl.
                 self._close_stack('dl', raise_on_missing=False)
-                self._require_parent('ul', 'li')
             elif obj.wiki_markup == '#':
+                self._wanted_lists.append('ol')
                 # Don't allow a ul inside of a dl.
                 self._close_stack('dl', raise_on_missing=False)
-                self._require_parent('ol', 'li')
             elif obj.wiki_markup == ';':
+                self._wanted_lists.append('dl')
                 # Don't allow dl instead ol or ul.
                 self._close_stack('ol', raise_on_missing=False)
                 self._close_stack('ul', raise_on_missing=False)
-                self._require_parent('dl', 'dt')
 
-            # Create an HTML tag.
-            # TODO Handle attributes.
-            self._add_part(u'<{}>'.format(obj.tag))
-            self._stack.append(obj.tag)
+            else:
+                # Create an HTML tag.
+                # TODO Handle attributes.
+                self._add_part(u'<{}>'.format(obj.tag))
+                self._stack.append(obj.tag)
 
             for child in obj.__children__():
                 self._compose_parts(child)
