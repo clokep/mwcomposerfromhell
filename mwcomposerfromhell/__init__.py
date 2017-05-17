@@ -86,8 +86,12 @@ class WikicodeToHtmlComposer(object):
                 self._parts.append(u'<{}>'.format(node))
 
             # Finally, open the list item.
-            self._stack.append('li')
-            self._parts.append(u'<{}>'.format('li'))
+            if self._wanted_lists[-1] == 'dl':
+                item_tag = 'dt'
+            else:
+                item_tag = 'li'
+            self._stack.append(item_tag)
+            self._parts.append(u'<{}>'.format(item_tag))
 
             # Reset the list.
             self._wanted_lists = []

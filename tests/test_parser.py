@@ -56,6 +56,13 @@ def test_subitem_list_complex():
     content = "* Foobar\n** Subitem\n* Barfoo"
     wikicode = mwparserfromhell.parse(content)
     composer = WikicodeToHtmlComposer()
+    assert composer.compose(wikicode) == '<ul><li> Foobar\n</li><ul><li> Subitem\n</li></ul><li> Barfoo</li></ul>'
+
+
+def test_definition_list():
+    content = ";Foobar"
+    wikicode = mwparserfromhell.parse(content)
+    composer = WikicodeToHtmlComposer()
     result = composer.compose(wikicode)
     print(result)
-    assert result == '<ul><li> Foobar\n</li><ul><li> Subitem\n</li></ul><li> Barfoo</li></ul>'
+    assert result == '<dl><dt>Foobar</dt></dl>'
