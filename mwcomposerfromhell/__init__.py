@@ -35,13 +35,12 @@ class WikicodeToHtmlComposer(object):
         safe_title = url_quote(title.encode('utf-8'))
         return self._article_url_format.format(safe_title)
 
-    def _close_stack(self, tag=None):
+    def _close_stack(self, tag=None, raise_on_missing=True):
         """Close tags that are on the stack. It closes all tags until ``tag`` is found.
         If no tag to close is given the entire stack is closed.
         """
         # Close the entire stack.
         if tag is None:
-            print("Closing the full stack.")
             for current_tag in reversed(self._stack):
                 self._parts.append(u'</{}>'.format(current_tag))
             return
@@ -49,7 +48,10 @@ class WikicodeToHtmlComposer(object):
         # If a tag was given, close all tags behind it (in reverse order).
         if tag not in self._stack:
             # TODO
-            raise RuntimeError('Uh oh')
+            if raise_on_missing:
+                raise RuntimeError('Uh oh')
+            else:
+                return
 
         while len(self._stack):
             current_tag = self._stack.pop()
@@ -69,6 +71,7 @@ class WikicodeToHtmlComposer(object):
             self._parts.append(u'<{}>'.format(parent_tag))
 
     def _add_part(self, part):
+        """Append a part, closing any parts of the stack that should be closed here."""
         self._parts.append(part)
 
         # Certain tags get closed when there's a line break.
@@ -92,17 +95,22 @@ class WikicodeToHtmlComposer(object):
             # Some tags require a parent tag to be open first, but get grouped
             # if one is already open.
             if obj.wiki_markup == '*':
+                # Don't allow a ul inside of a dl.
+                self._close_stack('dl', raise_on_missing=False)
                 self._require_parent('ul', 'li')
             elif obj.wiki_markup == '#':
+                # Don't allow a ul inside of a dl.
+                self._close_stack('dl', raise_on_missing=False)
                 self._require_parent('ol', 'li')
             elif obj.wiki_markup == ';':
+                # Don't allow dl instead ol or ul.
+                self._close_stack('ol', raise_on_missing=False)
+                self._close_stack('ul', raise_on_missing=False)
                 self._require_parent('dl', 'dt')
 
             # Create an HTML tag.
             # TODO Handle attributes.
             self._add_part(u'<{}>'.format(obj.tag))
-
-            # We just opened a tag, woot!
             self._stack.append(obj.tag)
 
             for child in obj.__children__():
