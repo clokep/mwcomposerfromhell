@@ -14,6 +14,10 @@ class UnknownNode(Exception):
     pass
 
 
+class HtmlComposingError(Exception):
+    pass
+
+
 class WikicodeToHtmlComposer(object):
     """
     Format HTML from Parsed Wikicode.
@@ -48,7 +52,7 @@ class WikicodeToHtmlComposer(object):
         if tag not in self._stack:
             # TODO
             if raise_on_missing:
-                raise RuntimeError('Uh oh')
+                raise HtmlComposingError('Unable to close given tags.')
             else:
                 return
 
