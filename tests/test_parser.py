@@ -124,3 +124,18 @@ def test_template_with_default():
     wikicode = mwparserfromhell.parse(content)
     result = composer.compose(wikicode)
     assert result == "This is a '' {{{key}}}"
+
+
+def test_complex_template_name():
+    """A template name that gets rendered via a different template."""
+    # The name of the template is given by another template
+    content = "{{t{{text|em}}p}}"
+    # Create a composer and add the template to the cache.
+    composer = WikicodeToHtmlComposer()
+    composer._template_cache['text'] = mwparserfromhell.parse('{{{1}}}')
+    composer._template_cache['temp'] = mwparserfromhell.parse('This is a test')
+
+    # Parse the main content.
+    wikicode = mwparserfromhell.parse(content)
+    result = composer.compose(wikicode)
+    assert result == 'This is a test'

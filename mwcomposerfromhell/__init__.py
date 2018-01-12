@@ -182,8 +182,13 @@ class WikicodeToHtmlComposer:
             yield from self._add_part(obj.value)
 
         elif isinstance(obj, Template):
-            # TODO This probably breaks weird cases of like {{f{{{oo|}}}bar}}.
-            key = str(obj.name)
+            # Render the key into a string. This handles weird cases of like
+            # {{f{{text|oo}}bar}}.
+            composer = WikicodeToHtmlComposer(self._base_url, context=self._context)
+            # TODO This is weird.
+            composer._template_cache = self._template_cache
+            key = composer.compose(obj.name)
+
             # This represents a script, see https://www.mediawiki.org/wiki/Extension:Scribunto
             if key.startswith('#'):
                 yield from self._add_part(str(obj))
@@ -208,7 +213,7 @@ class WikicodeToHtmlComposer:
 
             # Create a new composer with the call to include the template as the context.
             composer = WikicodeToHtmlComposer(self._base_url, context=obj)
-            yield from composer.compose(template)
+            yield composer.compose(template)
 
         elif isinstance(obj, Argument):
             # There's no provided values, so just render the string.
