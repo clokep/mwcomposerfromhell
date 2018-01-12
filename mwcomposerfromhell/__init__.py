@@ -1,7 +1,7 @@
 from urllib.parse import quote as url_quote
 
 from mwparserfromhell.definitions import MARKUP_TO_HTML
-from mwparserfromhell.nodes import Comment, ExternalLink, HTMLEntity, Tag, Template, Text, Wikilink
+from mwparserfromhell.nodes import Argument, Comment, ExternalLink, HTMLEntity, Tag, Template, Text, Wikilink
 from mwparserfromhell.wikicode import Wikicode
 
 # The MARKUP_TO_HTML is missing a few things...this duck punches them in.
@@ -26,7 +26,7 @@ class WikicodeToHtmlComposer:
 
     https://en.wikipedia.org/wiki/Help:Wiki_markup
     """
-    def __init__(self, base_url='https://en.wikipedia.org/wiki'):
+    def __init__(self, base_url='https://en.wikipedia.org/wiki', context=None):
         # The base URL should be the root that articles sit in.
         self._base_url = base_url.rstrip('/')
 
@@ -34,6 +34,11 @@ class WikicodeToHtmlComposer:
 
         # Track the currently open tags.
         self._stack = []
+
+        self._context = context
+
+        # A place to cache templates.
+        self._template_cache = {}
 
     def _get_url(self, title):
         """Given a page title, return a URL suitable for linking."""
@@ -176,7 +181,49 @@ class WikicodeToHtmlComposer:
         elif isinstance(obj, Text):
             yield from self._add_part(obj.value)
 
-        elif isinstance(obj, (HTMLEntity, Template)):
+        elif isinstance(obj, Template):
+            # TODO This probably breaks weird cases of like {{f{{{oo|}}}bar}}.
+            key = str(obj.name)
+            # This represents a script, see https://www.mediawiki.org/wiki/Extension:Scribunto
+            if key.startswith('#'):
+                yield from self._add_part(str(obj))
+
+            try:
+                template = self._template_cache[key]
+            except KeyError:
+                # Get the template from the server.
+                template_str = get_article(get_article_url('Template:' + key))
+
+                # Only use the parts that would be included.
+                pat = re.compile(r'<noinclude>.*?</noinclude>', flags=re.DOTALL)
+                template_str = pat.sub(r'', template_str)
+                pat = re.compile(r'<includeonly>(.*?)</includeonly>', flags=re.DOTALL)
+                template_str = pat.sub(r'\1', template_str)
+
+                # Parse the template to Wikicode
+                template = mwparserfromhell.parse(template_str)
+
+                # Store it for subsequent calls.
+                self._template_cache[key] = template
+
+            # Create a new composer with the call to include the template as the context.
+            composer = WikicodeToHtmlComposer(self._base_url, context=obj)
+            yield from composer.compose(template)
+
+        elif isinstance(obj, Argument):
+            # There's no provided values, so just render the string.
+            # Templates have special handling for Arguments.
+            param_name = str(obj.name)
+            try:
+                param = self._context.get(param_name)
+                yield str(param.value)
+            except (AttributeError, ValueError):
+                if obj.default is None:
+                    yield from self._add_part(str(obj))
+                else:
+                    yield str(obj.default)
+
+        elif isinstance(obj, HTMLEntity):
             # TODO
             yield from self._add_part(str(obj))
 
