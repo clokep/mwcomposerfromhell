@@ -60,9 +60,25 @@ def test_subitem_list_complex():
 
 
 def test_definition_list():
+    """A definition list with no items."""
     content = ";Foobar"
     wikicode = mwparserfromhell.parse(content)
     composer = WikicodeToHtmlComposer()
     result = composer.compose(wikicode)
     print(result)
     assert result == '<dl><dt>Foobar</dt></dl>'
+
+
+def test_nested_list():
+    """A nested list with additional line breaks afterward properly closes the stack."""
+    content = """*Foo
+**Bar
+
+<!--Comment-->
+
+"""
+    wikicode = mwparserfromhell.parse(content)
+    composer = WikicodeToHtmlComposer()
+    result = composer.compose(wikicode)
+    print(result)
+    assert result == '<ul><li>Foo\n</li><ul><li>Bar\n\n</li></ul><!-- Comment -->\n\n</ul>'

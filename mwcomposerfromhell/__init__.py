@@ -21,7 +21,9 @@ class HtmlComposingError(Exception):
 class WikicodeToHtmlComposer(object):
     """
     Format HTML from Parsed Wikicode.
+
     Note that this is not currently re-usable.
+
     https://en.wikipedia.org/wiki/Help:Wiki_markup
     """
     def __init__(self, base_url='https://en.wikipedia.org/wiki'):
@@ -40,6 +42,7 @@ class WikicodeToHtmlComposer(object):
 
     def _close_stack(self, tag=None, raise_on_missing=True):
         """Close tags that are on the stack. It closes all tags until ``tag`` is found.
+
         If no tag to close is given the entire stack is closed.
         """
         # Close the entire stack.
@@ -100,15 +103,19 @@ class WikicodeToHtmlComposer(object):
         yield part
 
         # Certain tags get closed when there's a line break.
-        if self._stack:
-            for c in reversed(part):
-                if c == '\n':
-                    elements_to_close = ['li', 'ul', 'ol', 'dl', 'dt']
-                    # Close an element in the stack.
-                    if self._stack[-1] in elements_to_close:
-                        yield from self._close_stack(self._stack[-1])
-                else:
-                    break
+        for c in reversed(part):
+            # Since _close_stack mutates the _stack, check on each iteration if
+            # _stack is still truth-y.
+            if not self._stack:
+                break
+
+            if c == '\n':
+                elements_to_close = ['li', 'ul', 'ol', 'dl', 'dt']
+                # Close an element in the stack.
+                if self._stack[-1] in elements_to_close:
+                    yield from self._close_stack(self._stack[-1])
+            else:
+                break
 
     def _compose_parts(self, obj):
         """Takes an object and returns a generator that will compose one more pieces of HTML."""
