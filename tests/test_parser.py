@@ -65,7 +65,6 @@ def test_definition_list():
     wikicode = mwparserfromhell.parse(content)
     composer = WikicodeToHtmlComposer()
     result = composer.compose(wikicode)
-    print(result)
     assert result == '<dl><dt>Foobar</dt></dl>'
 
 
@@ -80,5 +79,4 @@ def test_nested_list():
     wikicode = mwparserfromhell.parse(content)
     composer = WikicodeToHtmlComposer()
     result = composer.compose(wikicode)
-    print(result)
     assert result == '<ul><li>Foo\n</li><ul><li>Bar\n\n</li></ul><!-- Comment -->\n\n</ul>'

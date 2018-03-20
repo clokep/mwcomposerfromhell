@@ -18,7 +18,7 @@ class HtmlComposingError(Exception):
     pass
 
 
-class WikicodeToHtmlComposer(object):
+class WikicodeToHtmlComposer:
     """
     Format HTML from Parsed Wikicode.
 
