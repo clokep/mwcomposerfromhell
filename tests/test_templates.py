@@ -3,60 +3,86 @@ import mwparserfromhell
 from mwcomposerfromhell.composer import WikicodeToHtmlComposer
 
 
-def test_template():
-    """Render a content with a template."""
-    content = "{{temp}}"
-    template = "This is a test"
-    # Create a composer and add the template to the cache.
-    composer = WikicodeToHtmlComposer()
-    composer._template_cache['temp'] = mwparserfromhell.parse(template)
+def test_simple():
+    """Render a simple template."""
+    # A simple template that's just a string.
+    template = 'This is a test'
+    template_cache = {'temp': mwparserfromhell.parse(template)}
 
     # Parse the main content.
-    wikicode = mwparserfromhell.parse(content)
-    result = composer.compose(wikicode)
+    wikicode = mwparserfromhell.parse('{{temp}}')
+
+    # Render teh result.
+    result = WikicodeToHtmlComposer(template_cache=template_cache).compose(wikicode)
     assert result == template
 
 
-def test_template_with_args():
+def test_with_args():
     """Render a content with a template that has arguments."""
     # Template that uses both a position and keyword argument.
-    content = "{{temp|foobar|key=value}}"
-    template = "This is a {{{1}}} {{{key}}}"
-    # Create a composer and add the template to the cache.
-    composer = WikicodeToHtmlComposer()
-    composer._template_cache['temp'] = mwparserfromhell.parse(template)
+    template_cache = {'temp': mwparserfromhell.parse('This is a {{{1}}} {{{key}}}')}
 
     # Parse the main content.
-    wikicode = mwparserfromhell.parse(content)
-    result = composer.compose(wikicode)
+    wikicode = mwparserfromhell.parse('{{temp|foobar|key=value}}')
+
+    # Render the result.
+    result = WikicodeToHtmlComposer(template_cache=template_cache).compose(wikicode)
     assert result == 'This is a foobar value'
 
 
-def test_template_with_default():
-    # Template that uses both a position (that isn't given, but has a default)
-    # and keyword argument (that isn't given).
-    content = "{{temp}}"
-    template = "This is a '{{{1|}}}' {{{key}}}"
-    # Create a composer and add the template to the cache.
-    composer = WikicodeToHtmlComposer()
-    composer._template_cache['temp'] = mwparserfromhell.parse(template)
+def test_with_default_args():
+    """Render a template where arguments fall back to default values."""
+    # Template that uses a position argument and a keyword argument, both with
+    # defaults.
+    template_cache = {'temp': mwparserfromhell.parse('This is a "{{{1|first}}}" "{{{key|second}}}"')}
 
     # Parse the main content.
-    wikicode = mwparserfromhell.parse(content)
-    result = composer.compose(wikicode)
-    assert result == "This is a '' {{{key}}}"
+    wikicode = mwparserfromhell.parse('{{temp}}')
+
+    # Render the result.
+    result = WikicodeToHtmlComposer(template_cache=template_cache).compose(wikicode)
+    assert result == 'This is a "first" "second"'
 
 
-def test_complex_template_name():
+def test_with_blank_default_args():
+    """Render a template where arguments fall back to blank values."""
+    # Template that uses a position argument and a keyword argument, both with
+    # blank defaults.
+    template_cache = {'temp': mwparserfromhell.parse('This is a "{{{1|}}}" "{{{key|}}}"')}
+
+    # Parse the main content.
+    wikicode = mwparserfromhell.parse('{{temp}}')
+
+    # Render the result.
+    result = WikicodeToHtmlComposer(template_cache=template_cache).compose(wikicode)
+    assert result == 'This is a "" ""'
+
+
+def test_without_default_args():
+    """Render a template where arguments fall back to their keys."""
+    # Template that uses a position argument and a keyword argument, without
+    # defaults.
+    template = 'This is a "{{{1}}}" "{{{key}}}"'
+    template_cache = {'temp': mwparserfromhell.parse(template)}
+
+    # Parse the main content.
+    wikicode = mwparserfromhell.parse('{{temp}}')
+
+    # Render the result.
+    result = WikicodeToHtmlComposer(template_cache=template_cache).compose(wikicode)
+    assert result == template
+
+
+def test_complex_name():
     """A template name that gets rendered via a different template."""
-    # The name of the template is given by another template
-    content = "{{t{{text|em}}p}}"
-    # Create a composer and add the template to the cache.
-    composer = WikicodeToHtmlComposer()
-    composer._template_cache['text'] = mwparserfromhell.parse('{{{1}}}')
-    composer._template_cache['temp'] = mwparserfromhell.parse('This is a test')
+    template_cache = {
+        'text': mwparserfromhell.parse('{{{1}}}'),
+        'temp': mwparserfromhell.parse('This is a test'),
+    }
 
-    # Parse the main content.
-    wikicode = mwparserfromhell.parse(content)
-    result = composer.compose(wikicode)
+    # Parse the main content. The name of the template is given by another template
+    wikicode = mwparserfromhell.parse('{{t{{text|em}}p}}')
+
+    # Render the result.
+    result = WikicodeToHtmlComposer(template_cache=template_cache).compose(wikicode)
     assert result == 'This is a test'
