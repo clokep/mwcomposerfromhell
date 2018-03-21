@@ -2,7 +2,6 @@ from urllib.parse import quote as url_quote
 
 from mwparserfromhell.definitions import MARKUP_TO_HTML
 from mwparserfromhell.nodes import Argument, Comment, ExternalLink, HTMLEntity, Tag, Template, Text, Wikilink
-from mwparserfromhell.nodes.extras import Parameter
 from mwparserfromhell.wikicode import Wikicode
 
 

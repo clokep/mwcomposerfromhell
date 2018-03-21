@@ -1,4 +1,4 @@
-from mwcomposerfromhell.composer import HtmlComposingError, WikicodeToHtmlComposer
+from mwcomposerfromhell.composer import HtmlComposingError, WikicodeToHtmlComposer  # noqa: F401
 
 
 def compose(obj):

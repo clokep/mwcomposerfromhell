@@ -1,5 +1,7 @@
 import re
 
+import mwparserfromhell
+
 
 class DownloadingCache:
     NOINCLUDE_PATTERN = re.compile(r'<noinclude>.*?</noinclude>', flags=re.DOTALL)

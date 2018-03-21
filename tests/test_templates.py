@@ -12,7 +12,7 @@ def test_simple():
     # Parse the main content.
     wikicode = mwparserfromhell.parse('{{temp}}')
 
-    # Render teh result.
+    # Render the result.
     result = WikicodeToHtmlComposer(template_cache=template_cache).compose(wikicode)
     assert result == template
 
