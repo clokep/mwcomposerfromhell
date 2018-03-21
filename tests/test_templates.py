@@ -86,3 +86,48 @@ def test_complex_name():
     # Render the result.
     result = WikicodeToHtmlComposer(template_cache=template_cache).compose(wikicode)
     assert result == 'This is a test'
+
+
+def test_complex_parameter_name():
+    """A template name that gets rendered via a different template."""
+    template_cache = {
+        'text': mwparserfromhell.parse('{{{1}}}'),
+        'temp': mwparserfromhell.parse('This is a "{{{1}}}" "{{{key}}}"'),
+    }
+
+    # Parse the main content. The name of the template is given by another template
+    wikicode = mwparserfromhell.parse('{{temp|first|k{{text|ey}}=second}}')
+
+    # Render the result.
+    result = WikicodeToHtmlComposer(template_cache=template_cache).compose(wikicode)
+    assert result == 'This is a "first" "second"'
+
+
+def test_complex_parameter_value():
+    """A template name that gets rendered via a different template."""
+    template_cache = {
+        'text': mwparserfromhell.parse('{{{1}}}'),
+        'temp': mwparserfromhell.parse('This is a "{{{1}}}" "{{{key}}}"'),
+    }
+
+    # Parse the main content. The name of the template is given by another template
+    wikicode = mwparserfromhell.parse('{{temp|fi{{text|rst}}|key={{text|sec}}ond}}')
+
+    # Render the result.
+    result = WikicodeToHtmlComposer(template_cache=template_cache).compose(wikicode)
+    assert result == 'This is a "first" "second"'
+
+
+def test_complex_arg():
+    """An argument name gets generated in a complex fashion."""
+    template_cache = {
+        'text': mwparserfromhell.parse('{{{1}}}'),
+        'temp': mwparserfromhell.parse('This is a "{{{ {{text|1}} }}}" "{{{ {{text|key}} }}}"'),
+    }
+
+    # Parse the main content. The name of the template is given by another template
+    wikicode = mwparserfromhell.parse('{{temp|first|key=second}}')
+
+    # Render the result.
+    result = WikicodeToHtmlComposer(template_cache=template_cache).compose(wikicode)
+    assert result == 'This is a "first" "second"'
