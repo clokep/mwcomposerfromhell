@@ -19,6 +19,12 @@ class HtmlComposingError(Exception):
     pass
 
 
+def get_article_url(base_url, title):
+    """Given a page title, return a URL suitable for linking."""
+    safe_title = url_quote(title.encode('utf-8'))
+    return '{}/{}'.format(base_url, safe_title)
+
+
 class WikicodeToHtmlComposer:
     """
     Format HTML from parsed Wikicode.
@@ -27,7 +33,7 @@ class WikicodeToHtmlComposer:
 
     See https://en.wikipedia.org/wiki/Help:Wikitext for a full definition.
     """
-    def __init__(self, base_url='https://en.wikipedia.org/wiki', template_cache=None, context=None):
+    def __init__(self, base_url='https://en.wikipedia.org/wiki', template_store=None, context=None):
         # The base URL should be the root that articles sit in.
         self._base_url = base_url.rstrip('/')
 
@@ -39,14 +45,9 @@ class WikicodeToHtmlComposer:
         self._context = context
 
         # A place to cache templates.
-        if template_cache is None:
-            template_cache = {}
-        self._template_cache = template_cache
-
-    def _get_url(self, title):
-        """Given a page title, return a URL suitable for linking."""
-        safe_title = url_quote(title.encode('utf-8'))
-        return '{}/{}'.format(self._base_url, safe_title)
+        if template_store is None:
+            template_store = {}
+        self._template_store = template_store
 
     def _close_stack(self, tag=None, raise_on_missing=True):
         """Close tags that are on the stack. It closes all tags until ``tag`` is found.
@@ -166,7 +167,7 @@ class WikicodeToHtmlComposer:
         elif isinstance(obj, Wikilink):
             # Different text can be specified, or falls back to the title.
             text = obj.text or obj.title
-            url = self._get_url(obj.title)
+            url = get_article_url(self._base_url, obj.title)
             yield from self._add_part(u'<a href="{}">'.format(url))
             yield from self._compose_parts(text)
             yield from self._add_part(u'</a>')
@@ -188,7 +189,7 @@ class WikicodeToHtmlComposer:
             # Render the key into a string. This handles weird cases of like
             # {{f{{text|oo}}bar}}.
             composer = WikicodeToHtmlComposer(
-                self._base_url, template_cache=self._template_cache, context=self._context)
+                self._base_url, template_store=self._template_store, context=self._context)
             template_name = composer.compose(obj.name).strip()
 
             # Because each parameter's name and value might have other
@@ -199,11 +200,11 @@ class WikicodeToHtmlComposer:
                 # See https://meta.wikimedia.org/wiki/Help:Template#Parameters
                 # for information about striping whitespace around parameters.
                 composer = WikicodeToHtmlComposer(
-                    self._base_url, template_cache=self._template_cache, context=self._context)
+                    self._base_url, template_store=self._template_store, context=self._context)
                 param_name = composer.compose(param.name).strip()
 
                 composer = WikicodeToHtmlComposer(
-                    self._base_url, template_cache=self._template_cache, context=self._context)
+                    self._base_url, template_store=self._template_store, context=self._context)
                 param_value = composer.compose(param.value)
 
                 # Only named parameters get whitespace striped.
@@ -217,21 +218,21 @@ class WikicodeToHtmlComposer:
                 yield from self._add_part(str(obj))
 
             try:
-                template = self._template_cache[template_name]
+                template = self._template_store[template_name]
             except KeyError:
                 # TODO
                 yield from self._add_part(str(obj))
             else:
                 # Create a new composer with the call to include the template as the context.
                 composer = WikicodeToHtmlComposer(
-                    self._base_url, template_cache=self._template_cache, context=context)
+                    self._base_url, template_store=self._template_store, context=context)
                 yield composer.compose(template)
 
         elif isinstance(obj, Argument):
             # There's no provided values, so just render the string.
             # Templates have special handling for Arguments.
             composer = WikicodeToHtmlComposer(
-                self._base_url, template_cache=self._template_cache, context=self._context)
+                self._base_url, template_store=self._template_store, context=self._context)
             param_name = composer.compose(obj.name).strip()
 
             # Get the parameter's value from the context (the call to the
@@ -246,7 +247,7 @@ class WikicodeToHtmlComposer:
                     value = str(obj)
                 else:
                     composer = WikicodeToHtmlComposer(
-                        self._base_url, template_cache=self._template_cache)
+                        self._base_url, template_store=self._template_store)
                     value = composer.compose(obj.default)
 
             yield value
