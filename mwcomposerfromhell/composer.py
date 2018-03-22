@@ -4,6 +4,7 @@ from mwparserfromhell.definitions import MARKUP_TO_HTML
 from mwparserfromhell.nodes import Argument, Comment, ExternalLink, HTMLEntity, Tag, Template, Text, Wikilink
 from mwparserfromhell.wikicode import Wikicode
 
+from mwcomposerfromhell.store import TemplateStore
 
 # The MARKUP_TO_HTML is missing a few things...this duck punches them in.
 MARKUP_TO_HTML.update({
@@ -46,7 +47,11 @@ class WikicodeToHtmlComposer:
 
         # A place to cache templates.
         if template_store is None:
-            template_store = {}
+            template_store = TemplateStore()
+        elif isinstance(template_store, dict):
+            template_store = TemplateStore(template_store)
+        elif not isinstance(template_store, TemplateStore):
+            raise ValueError('template_store must be an instance of TemplateStore')
         self._template_store = template_store
 
     def _close_stack(self, tag=None, raise_on_missing=True):
@@ -190,7 +195,7 @@ class WikicodeToHtmlComposer:
             # {{f{{text|oo}}bar}}.
             composer = WikicodeToHtmlComposer(
                 self._base_url, template_store=self._template_store, context=self._context)
-            template_name = composer.compose(obj.name).strip()
+            template_name = composer.compose(obj.name)
 
             # Because each parameter's name and value might have other
             # templates, etc. in it we need to render those in the context of
