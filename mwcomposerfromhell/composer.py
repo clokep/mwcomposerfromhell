@@ -21,11 +21,11 @@ class HtmlComposingError(Exception):
 
 class WikicodeToHtmlComposer:
     """
-    Format HTML from Parsed Wikicode.
+    Format HTML from parsed Wikicode.
 
     Note that this is not currently re-usable.
 
-    https://en.wikipedia.org/wiki/Help:Wiki_markup
+    See https://en.wikipedia.org/wiki/Help:Wikitext for a full definition.
     """
     def __init__(self, base_url='https://en.wikipedia.org/wiki', template_cache=None, context=None):
         # The base URL should be the root that articles sit in.
@@ -189,20 +189,26 @@ class WikicodeToHtmlComposer:
             # {{f{{text|oo}}bar}}.
             composer = WikicodeToHtmlComposer(
                 self._base_url, template_cache=self._template_cache, context=self._context)
-            template_name = composer.compose(obj.name)
+            template_name = composer.compose(obj.name).strip()
 
             # Because each parameter's name and value might have other
             # templates, etc. in it we need to render those in the context of
             # the template call.
             context = {}
             for param in obj.params:
+                # See https://meta.wikimedia.org/wiki/Help:Template#Parameters
+                # for information about striping whitespace around parameters.
                 composer = WikicodeToHtmlComposer(
                     self._base_url, template_cache=self._template_cache, context=self._context)
-                param_name = composer.compose(param.name)
+                param_name = composer.compose(param.name).strip()
 
                 composer = WikicodeToHtmlComposer(
                     self._base_url, template_cache=self._template_cache, context=self._context)
                 param_value = composer.compose(param.value)
+
+                # Only named parameters get whitespace striped.
+                if param.showkey:
+                    param_value = param_value.strip()
 
                 context[param_name] = param_value
 

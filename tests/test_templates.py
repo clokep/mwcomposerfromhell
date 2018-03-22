@@ -20,14 +20,14 @@ def test_simple():
 def test_with_args():
     """Render a content with a template that has arguments."""
     # Template that uses both a position and keyword argument.
-    template_cache = {'temp': mwparserfromhell.parse('This is a {{{1}}} {{{key}}}')}
+    template_cache = {'temp': mwparserfromhell.parse('This is a "{{{1}}}" "{{{key}}}"')}
 
     # Parse the main content.
     wikicode = mwparserfromhell.parse('{{temp|foobar|key=value}}')
 
     # Render the result.
     result = WikicodeToHtmlComposer(template_cache=template_cache).compose(wikicode)
-    assert result == 'This is a foobar value'
+    assert result == 'This is a "foobar" "value"'
 
 
 def test_with_default_args():
@@ -131,3 +131,30 @@ def test_complex_arg():
     # Render the result.
     result = WikicodeToHtmlComposer(template_cache=template_cache).compose(wikicode)
     assert result == 'This is a "first" "second"'
+
+
+def test_spaces():
+    """Spaces around a template name should be ignored."""
+    # A simple template that's just a string.
+    template = 'This is a test'
+    template_cache = {'temp': mwparserfromhell.parse(template)}
+
+    # Parse the main content.
+    wikicode = mwparserfromhell.parse('{{ temp }}')
+
+    # Render the result.
+    result = WikicodeToHtmlComposer(template_cache=template_cache).compose(wikicode)
+    assert result == template
+
+
+def test_spaces_with_parameter():
+    """Spaces around keyword parameters should be removed."""
+    # Template that uses both a position and keyword argument.
+    template_cache = {'temp': mwparserfromhell.parse('This is a "{{{1}}}" "{{{key}}}"')}
+
+    # Parse the main content.
+    wikicode = mwparserfromhell.parse('{{temp| foobar | key = value}}')
+
+    # Render the result.
+    result = WikicodeToHtmlComposer(template_cache=template_cache).compose(wikicode)
+    assert result == 'This is a " foobar " "value"'
