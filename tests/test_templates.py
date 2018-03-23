@@ -158,3 +158,27 @@ def test_spaces_with_parameter():
     # Render the result.
     result = WikicodeToHtmlComposer(template_store=template_store).compose(wikicode)
     assert result == 'This is a " foobar " "value"'
+
+
+def test_capitalization():
+    """MediaWiki treats the first character as case-insensitive."""
+    # A simple template that's just a string.
+    template = 'This is a test'
+    template_store = {'temp': mwparserfromhell.parse(template)}
+
+    # Parse the main content.
+    wikicode = mwparserfromhell.parse('{{Temp}}')
+
+    # Render the result.
+    result = WikicodeToHtmlComposer(template_store=template_store).compose(wikicode)
+    assert result == template
+
+
+def test_unknown():
+    """An unknown template gets rendered as is."""
+    content = '{{temp}}'
+    wikicode = mwparserfromhell.parse(content)
+
+    # Render the result.
+    result = WikicodeToHtmlComposer().compose(wikicode)
+    assert result == content

@@ -9,7 +9,8 @@ remove such whitespace.
 
 See https://en.wikipedia.org/wiki/Module:String
 
-"""# Store the Python version so it isn't shadowed.
+"""
+# Store the Python version so it isn't shadowed.
 _len = len
 
 

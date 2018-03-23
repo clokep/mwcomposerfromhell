@@ -5,8 +5,8 @@ from mwparserfromhell.definitions import MARKUP_TO_HTML
 from mwparserfromhell.nodes import Argument, Comment, ExternalLink, HTMLEntity, Tag, Template, Text, Wikilink
 from mwparserfromhell.wikicode import Wikicode
 
+from mwcomposerfromhell.modules import ModuleStore, UnknownModule
 from mwcomposerfromhell.templates import TemplateStore
-from mwcomposerfromhell.modules import ModuleStore
 
 # The MARKUP_TO_HTML is missing a few things...this duck punches them in.
 MARKUP_TO_HTML.update({
@@ -233,7 +233,7 @@ class WikicodeToHtmlComposer:
 
                     # Get the actual function.
                     function = self._module_store.get_function(module_name, function_name)
-                except KeyError:
+                except UnknownModule:
                     # TODO
                     yield from self._add_part(str(obj))
                 else:

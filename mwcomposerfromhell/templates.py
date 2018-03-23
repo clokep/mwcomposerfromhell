@@ -2,6 +2,7 @@
 Handle MediaWiki Templates.
 """
 
+
 class TemplateStore:
     """
     A template store maps template names (as strings) to
@@ -17,9 +18,13 @@ class TemplateStore:
 
         self.templates = templates
 
+    def _clean_name(self, key):
+        """MediaWiki treats the first character of article names as case-insensitive."""
+        return key[0].lower() + key[1:]
+
     def __getitem__(self, key):
-        return self.templates[key]
+        return self.templates[self._clean_name(key)]
 
     def __setitem__(self, key, value):
-        self.templates[key] = value
+        self.templates[self._clean_name(key)] = value
         return value
