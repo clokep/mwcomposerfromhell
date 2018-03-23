@@ -1,8 +1,6 @@
-import json
-import re
-
-import mwparserfromhell
-
+"""
+Handle MediaWiki Templates.
+"""
 
 class TemplateStore:
     """
@@ -20,10 +18,8 @@ class TemplateStore:
         self.templates = templates
 
     def __getitem__(self, key):
-        key = key.strip()
         return self.templates[key]
 
     def __setitem__(self, key, value):
-        key = key.strip()
         self.templates[key] = value
         return value

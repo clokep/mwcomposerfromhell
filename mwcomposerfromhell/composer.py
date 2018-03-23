@@ -1,10 +1,12 @@
+from collections import OrderedDict
 from urllib.parse import quote as url_quote
 
 from mwparserfromhell.definitions import MARKUP_TO_HTML
 from mwparserfromhell.nodes import Argument, Comment, ExternalLink, HTMLEntity, Tag, Template, Text, Wikilink
 from mwparserfromhell.wikicode import Wikicode
 
-from mwcomposerfromhell.store import TemplateStore
+from mwcomposerfromhell.templates import TemplateStore
+from mwcomposerfromhell.modules import ModuleStore
 
 # The MARKUP_TO_HTML is missing a few things...this duck punches them in.
 MARKUP_TO_HTML.update({
@@ -45,7 +47,7 @@ class WikicodeToHtmlComposer:
 
         self._context = context
 
-        # A place to cache templates.
+        # A place to lookup templates.
         if template_store is None:
             template_store = TemplateStore()
         elif isinstance(template_store, dict):
@@ -53,6 +55,9 @@ class WikicodeToHtmlComposer:
         elif not isinstance(template_store, TemplateStore):
             raise ValueError('template_store must be an instance of TemplateStore')
         self._template_store = template_store
+
+        # A place to lookup modules.
+        self._module_store = ModuleStore()
 
     def _close_stack(self, tag=None, raise_on_missing=True):
         """Close tags that are on the stack. It closes all tags until ``tag`` is found.
@@ -195,12 +200,12 @@ class WikicodeToHtmlComposer:
             # {{f{{text|oo}}bar}}.
             composer = WikicodeToHtmlComposer(
                 self._base_url, template_store=self._template_store, context=self._context)
-            template_name = composer.compose(obj.name)
+            template_name = composer.compose(obj.name).strip()
 
             # Because each parameter's name and value might have other
             # templates, etc. in it we need to render those in the context of
             # the template call.
-            context = {}
+            context = OrderedDict()
             for param in obj.params:
                 # See https://meta.wikimedia.org/wiki/Help:Template#Parameters
                 # for information about striping whitespace around parameters.
@@ -219,19 +224,47 @@ class WikicodeToHtmlComposer:
                 context[param_name] = param_value
 
             # This represents a script, see https://www.mediawiki.org/wiki/Extension:Scribunto
-            if template_name.startswith('#'):
-                yield from self._add_part(str(obj))
+            if template_name.startswith('#invoke:'):
+                template_name, _, module_name = template_name.partition(':')
 
-            try:
-                template = self._template_store[template_name]
-            except KeyError:
-                # TODO
-                yield from self._add_part(str(obj))
+                try:
+                    # Get the function names from the parameters.
+                    _, function_name = context.popitem(last=False)
+
+                    # Get the actual function.
+                    function = self._module_store.get_function(module_name, function_name)
+                except KeyError:
+                    # TODO
+                    yield from self._add_part(str(obj))
+                else:
+                    # Call the script with the provided context. Note that we
+                    # can't do anything fancy with the parameters because
+                    # MediaWiki lets you have non-named parameters after named
+                    # parameters. We do need to re-number them, however, so that
+                    # they begin at '1' and not '2'.
+                    function_context = OrderedDict()
+                    for key, value in context.items():
+                        try:
+                            key = int(key)
+                        except ValueError:
+                            pass
+                        else:
+                            key -= 1
+                        finally:
+                            function_context[str(key)] = value
+
+                    yield function(function_context)
             else:
-                # Create a new composer with the call to include the template as the context.
-                composer = WikicodeToHtmlComposer(
-                    self._base_url, template_store=self._template_store, context=context)
-                yield composer.compose(template)
+                try:
+                    template = self._template_store[template_name]
+                except KeyError:
+                    # TODO
+                    yield from self._add_part(str(obj))
+                else:
+                    # Create a new composer with the call to include the template as the context.
+                    composer = WikicodeToHtmlComposer(
+                        self._base_url, template_store=self._template_store, context=context)
+                    yield composer.compose(template)
 
         elif isinstance(obj, Argument):
             # There's no provided values, so just render the string.
