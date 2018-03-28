@@ -1,0 +1,7 @@
+# For running tests.
+pytest==3.4.2
+
+# Style checking.
+flake8==3.5.0
+flake8-builtins==1.1.0      # For disallowing shadowing of Python built-ins.
+flake8-import-order==0.17.1
