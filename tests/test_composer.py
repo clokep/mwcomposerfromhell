@@ -1,6 +1,6 @@
 import mwparserfromhell
 
-from mwcomposerfromhell import WikicodeToHtmlComposer
+from mwcomposerfromhell.composer import WikicodeToHtmlComposer
 
 
 def test_formatting():
