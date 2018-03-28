@@ -1,2 +1,8 @@
 .cache
 *.pyc
+
+# Testing related.
+.pytest_cache
+
+# Packaging related.
+mwcomposerfromhell.egg-info
