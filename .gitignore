@@ -7,3 +7,5 @@
 
 # Packaging related.
 mwcomposerfromhell.egg-info
+build
+dist

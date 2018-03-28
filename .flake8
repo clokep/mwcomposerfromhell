@@ -4,4 +4,5 @@ exclude =
     __pycache__,
     .cache
 max-line-length = 150
-application-import-names = mwcomposerfromhell, tests
+application-import-names = mwcomposerfromhell
+import-order-style = appnexus
