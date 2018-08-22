@@ -204,20 +204,20 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # article title.
         text = node.text or node.title
         url = get_article_url(self._base_url, node.title)
-        self._add_part('<a href="{}">'.format(url))
+        self.write('<a href="{}">'.format(url))
         self.visit(text)
-        self._add_part('</a>')
+        self.write('</a>')
 
     def visit_ExternalLink(self, node):
         # Display text can be specified, if it is not given, fall back to the
         # raw URL.
         text = node.title or node.url
-        self._add_part('<a href="{}">'.format(node.url))
+        self.write('<a href="{}">'.format(node.url))
         self.visit(text)
-        self._add_part('</a>')
+        self.write('</a>')
 
     def visit_Comment(self, node):
-        self._add_part('<!-- {} -->'.format(node.contents))
+        self.write('<!-- {} -->'.format(node.contents))
 
     def visit_Text(self, node):
         self._add_part(node.value)
@@ -265,7 +265,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 function = self._module_store.get_function(module_name, function_name)
             except UnknownModule:
                 # TODO
-                self._add_part(str(node))
+                self.write(str(node))
             else:
                 # Call the script with the provided context. Note that we
                 # can't do anything fancy with the parameters because
@@ -289,7 +289,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 template = self._template_store[template_name]
             except KeyError:
                 # TODO
-                self._add_part(str(node))
+                self.write(str(node))
             else:
                 # Create a new composer with the call to include the template as the context.
                 composer = WikicodeToHtmlComposer(
