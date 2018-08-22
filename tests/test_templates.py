@@ -1,5 +1,6 @@
 import mwparserfromhell
 
+from mwcomposerfromhell import compose
 from mwcomposerfromhell.composer import WikicodeToHtmlComposer
 
 
@@ -13,8 +14,9 @@ def test_simple():
     wikicode = mwparserfromhell.parse('{{temp}}')
 
     # Render the result.
-    result = WikicodeToHtmlComposer(template_store=template_store).compose(wikicode)
-    assert result == template
+    composer = WikicodeToHtmlComposer(template_store=template_store)
+    composer.compose(wikicode)
+    assert composer.stream.getvalue() == template
 
 
 def test_with_args():
@@ -26,8 +28,9 @@ def test_with_args():
     wikicode = mwparserfromhell.parse('{{temp|foobar|key=value}}')
 
     # Render the result.
-    result = WikicodeToHtmlComposer(template_store=template_store).compose(wikicode)
-    assert result == 'This is a "foobar" "value"'
+    composer = WikicodeToHtmlComposer(template_store=template_store)
+    composer.compose(wikicode)
+    assert composer.stream.getvalue() == 'This is a "foobar" "value"'
 
 
 def test_with_default_args():
@@ -40,8 +43,9 @@ def test_with_default_args():
     wikicode = mwparserfromhell.parse('{{temp}}')
 
     # Render the result.
-    result = WikicodeToHtmlComposer(template_store=template_store).compose(wikicode)
-    assert result == 'This is a "first" "second"'
+    composer = WikicodeToHtmlComposer(template_store=template_store)
+    composer.compose(wikicode)
+    assert composer.stream.getvalue() == 'This is a "first" "second"'
 
 
 def test_with_blank_default_args():
@@ -54,8 +58,9 @@ def test_with_blank_default_args():
     wikicode = mwparserfromhell.parse('{{temp}}')
 
     # Render the result.
-    result = WikicodeToHtmlComposer(template_store=template_store).compose(wikicode)
-    assert result == 'This is a "" ""'
+    composer = WikicodeToHtmlComposer(template_store=template_store)
+    composer.compose(wikicode)
+    assert composer.stream.getvalue() == 'This is a "" ""'
 
 
 def test_without_default_args():
@@ -69,8 +74,9 @@ def test_without_default_args():
     wikicode = mwparserfromhell.parse('{{temp}}')
 
     # Render the result.
-    result = WikicodeToHtmlComposer(template_store=template_store).compose(wikicode)
-    assert result == template
+    composer = WikicodeToHtmlComposer(template_store=template_store)
+    composer.compose(wikicode)
+    assert composer.stream.getvalue() == template
 
 
 def test_complex_name():
@@ -84,8 +90,9 @@ def test_complex_name():
     wikicode = mwparserfromhell.parse('{{t{{text|em}}p}}')
 
     # Render the result.
-    result = WikicodeToHtmlComposer(template_store=template_store).compose(wikicode)
-    assert result == 'This is a test'
+    composer = WikicodeToHtmlComposer(template_store=template_store)
+    composer.compose(wikicode)
+    assert composer.stream.getvalue() == 'This is a test'
 
 
 def test_complex_parameter_name():
@@ -99,8 +106,9 @@ def test_complex_parameter_name():
     wikicode = mwparserfromhell.parse('{{temp|first|k{{text|ey}}=second}}')
 
     # Render the result.
-    result = WikicodeToHtmlComposer(template_store=template_store).compose(wikicode)
-    assert result == 'This is a "first" "second"'
+    composer = WikicodeToHtmlComposer(template_store=template_store)
+    composer.compose(wikicode)
+    assert composer.stream.getvalue() == 'This is a "first" "second"'
 
 
 def test_complex_parameter_value():
@@ -114,8 +122,9 @@ def test_complex_parameter_value():
     wikicode = mwparserfromhell.parse('{{temp|fi{{text|rst}}|key={{text|sec}}ond}}')
 
     # Render the result.
-    result = WikicodeToHtmlComposer(template_store=template_store).compose(wikicode)
-    assert result == 'This is a "first" "second"'
+    composer = WikicodeToHtmlComposer(template_store=template_store)
+    composer.compose(wikicode)
+    assert composer.stream.getvalue() == 'This is a "first" "second"'
 
 
 def test_complex_arg():
@@ -129,8 +138,9 @@ def test_complex_arg():
     wikicode = mwparserfromhell.parse('{{temp|first|key=second}}')
 
     # Render the result.
-    result = WikicodeToHtmlComposer(template_store=template_store).compose(wikicode)
-    assert result == 'This is a "first" "second"'
+    composer = WikicodeToHtmlComposer(template_store=template_store)
+    composer.compose(wikicode)
+    assert composer.stream.getvalue() == 'This is a "first" "second"'
 
 
 def test_spaces():
@@ -143,8 +153,9 @@ def test_spaces():
     wikicode = mwparserfromhell.parse('{{ temp }}')
 
     # Render the result.
-    result = WikicodeToHtmlComposer(template_store=template_store).compose(wikicode)
-    assert result == template
+    composer = WikicodeToHtmlComposer(template_store=template_store)
+    composer.compose(wikicode)
+    assert composer.stream.getvalue() == template
 
 
 def test_spaces_with_parameter():
@@ -156,8 +167,9 @@ def test_spaces_with_parameter():
     wikicode = mwparserfromhell.parse('{{temp| foobar | key = value}}')
 
     # Render the result.
-    result = WikicodeToHtmlComposer(template_store=template_store).compose(wikicode)
-    assert result == 'This is a " foobar " "value"'
+    composer = WikicodeToHtmlComposer(template_store=template_store)
+    composer.compose(wikicode)
+    assert composer.stream.getvalue() == 'This is a " foobar " "value"'
 
 
 def test_capitalization():
@@ -170,8 +182,9 @@ def test_capitalization():
     wikicode = mwparserfromhell.parse('{{Temp}}')
 
     # Render the result.
-    result = WikicodeToHtmlComposer(template_store=template_store).compose(wikicode)
-    assert result == template
+    composer = WikicodeToHtmlComposer(template_store=template_store)
+    composer.compose(wikicode)
+    assert composer.stream.getvalue() == template
 
 
 def test_unknown():
@@ -180,5 +193,4 @@ def test_unknown():
     wikicode = mwparserfromhell.parse(content)
 
     # Render the result.
-    result = WikicodeToHtmlComposer().compose(wikicode)
-    assert result == content
+    assert compose(wikicode) == content
