@@ -76,3 +76,10 @@ def test_heading():
     content = "=== Foobar ==="
     wikicode = mwparserfromhell.parse(content)
     assert compose(wikicode) == '<h3> Foobar </h3>'
+
+
+def test_entity():
+    """Test HTML entities."""
+    content = "&Sigma; &#931; &#x3a3;"
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == '&Sigma; &#931; &#x3a3;'

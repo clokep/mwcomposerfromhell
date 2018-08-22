@@ -320,8 +320,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 composer.visit(node.default)
 
     def visit_HTMLEntity(self, node):
-        # TODO
-        self._add_part(str(node))
+        # Just write the original HTML entitiy.
+        self.write(str(node))
 
     # The following aren't nodes, but they allow some generic Python iterables
     # to be used.
