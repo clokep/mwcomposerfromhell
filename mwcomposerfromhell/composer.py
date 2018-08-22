@@ -200,7 +200,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         self.write('</h{}>'.format(node.level))
 
     def visit_Wikilink(self, node):
-        # Different text can be specified, or falls back to the title.
+        # Display text can be specified, if it is not given, fall back to the
+        # article title.
         text = node.text or node.title
         url = get_article_url(self._base_url, node.title)
         self._add_part('<a href="{}">'.format(url))
@@ -208,7 +209,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         self._add_part('</a>')
 
     def visit_ExternalLink(self, node):
-        # Different text can be specified, or falls back to the URL.
+        # Display text can be specified, if it is not given, fall back to the
+        # raw URL.
         text = node.title or node.url
         self._add_part('<a href="{}">'.format(node.url))
         self.visit(text)
