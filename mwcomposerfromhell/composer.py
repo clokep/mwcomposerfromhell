@@ -3,8 +3,6 @@ from io import StringIO
 from urllib.parse import quote as url_quote
 
 from mwparserfromhell.definitions import MARKUP_TO_HTML
-from mwparserfromhell.nodes import Argument, Comment, ExternalLink, HTMLEntity, Tag, Template, Text, Wikilink
-from mwparserfromhell.wikicode import Wikicode
 
 from mwcomposerfromhell.modules import ModuleStore, UnknownModule
 from mwcomposerfromhell.templates import TemplateStore
