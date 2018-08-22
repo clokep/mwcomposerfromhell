@@ -69,3 +69,10 @@ def test_nested_list():
 """
     wikicode = mwparserfromhell.parse(content)
     assert compose(wikicode) == '<ul><li>Foo\n</li><ul><li>Bar\n\n</li></ul><!-- Comment -->\n\n</ul>'
+
+
+def test_heading():
+    """Test a heading."""
+    content = "=== Foobar ==="
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == '<h3> Foobar </h3>'

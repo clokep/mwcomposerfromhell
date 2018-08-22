@@ -196,6 +196,11 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # Close this tag and any other open tags after it.
             self._close_stack(node.tag)
 
+    def visit_Heading(self, node):
+        self.write('<h{}>'.format(node.level))
+        self.visit(node.title)
+        self.write('</h{}>'.format(node.level))
+
     def visit_Wikilink(self, node):
         # Different text can be specified, or falls back to the title.
         text = node.text or node.title
