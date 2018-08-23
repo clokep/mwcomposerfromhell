@@ -107,57 +107,6 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             if current_tag == tag:
                 break
 
-    def _add_part(self, part):
-        """Append a part, closing any parts of the stack that should be closed here."""
-        if self._wanted_lists:
-            stack_lists = [node for node in self._stack if node in ['ul', 'ol', 'dl']]
-
-            # Remove the prefixed part of the lists that match.
-            i = 0
-            shortest = min([len(stack_lists), len(self._wanted_lists)])
-            for i in range(shortest):
-                if stack_lists[i] != self._wanted_lists[i]:
-                    break
-            else:
-                i = shortest
-
-            # Now close anything left in stack_lists.
-            for node in reversed(stack_lists[i:]):
-                self._close_stack(node)
-
-            # Open anything in wanted_lists.
-            for node in self._wanted_lists[i:]:
-                self._stack.append(node)
-                self.write('<{}>'.format(node))
-
-            # Finally, open the list item.
-            if self._wanted_lists[-1] == 'dl':
-                item_tag = 'dt'
-            else:
-                item_tag = 'li'
-            self._stack.append(item_tag)
-            self.write('<{}>'.format(item_tag))
-
-            # Reset the list.
-            self._wanted_lists = []
-
-        self.write(part)
-
-        # Certain tags get closed when there's a line break.
-        for c in reversed(part):
-            # Since _close_stack mutates the _stack, check on each iteration if
-            # _stack is still truth-y.
-            if not self._stack:
-                break
-
-            if c == '\n':
-                elements_to_close = ['li', 'ul', 'ol', 'dl', 'dt']
-                # Close an element in the stack.
-                if self._stack[-1] in elements_to_close:
-                    self._close_stack(self._stack[-1])
-            else:
-                break
-
     def visit_Wikicode(self, node):
         for node in node.ifilter(recursive=False):
             self.visit(node)
@@ -228,7 +177,57 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         self.write('<!-- {} -->'.format(node.contents))
 
     def visit_Text(self, node):
-        self._add_part(node.value)
+        # Write an actual text element. This needs to handle whether there's any
+        # lists to open.
+
+        if self._wanted_lists:
+            stack_lists = [list_node for list_node in self._stack if list_node in ['ul', 'ol', 'dl']]
+
+            # Remove the prefixed part of the lists that match.
+            i = 0
+            shortest = min([len(stack_lists), len(self._wanted_lists)])
+            for i in range(shortest):
+                if stack_lists[i] != self._wanted_lists[i]:
+                    break
+            else:
+                i = shortest
+
+            # Now close anything left in stack_lists.
+            for stack_node in reversed(stack_lists[i:]):
+                self._close_stack(stack_node)
+
+            # Open anything in wanted_lists.
+            for stack_node in self._wanted_lists[i:]:
+                self._stack.append(stack_node)
+                self.write('<{}>'.format(stack_node))
+
+            # Finally, open the list item.
+            if self._wanted_lists[-1] == 'dl':
+                item_tag = 'dt'
+            else:
+                item_tag = 'li'
+            self._stack.append(item_tag)
+            self.write('<{}>'.format(item_tag))
+
+            # Reset the list.
+            self._wanted_lists = []
+
+        self.write(node.value)
+
+        # Certain tags get closed when there's a line break.
+        for c in reversed(node.value):
+            # Since _close_stack mutates the _stack, check on each iteration if
+            # _stack is still truth-y.
+            if not self._stack:
+                break
+
+            if c == '\n':
+                elements_to_close = ['li', 'ul', 'ol', 'dl', 'dt']
+                # Close an element in the stack.
+                if self._stack[-1] in elements_to_close:
+                    self._close_stack(self._stack[-1])
+            else:
+                break
 
     def visit_Template(self, node):
         # Render the key into a string. This handles weird cases of like
