@@ -185,8 +185,9 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             self._add_part('<{}>'.format(node.tag))
             self._stack.append(node.tag)
 
-        for child in node.__children__():
-            self.visit(child)
+        # Handle anything inside of the tag.
+        if node.contents:
+            self.visit(node.contents)
 
         # Self closing tags don't need an end tag, this produces "broken"
         # HTML, but readers should handle it fine.
