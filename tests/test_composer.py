@@ -71,6 +71,17 @@ def test_nested_list():
     assert compose(wikicode) == '<ul><li>Foo\n</li><ul><li>Bar\n\n</li></ul><!-- Comment -->\n\n</ul>'
 
 
+def test_list_with_formatting():
+    """A list that has formatted entries."""
+    content = """* '''foo'''
+* ''bar''
+"""
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == '''<ul><li> <b>foo</b>
+</li><li> <i>bar</i>
+</li></ul>'''
+
+
 def test_heading():
     """Test a heading."""
     content = "=== Foobar ==="
