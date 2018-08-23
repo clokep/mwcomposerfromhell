@@ -215,19 +215,19 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         self.write(node.value)
 
         # Certain tags get closed when there's a line break.
-        for c in reversed(node.value):
+        num_new_lines = len(node.value) - len(node.value.rstrip('\n'))
+
+        ELEMENTS_TO_CLOSE = ['li', 'ul', 'ol', 'dl', 'dt']
+
+        for i in range(num_new_lines):
             # Since _close_stack mutates the _stack, check on each iteration if
             # _stack is still truth-y.
             if not self._stack:
                 break
 
-            if c == '\n':
-                elements_to_close = ['li', 'ul', 'ol', 'dl', 'dt']
-                # Close an element in the stack.
-                if self._stack[-1] in elements_to_close:
-                    self._close_stack(self._stack[-1])
-            else:
-                break
+            # Close an element in the stack.
+            if self._stack[-1] in ELEMENTS_TO_CLOSE:
+                self._close_stack(self._stack[-1])
 
     def visit_Template(self, node):
         # Render the key into a string. This handles weird cases of like
