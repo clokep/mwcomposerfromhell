@@ -12,6 +12,13 @@ MARKUP_TO_HTML.update({
     "''": 'i',
 })
 
+# The markup for different lists mapped to the list tag and list item tag.
+MARKUP_TO_LIST = {
+    '*': ('ul', 'li'),
+    '#': ('ol', 'li'),
+    ';': ('dl', 'dt'),
+}
+
 
 class UnknownNode(Exception):
     pass
@@ -58,7 +65,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # The base URL should be the root that articles sit in.
         self._base_url = base_url.rstrip('/')
 
-        self._wanted_lists = []
+        self._pending_lists = []
 
         # Track the currently open tags.
         self._stack = []
@@ -107,85 +114,38 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             if current_tag == tag:
                 break
 
-    def _add_part(self, part):
-        """Append a part, closing any parts of the stack that should be closed here."""
-        if self._wanted_lists:
-            stack_lists = [node for node in self._stack if node in ['ul', 'ol', 'dl']]
-
-            # Remove the prefixed part of the lists that match.
-            i = 0
-            shortest = min([len(stack_lists), len(self._wanted_lists)])
-            for i in range(shortest):
-                if stack_lists[i] != self._wanted_lists[i]:
-                    break
-            else:
-                i = shortest
-
-            # Now close anything left in stack_lists.
-            for node in reversed(stack_lists[i:]):
-                self._close_stack(node)
-
-            # Open anything in wanted_lists.
-            for node in self._wanted_lists[i:]:
-                self._stack.append(node)
-                self.write('<{}>'.format(node))
-
-            # Finally, open the list item.
-            if self._wanted_lists[-1] == 'dl':
-                item_tag = 'dt'
-            else:
-                item_tag = 'li'
-            self._stack.append(item_tag)
-            self.write('<{}>'.format(item_tag))
-
-            # Reset the list.
-            self._wanted_lists = []
-
-        self.write(part)
-
-        # Certain tags get closed when there's a line break.
-        for c in reversed(part):
-            # Since _close_stack mutates the _stack, check on each iteration if
-            # _stack is still truth-y.
-            if not self._stack:
-                break
-
-            if c == '\n':
-                elements_to_close = ['li', 'ul', 'ol', 'dl', 'dt']
-                # Close an element in the stack.
-                if self._stack[-1] in elements_to_close:
-                    self._close_stack(self._stack[-1])
-            else:
-                break
-
     def visit_Wikicode(self, node):
         for node in node.ifilter(recursive=False):
             self.visit(node)
 
     def visit_Tag(self, node):
-        # Some tags require a parent tag to be open first, but get grouped
+        # List tags require a parent tag to be open first, but get grouped
         # if one is already open.
-        if node.wiki_markup == '*':
-            self._wanted_lists.append('ul')
-            # Don't allow a ul inside of a dl.
-            self._close_stack('dl', raise_on_missing=False)
-        elif node.wiki_markup == '#':
-            self._wanted_lists.append('ol')
-            # Don't allow a ul inside of a dl.
-            self._close_stack('dl', raise_on_missing=False)
-        elif node.wiki_markup == ';':
-            self._wanted_lists.append('dl')
-            # Don't allow dl instead ol or ul.
-            self._close_stack('ol', raise_on_missing=False)
-            self._close_stack('ul', raise_on_missing=False)
+        if node.wiki_markup in MARKUP_TO_LIST:
+            list_tag, item_tag = MARKUP_TO_LIST[node.wiki_markup]
+            # Mark that this tag needs to be opened.
+            self._pending_lists.append((list_tag, item_tag))
+
+            # ul and ol cannot be inside of a dl and a dl cannot be in a ul or
+            # ol.
+            if node.wiki_markup in ('*', '#'):
+                self._close_stack('dl', raise_on_missing=False)
+            else:
+                self._close_stack('ol', raise_on_missing=False)
+                self._close_stack('ul', raise_on_missing=False)
 
         else:
+            composer = WikicodeToHtmlComposer(
+                self._base_url, template_store=self._template_store, context=self._context)
+            composer.visit(node.tag)
+            tag = composer.stream.getvalue().strip()
+
             # Create an HTML tag.
-            self.write('<{}'.format(node.tag))
+            self.write('<{}'.format(tag))
             for attr in node.attributes:
                 self.visit(attr)
             self.write('>')
-            self._stack.append(node.tag)
+            self._stack.append(tag)
 
         # Handle anything inside of the tag.
         if node.contents:
@@ -228,7 +188,57 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         self.write('<!-- {} -->'.format(node.contents))
 
     def visit_Text(self, node):
-        self._add_part(node.value)
+        # Write an actual text element. This needs to handle whether there's any
+        # lists to open.
+
+        LIST_TAGS = {'ul', 'ol', 'dl'}
+        TAGS_TO_CLOSE = LIST_TAGS.copy() | {'li', 'dt'}
+
+        if self._pending_lists:
+            stack_lists = [list_node for list_node in self._stack if list_node in LIST_TAGS]
+
+            # Remove the prefixed part of the lists that match.
+            i = 0
+            shortest = min([len(stack_lists), len(self._pending_lists)])
+            for i in range(shortest):
+                # Each element of _pending_lists is a tuple of (list tag, item tag).
+                if stack_lists[i] != self._pending_lists[i][0]:
+                    break
+            else:
+                i = shortest
+
+            # Now close anything left in stack_lists.
+            for stack_node in reversed(stack_lists[i:]):
+                self._close_stack(stack_node)
+
+            # Re-open anything that is pending..
+            for list_tag, item_tag in self._pending_lists[i:]:
+                self._stack.append(list_tag)
+                self.write('<{}>'.format(list_tag))
+
+            # For the last pending list, also open the list item.
+            item_tag = self._pending_lists[-1][1]
+            self.write('<{}>'.format(item_tag))
+            self._stack.append(item_tag)
+
+            # Reset the list.
+            self._pending_lists = []
+
+        self.write(node.value)
+
+        # Certain tags get closed when there's a line break.
+        num_new_lines = len(node.value) - len(node.value.rstrip('\n'))
+
+        for i in range(num_new_lines):
+            # Since _close_stack mutates the _stack, check on each iteration if
+            # _stack is still truth-y.
+            if not self._stack:
+                break
+
+            # Close an element in the stack.
+            print(self._stack[-1])
+            if self._stack[-1] in TAGS_TO_CLOSE:
+                self._close_stack(self._stack[-1])
 
     def visit_Template(self, node):
         # Render the key into a string. This handles weird cases of like
