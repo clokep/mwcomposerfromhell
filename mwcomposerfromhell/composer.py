@@ -20,7 +20,6 @@ MARKUP_TO_LIST = {
 }
 
 
-
 class UnknownNode(Exception):
     pass
 
@@ -136,12 +135,17 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 self._close_stack('ul', raise_on_missing=False)
 
         else:
+            composer = WikicodeToHtmlComposer(
+                self._base_url, template_store=self._template_store, context=self._context)
+            composer.visit(node.tag)
+            tag = composer.stream.getvalue().strip()
+
             # Create an HTML tag.
-            self.write('<{}'.format(node.tag))
+            self.write('<{}'.format(tag))
             for attr in node.attributes:
                 self.visit(attr)
             self.write('>')
-            self._stack.append(node.tag)
+            self._stack.append(tag)
 
         # Handle anything inside of the tag.
         if node.contents:
@@ -187,8 +191,11 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # Write an actual text element. This needs to handle whether there's any
         # lists to open.
 
+        LIST_TAGS = {'ul', 'ol', 'dl'}
+        TAGS_TO_CLOSE = LIST_TAGS.copy() | {'li', 'dt'}
+
         if self._pending_lists:
-            stack_lists = [list_node for list_node in self._stack if list_node in ['ul', 'ol', 'dl']]
+            stack_lists = [list_node for list_node in self._stack if list_node in LIST_TAGS]
 
             # Remove the prefixed part of the lists that match.
             i = 0
@@ -222,8 +229,6 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # Certain tags get closed when there's a line break.
         num_new_lines = len(node.value) - len(node.value.rstrip('\n'))
 
-        ELEMENTS_TO_CLOSE = ['li', 'ul', 'ol', 'dl', 'dt']
-
         for i in range(num_new_lines):
             # Since _close_stack mutates the _stack, check on each iteration if
             # _stack is still truth-y.
@@ -231,7 +236,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 break
 
             # Close an element in the stack.
-            if self._stack[-1] in ELEMENTS_TO_CLOSE:
+            print(self._stack[-1])
+            if self._stack[-1] in TAGS_TO_CLOSE:
                 self._close_stack(self._stack[-1])
 
     def visit_Template(self, node):
