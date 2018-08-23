@@ -12,6 +12,14 @@ MARKUP_TO_HTML.update({
     "''": 'i',
 })
 
+# The markup for different lists mapped to the list tag and list item tag.
+MARKUP_TO_LIST = {
+    '*': ('ul', 'li'),
+    '#': ('ol', 'li'),
+    ';': ('dl', 'dt'),
+}
+
+
 
 class UnknownNode(Exception):
     pass
@@ -58,7 +66,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # The base URL should be the root that articles sit in.
         self._base_url = base_url.rstrip('/')
 
-        self._wanted_lists = []
+        self._pending_lists = []
 
         # Track the currently open tags.
         self._stack = []
@@ -112,21 +120,20 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             self.visit(node)
 
     def visit_Tag(self, node):
-        # Some tags require a parent tag to be open first, but get grouped
+        # List tags require a parent tag to be open first, but get grouped
         # if one is already open.
-        if node.wiki_markup == '*':
-            self._wanted_lists.append('ul')
-            # Don't allow a ul inside of a dl.
-            self._close_stack('dl', raise_on_missing=False)
-        elif node.wiki_markup == '#':
-            self._wanted_lists.append('ol')
-            # Don't allow a ul inside of a dl.
-            self._close_stack('dl', raise_on_missing=False)
-        elif node.wiki_markup == ';':
-            self._wanted_lists.append('dl')
-            # Don't allow dl instead ol or ul.
-            self._close_stack('ol', raise_on_missing=False)
-            self._close_stack('ul', raise_on_missing=False)
+        if node.wiki_markup in MARKUP_TO_LIST:
+            list_tag, item_tag = MARKUP_TO_LIST[node.wiki_markup]
+            # Mark that this tag needs to be opened.
+            self._pending_lists.append((list_tag, item_tag))
+
+            # ul and ol cannot be inside of a dl and a dl cannot be in a ul or
+            # ol.
+            if node.wiki_markup in ('*', '#'):
+                self._close_stack('dl', raise_on_missing=False)
+            else:
+                self._close_stack('ol', raise_on_missing=False)
+                self._close_stack('ul', raise_on_missing=False)
 
         else:
             # Create an HTML tag.
@@ -180,14 +187,15 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # Write an actual text element. This needs to handle whether there's any
         # lists to open.
 
-        if self._wanted_lists:
+        if self._pending_lists:
             stack_lists = [list_node for list_node in self._stack if list_node in ['ul', 'ol', 'dl']]
 
             # Remove the prefixed part of the lists that match.
             i = 0
-            shortest = min([len(stack_lists), len(self._wanted_lists)])
+            shortest = min([len(stack_lists), len(self._pending_lists)])
             for i in range(shortest):
-                if stack_lists[i] != self._wanted_lists[i]:
+                # Each element of _pending_lists is a tuple of (list tag, item tag).
+                if stack_lists[i] != self._pending_lists[i][0]:
                     break
             else:
                 i = shortest
@@ -196,21 +204,18 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             for stack_node in reversed(stack_lists[i:]):
                 self._close_stack(stack_node)
 
-            # Open anything in wanted_lists.
-            for stack_node in self._wanted_lists[i:]:
-                self._stack.append(stack_node)
-                self.write('<{}>'.format(stack_node))
+            # Re-open anything that is pending..
+            for list_tag, item_tag in self._pending_lists[i:]:
+                self._stack.append(list_tag)
+                self.write('<{}>'.format(list_tag))
 
-            # Finally, open the list item.
-            if self._wanted_lists[-1] == 'dl':
-                item_tag = 'dt'
-            else:
-                item_tag = 'li'
-            self._stack.append(item_tag)
+            # For the last pending list, also open the list item.
+            item_tag = self._pending_lists[-1][1]
             self.write('<{}>'.format(item_tag))
+            self._stack.append(item_tag)
 
             # Reset the list.
-            self._wanted_lists = []
+            self._pending_lists = []
 
         self.write(node.value)
 
