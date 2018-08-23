@@ -4,6 +4,7 @@ next
 * Add support for the Header node.
 * ``WikicodeToHtmlComposer`` optionally supports a output stream. Calling
   ``compose()`` no longer returns the string directly.
+* Support attributes for ``Tag`` nodes.
 
 0.1 (March 28, 2018)
 ====================
