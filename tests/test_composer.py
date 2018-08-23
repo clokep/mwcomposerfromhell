@@ -83,3 +83,20 @@ def test_entity():
     content = "&Sigma; &#931; &#x3a3;"
     wikicode = mwparserfromhell.parse(content)
     assert compose(wikicode) == '&Sigma; &#931; &#x3a3;'
+
+
+def test_table():
+    """Test an wiki table."""
+    content = """{|
+|-
+! Header 1 !! Header 2 !! Header 3
+|-
+| Example 1a || Example 2a || Example 3a
+|-
+| Example 1b || Example 2b || Example 3b
+|}"""
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == """<table><tr><th> Header 1 </th><th> Header 2 </th><th> Header 3
+</th></tr><tr><td> Example 1a </td><td> Example 2a </td><td> Example 3a
+</td></tr><tr><td> Example 1b </td><td> Example 2b </td><td> Example 3b
+</td></tr></table>"""
