@@ -181,18 +181,26 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         else:
             # Create an HTML tag.
-            # TODO Handle attributes.
-            self._add_part('<{}>'.format(node.tag))
+            self.write('<{}'.format(node.tag))
+            for attr in node.attributes:
+                self.visit(attr)
+            self.write('>')
             self._stack.append(node.tag)
 
-        for child in node.__children__():
-            self.visit(child)
+        # Handle anything inside of the tag.
+        if node.contents:
+            self.visit(node.contents)
 
         # Self closing tags don't need an end tag, this produces "broken"
         # HTML, but readers should handle it fine.
         if not node.self_closing:
             # Close this tag and any other open tags after it.
             self._close_stack(node.tag)
+
+    def visit_Attribute(self, attr):
+        # Just use the string version of the attribute, it does all the parsing
+        # that we want.
+        self.write(str(attr))
 
     def visit_Heading(self, node):
         self.write('<h{}>'.format(node.level))

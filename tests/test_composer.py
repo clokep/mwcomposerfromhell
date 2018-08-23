@@ -71,6 +71,17 @@ def test_nested_list():
     assert compose(wikicode) == '<ul><li>Foo\n</li><ul><li>Bar\n\n</li></ul><!-- Comment -->\n\n</ul>'
 
 
+def test_list_with_formatting():
+    """A list that has formatted entries."""
+    content = """* '''foo'''
+* ''bar''
+"""
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == '''<ul><li> <b>foo</b>
+</li><li> <i>bar</i>
+</li></ul>'''
+
+
 def test_heading():
     """Test a heading."""
     content = "=== Foobar ==="
@@ -83,3 +94,34 @@ def test_entity():
     content = "&Sigma; &#931; &#x3a3;"
     wikicode = mwparserfromhell.parse(content)
     assert compose(wikicode) == '&Sigma; &#931; &#x3a3;'
+
+
+def test_table():
+    """Test an wiki table."""
+    content = """{|
+|-
+! Header 1 !! Header 2 !! Header 3
+|-
+| Example 1a || Example 2a || Example 3a
+|-
+| Example 1b || Example 2b || Example 3b
+|}"""
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == """<table><tr><th> Header 1 </th><th> Header 2 </th><th> Header 3
+</th></tr><tr><td> Example 1a </td><td> Example 2a </td><td> Example 3a
+</td></tr><tr><td> Example 1b </td><td> Example 2b </td><td> Example 3b
+</td></tr></table>"""
+
+
+def test_table_class():
+    """Test an wiki table."""
+    content = """{| class="wikitable"
+|-
+! Header 1 !! Header 2
+|-
+| Example 1 || Example 2
+|}"""
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == """<table class="wikitable"><tr><th> Header 1 </th><th> Header 2
+</th></tr><tr><td> Example 1 </td><td> Example 2
+</td></tr></table>"""
