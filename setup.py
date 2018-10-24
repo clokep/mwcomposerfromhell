@@ -10,7 +10,7 @@ def long_description():
 
 setup(
     name='mwcomposerfromhell',
-    version="0.1",
+    version="0.2dev",
     packages=find_packages(),
     description='Convert the parsed MediaWiki wikicode (using mwparserfromhell) to HTML.',
     long_description=long_description(),
