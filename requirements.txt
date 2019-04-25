@@ -1,2 +1,2 @@
 # For parsing articles from Wikipedia.
-mwparserfromhell==0.5.1
+mwparserfromhell==0.5.3
