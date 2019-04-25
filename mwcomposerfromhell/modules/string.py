@@ -14,7 +14,7 @@ See https://en.wikipedia.org/wiki/Module:String
 _len = len
 
 
-def len(context):
+def len(context):  # noqa: A001
     try:
         s = context['s']
     except KeyError:
