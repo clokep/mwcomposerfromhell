@@ -27,4 +27,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'License :: OSI Approved :: ISC License (ISCL)',
     ],
+    install_requires=[
+        'mwparserfromhell>=0.5',
+    ],
 )
