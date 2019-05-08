@@ -253,9 +253,9 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         composer.visit(node.name)
         template_name = composer.stream.getvalue().strip()
 
-        # Because each parameter's name and value might have other
-        # templates, etc. in it we need to render those in the context of
-        # the template call.
+        # Because each parameter's name and value might have other templates,
+        # etc. in it we need to render those in the context of the template
+        # call.
         context = OrderedDict()
         for param in node.params:
             # See https://meta.wikimedia.org/wiki/Help:Template#Parameters
@@ -268,7 +268,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             composer.visit(param.value)
             param_value = composer.stream.getvalue()
 
-            # Only named parameters get whitespace striped.
+            # Only named parameters strip whitespace aroudn the value.
             if param.showkey:
                 param_value = param_value.strip()
 
@@ -305,14 +305,16 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                         function_context[str(key)] = value
 
                 self.write(function(function_context))
+
+        # Otherwise, this is a normal template.
         else:
             try:
                 template = self._template_store[template_name]
             except KeyError:
-                # TODO
+                # Template was not found, simply output the template call.
                 self.write(str(node))
             else:
-                # Create a new composer with the call to include the template as the context.
+                # Render the template in only the context of its parameters.
                 composer = self.clone(context)
                 composer.visit(template)
                 self.write(composer.stream.getvalue())
