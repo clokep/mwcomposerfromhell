@@ -331,15 +331,18 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         try:
             self.write(self._context[param_name])
         except KeyError:
-            # If no parameter with this name was given. If there's a default
-            # value, use it, otherwise just render the parameter as a
-            # string.
-            if node.default is None:
-                self.write(str(node))
-            else:
+            # No parameter with this name was given.
+
+            # Use a default value if it exists, otherwise just render the
+            # parameter as a string.
+            if node.default is not  None:
+                # Render the default value in a clean context.
                 composer = self.clone(None)
                 composer.visit(node.default)
                 self.write(composer.stream.getvalue())
+
+            else:
+                self.write(str(node))
 
     def visit_HTMLEntity(self, node):
         # Just write the original HTML entitiy.
