@@ -336,7 +336,9 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # Use a default value if it exists, otherwise just render the
             # parameter as a string.
             if node.default is not  None:
-                # Render the default value in a clean context.
+                # Render the default value in a clean context. You cannot use
+                # other parameters as defaults, see
+                # https://en.wikipedia.org/wiki/Help:Template#Handling_parameters
                 composer = self.clone(None)
                 composer.visit(node.default)
                 self.write(composer.stream.getvalue())
