@@ -84,6 +84,13 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # A place to lookup modules.
         self._module_store = ModuleStore()
 
+    def clone(self, context):
+        """Create a copy of this WikicodeToHtmlComposer."""
+        return WikicodeToHtmlComposer(
+            self._base_url,
+            template_store=self._template_store,
+            context=context)
+
     def write(self, x):
         """Write a string into the output stream."""
         self.stream.write(x)
@@ -135,8 +142,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 self._close_stack('ul', raise_on_missing=False)
 
         else:
-            composer = WikicodeToHtmlComposer(
-                self._base_url, template_store=self._template_store, context=self._context)
+            composer = self.clone(self._context)
             composer.visit(node.tag)
             tag = composer.stream.getvalue().strip()
 
@@ -243,8 +249,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
     def visit_Template(self, node):
         # Render the key into a string. This handles weird cases of like
         # {{f{{text|oo}}bar}}.
-        composer = WikicodeToHtmlComposer(
-            self._base_url, template_store=self._template_store, context=self._context)
+        composer = self.clone(self._context)
         composer.visit(node.name)
         template_name = composer.stream.getvalue().strip()
 
@@ -255,13 +260,11 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         for param in node.params:
             # See https://meta.wikimedia.org/wiki/Help:Template#Parameters
             # for information about striping whitespace around parameters.
-            composer = WikicodeToHtmlComposer(
-                self._base_url, template_store=self._template_store, context=self._context)
+            composer = self.clone(self._context)
             composer.visit(param.name)
             param_name = composer.stream.getvalue().strip()
 
-            composer = WikicodeToHtmlComposer(
-                self._base_url, template_store=self._template_store, context=self._context)
+            composer = self.clone(self._context)
             composer.visit(param.value)
             param_value = composer.stream.getvalue()
 
@@ -310,15 +313,14 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 self.write(str(node))
             else:
                 # Create a new composer with the call to include the template as the context.
-                composer = WikicodeToHtmlComposer(
-                    self._base_url, stream=self.stream, template_store=self._template_store, context=context)
+                composer = self.clone(context)
                 composer.visit(template)
+                self.write(composer.stream.getvalue())
 
     def visit_Argument(self, node):
         # There's no provided values, so just render the string.
         # Templates have special handling for Arguments.
-        composer = WikicodeToHtmlComposer(
-            self._base_url, template_store=self._template_store, context=self._context)
+        composer = self.clone(self._context)
         composer.visit(node.name)
         param_name = composer.stream.getvalue().strip()
 
@@ -333,9 +335,9 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             if node.default is None:
                 self.write(str(node))
             else:
-                composer = WikicodeToHtmlComposer(
-                    self._base_url, stream=self.stream, template_store=self._template_store)
+                composer = self.clone(None)
                 composer.visit(node.default)
+                self.write(composer.stream.getvalue())
 
     def visit_HTMLEntity(self, node):
         # Just write the original HTML entitiy.
