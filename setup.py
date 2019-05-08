@@ -16,6 +16,7 @@ setup(
     long_description=long_description(),
     author='Patrick Cloke',
     author_email='clokep@patrick.cloke.us',
+    url='https://github.com/clokep/mwcomposerfromhell',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
