@@ -242,7 +242,6 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 break
 
             # Close an element in the stack.
-            print(self._stack[-1])
             if self._stack[-1] in TAGS_TO_CLOSE:
                 self._close_stack(self._stack[-1])
 
