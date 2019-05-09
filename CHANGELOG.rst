@@ -1,5 +1,8 @@
-next
-====
+Changelog
+#########
+
+0.2 (May 8, 2019)
+=================
 
 * Add support for the Header and Attribute nodes.
 * ``WikicodeToHtmlComposer`` optionally supports a output stream. Calling
