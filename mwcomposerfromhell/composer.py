@@ -2,15 +2,8 @@ from collections import OrderedDict
 from io import StringIO
 from urllib.parse import quote as url_quote
 
-from mwparserfromhell.definitions import MARKUP_TO_HTML
-
 from mwcomposerfromhell.modules import ModuleStore, UnknownModule
 from mwcomposerfromhell.templates import TemplateStore
-
-# The MARKUP_TO_HTML is missing a few things...this duck punches them in.
-MARKUP_TO_HTML.update({
-    "''": 'i',
-})
 
 # The markup for different lists mapped to the list tag and list item tag.
 MARKUP_TO_LIST = {
