@@ -1,5 +1,6 @@
 .cache
 .pytest_cache
+.mypy_cache
 *.pyc
 
 # Testing related.
