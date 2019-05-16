@@ -4,7 +4,9 @@ Changelog
 next
 ====
 
-TODO
+* Stop modifying the mwparserfromhell library.
+* Remove obsolete methods to directly handle a ``list`` or ``tuple`` in the
+  ``WikicodeToHtmlComposer``
 
 0.2 (May 8, 2019)
 =================
