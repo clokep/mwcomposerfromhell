@@ -87,19 +87,9 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         """Write a string into the output stream."""
         self.stream.write(x)
 
-    def _close_stack(self, tag, raise_on_missing=True):
+    def _close_stack(self, tag):
         """Close tags that are on the stack. It closes all tags until ``tag`` is found."""
-        # If a tag was given, close all tags behind it (in reverse order).
-        if tag not in self._stack:
-            # If the tag was not found, this implies an error with the state
-            # tracking (in some situations).
-            if raise_on_missing:
-                raise HtmlComposingError('Unable to close given tags.')
-            else:
-                return
-
-        # Close each item in the stack (starting at the top) until the expected
-        # tag is found.
+        # For the given tag, close all tags behind it (in reverse order).
         while len(self._stack):
             current_tag = self._stack.pop()
             self.write('</{}>'.format(current_tag))
@@ -122,10 +112,13 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # ul and ol cannot be inside of a dl and a dl cannot be in a ul or
             # ol.
             if node.wiki_markup in ('*', '#'):
-                self._close_stack('dl', raise_on_missing=False)
+                if 'dl' in self._stack:
+                    self._close_stack('dl')
             else:
-                self._close_stack('ol', raise_on_missing=False)
-                self._close_stack('ul', raise_on_missing=False)
+                if 'ol' in self._stack:
+                    self._close_stack('ol')
+                if 'ul' in self._stack:
+                    self._close_stack('ul')
 
         else:
             composer = self.clone(self._context)
