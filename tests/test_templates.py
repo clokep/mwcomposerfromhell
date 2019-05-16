@@ -1,5 +1,7 @@
 import mwparserfromhell
 
+import pytest
+
 from mwcomposerfromhell import compose
 from mwcomposerfromhell.composer import WikicodeToHtmlComposer
 
@@ -194,3 +196,9 @@ def test_unknown():
 
     # Render the result.
     assert compose(wikicode) == content
+
+
+def test_invalid_template_store():
+    """An unknown node type should raise an error."""
+    with pytest.raises(ValueError):
+        WikicodeToHtmlComposer(template_store='')

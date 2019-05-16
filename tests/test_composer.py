@@ -1,6 +1,9 @@
 import mwparserfromhell
 
+import pytest
+
 from mwcomposerfromhell import compose
+from mwcomposerfromhell.composer import UnknownNode
 
 
 def test_formatting():
@@ -71,6 +74,15 @@ def test_nested_list():
     assert compose(wikicode) == '<ul><li>Foo\n</li><ul><li>Bar\n\n</li></ul><!-- Comment -->\n\n</ul>'
 
 
+def test_nested_list_types():
+    """Certain list types cannot be contained inside each other."""
+    content = """;Foo
+*Bar
+"""
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == '<dl><dt>Foo\n</dt></dl><ul><li>Bar\n</li></ul>'
+
+
 def test_list_with_formatting():
     """A list that has formatted entries."""
     content = """* '''foo'''
@@ -125,3 +137,9 @@ def test_table_class():
     assert compose(wikicode) == """<table class="wikitable"><tr><th> Header 1 </th><th> Header 2
 </th></tr><tr><td> Example 1 </td><td> Example 2
 </td></tr></table>"""
+
+
+def test_unknown_node():
+    """An unknown node type should raise an error."""
+    with pytest.raises(UnknownNode):
+        compose('')
