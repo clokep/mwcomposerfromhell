@@ -1,5 +1,6 @@
 # For running tests.
 pytest==4.4.1
+pytest-cov==2.7.1
 
 # Style checking.
 flake8==3.7.7
