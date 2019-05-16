@@ -87,17 +87,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         """Write a string into the output stream."""
         self.stream.write(x)
 
-    def _close_stack(self, tag=None, raise_on_missing=True):
-        """Close tags that are on the stack. It closes all tags until ``tag`` is found.
-
-        If no tag to close is given the entire stack is closed.
-        """
-        # Close the entire stack.
-        if tag is None:
-            for current_tag in reversed(self._stack):
-                self.write('</{}>'.format(current_tag))
-            return
-
+    def _close_stack(self, tag, raise_on_missing=True):
+        """Close tags that are on the stack. It closes all tags until ``tag`` is found."""
         # If a tag was given, close all tags behind it (in reverse order).
         if tag not in self._stack:
             # If the tag was not found, this implies an error with the state
@@ -348,4 +339,5 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         """Converts Wikicode or Node objects to HTML."""
         self.visit(node)
         # Ensure the stack is closed at the end.
-        self._close_stack()
+        for current_tag in reversed(self._stack):
+            self.write('</{}>'.format(current_tag))
