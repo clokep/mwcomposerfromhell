@@ -48,8 +48,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
     See https://en.wikipedia.org/wiki/Help:Wikitext for a full definition.
     """
     def __init__(self, base_url='https://en.wikipedia.org/wiki', stream=None, template_store=None, context=None):
-        # The output stream.
-        # TODO Accept this as an input parameter (e.g. to stream to a file).
+        # If no output stream is given, use an in-memory I/O sink.
         if stream is None:
             self.stream = StringIO()
         else:
@@ -101,12 +100,15 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         # If a tag was given, close all tags behind it (in reverse order).
         if tag not in self._stack:
-            # TODO
+            # If the tag was not found, this implies an error with the state
+            # tracking (in some situations).
             if raise_on_missing:
                 raise HtmlComposingError('Unable to close given tags.')
             else:
                 return
 
+        # Close each item in the stack (starting at the top) until the expected
+        # tag is found.
         while len(self._stack):
             current_tag = self._stack.pop()
             self.write('</{}>'.format(current_tag))
@@ -119,8 +121,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             self.visit(node)
 
     def visit_Tag(self, node):
-        # List tags require a parent tag to be open first, but get grouped
-        # if one is already open.
+        # List tags require a parent tag to be opened first, but get grouped
+        # together if one is already open.
         if node.wiki_markup in MARKUP_TO_LIST:
             list_tag, item_tag = MARKUP_TO_LIST[node.wiki_markup]
             # Mark that this tag needs to be opened.
@@ -167,8 +169,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         self.write('</h{}>'.format(node.level))
 
     def visit_Wikilink(self, node):
-        # Display text can be specified, if it is not given, fall back to the
-        # article title.
+        # Display text can be optionally specified. Fall back to the article
+        # title if it is not given.
         text = node.text or node.title
         url = get_article_url(self._base_url, node.title)
         self.write('<a href="{}">'.format(url))
@@ -176,20 +178,21 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         self.write('</a>')
 
     def visit_ExternalLink(self, node):
-        # Display text can be specified, if it is not given, fall back to the
-        # raw URL.
+        # Display text can be optionally specified. Fall back to the URL if it
+        # is not given.
         text = node.title or node.url
         self.write('<a href="{}">'.format(node.url))
         self.visit(text)
         self.write('</a>')
 
     def visit_Comment(self, node):
+        # Write an HTML comment.
         self.write('<!-- {} -->'.format(node.contents))
 
     def visit_Text(self, node):
-        # Write an actual text element. This needs to handle whether there's any
-        # lists to open.
+        # Write a text element.
 
+        # Handle whether there's any lists to open.
         LIST_TAGS = {'ul', 'ol', 'dl'}
         TAGS_TO_CLOSE = LIST_TAGS.copy() | {'li', 'dt'}
 
@@ -239,19 +242,18 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 self._close_stack(self._stack[-1])
 
     def visit_Template(self, node):
-        # Render the key into a string. This handles weird cases of like
+        # Render the key into a string. This handles weird nested cases, e.g.
         # {{f{{text|oo}}bar}}.
         composer = self.clone(self._context)
         composer.visit(node.name)
         template_name = composer.stream.getvalue().strip()
 
-        # Because each parameter's name and value might have other templates,
-        # etc. in it we need to render those in the context of the template
-        # call.
+        # Because each parameter's name and value might include other templates,
+        # etc. these need to be rendered in the context of the template call.
         context = OrderedDict()
         for param in node.params:
             # See https://meta.wikimedia.org/wiki/Help:Template#Parameters
-            # for information about striping whitespace around parameters.
+            # for information about stripping whitespace around parameters.
             composer = self.clone(self._context)
             composer.visit(param.name)
             param_name = composer.stream.getvalue().strip()
@@ -260,7 +262,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             composer.visit(param.value)
             param_value = composer.stream.getvalue()
 
-            # Only named parameters strip whitespace aroudn the value.
+            # Only named parameters strip whitespace around the value.
             if param.showkey:
                 param_value = param_value.strip()
 
@@ -339,7 +341,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 self.write(str(node))
 
     def visit_HTMLEntity(self, node):
-        # Just write the original HTML entitiy.
+        # Write the original HTML entity.
         self.write(str(node))
 
     # The following aren't nodes, but they allow some generic Python iterables
