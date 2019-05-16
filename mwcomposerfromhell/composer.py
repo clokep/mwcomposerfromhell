@@ -344,16 +344,6 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # Write the original HTML entity.
         self.write(str(node))
 
-    # The following aren't nodes, but they allow some generic Python iterables
-    # to be used.
-
-    def visit_list(self, node):
-        # If the object is iterable, just handle each item separately.
-        for node in node:
-            self.visit(node)
-
-    visit_tuple = visit_list
-
     def compose(self, node):
         """Converts Wikicode or Node objects to HTML."""
         self.visit(node)
