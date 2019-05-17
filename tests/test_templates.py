@@ -1,5 +1,4 @@
 import mwparserfromhell
-
 import pytest
 
 from mwcomposerfromhell import compose
