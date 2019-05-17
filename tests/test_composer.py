@@ -61,6 +61,23 @@ def test_definition_list():
     assert compose(wikicode) == '<dl><dt>Foobar</dt></dl>'
 
 
+def test_definition_list_single_item():
+    """A definition list with no items."""
+    content = ";Foo : Bar"
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == '<dl><dt>Foo </dt><dd> Bar</dd></dl>'
+
+
+def test_definition_list_multiple_items():
+    """A definition list with no items."""
+    content = """;Foo
+: Bar
+: Baz
+"""
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == '<dl><dt>Foo\n</dt><dd> Bar\n</dd><dd> Baz\n</dd></dl>'
+
+
 def test_nested_list():
     """A nested list with additional line breaks afterward properly closes the stack."""
     content = """*Foo
@@ -80,6 +97,15 @@ def test_nested_list_types():
 """
     wikicode = mwparserfromhell.parse(content)
     assert compose(wikicode) == '<dl><dt>Foo\n</dt></dl><ul><li>Bar\n</li></ul>'
+
+
+def test_nested_list_types2():
+    """Certain list types cannot be contained inside each other."""
+    content = """*Foo
+;Bar
+"""
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == '<ul><li>Foo\n</li></ul><dl><dt>Bar\n</dt></dl>'
 
 
 def test_list_with_formatting():
