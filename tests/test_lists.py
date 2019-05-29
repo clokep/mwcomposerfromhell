@@ -24,6 +24,18 @@ def test_subitem_list_complex():
     assert compose(wikicode) == '<ul><li> Foobar\n</li><ul><li> Subitem\n</li></ul><li> Barfoo</li></ul>'
 
 
+def test_abutting_lists():
+    """Lists next to each other should not be combined."""
+    content = """* List 1
+* List 1
+
+* List 2
+* List 2
+"""
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == '<ul><li> List 1\n</li><li> List 1\n\n</li></ul><ul><li> List 2\n</li><li> List 2\n</li></ul>'
+
+
 def test_definition_list():
     """A definition list with no items."""
     content = ";Foobar"
