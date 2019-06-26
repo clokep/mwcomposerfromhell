@@ -1,8 +1,8 @@
 Changelog
 #########
 
-next
-====
+0.2.1 (June 26, 2019)
+=====================
 
 * Stop modifying the mwparserfromhell library.
 * Remove obsolete methods to directly handle a ``list`` or ``tuple`` in the
