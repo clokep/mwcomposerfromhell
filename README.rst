@@ -4,8 +4,8 @@ mwcomposerfromhell
 .. image:: https://travis-ci.org/clokep/mwcomposerfromhell.svg?branch=master
     :target: https://travis-ci.org/clokep/mwcomposerfromhell
 
-**mwcomposerfromhell** is a Python package that provides an easy-to-use composer
-to convert the MediaWiki `Wikicode`_ to HTML via `mwparserfromhell`_. It supports
+**mwcomposerfromhell** is a Python package that provides an easy-to-use method
+to convert MediaWiki `Wikicode`_ to HTML via `mwparserfromhell`_. It supports
 Python 3.
 
 .. _Wikicode: https://en.wikipedia.org/wiki/Help:Wikitext
@@ -14,13 +14,15 @@ Python 3.
 Usage
 -----
 
-Normal usage is rather straightforward (where ``text`` is page text)
+Normal usage is rather straightforward to convert from a ``str`` of Wikicode to
+a ``str`` of HTML. It involves two steps:
+
+1. Parse the Wikicode to an abstract syntax tree using ``mwparserfromhell``.
+2. Convert the AST to HTML.
 
 .. code-block:: python
 
     >>> import mwparserfromhell
     >>> import mwcomposerfromhell
-    >>> wikicode = mwparserfromhell.parse(text)
-    >>> html = mwcomposerfromhell.compose(wikicode)
-
-``html`` is a ``str`` object for the output HTML.
+    >>> wikicode = mwparserfromhell.parse(text)  # Step 1
+    >>> html = mwcomposerfromhell.compose(wikicode)  # Step 2
