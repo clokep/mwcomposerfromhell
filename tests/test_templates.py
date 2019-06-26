@@ -203,6 +203,32 @@ def test_capitalization():
     assert composer.stream.getvalue() == template
 
 
+def test_wikilink():
+    """Parameters in Wikilinks should be replaced."""
+    template_store = {'temp': mwparserfromhell.parse('[[{{{1}}}|See more at {{{1}}}]]')}
+
+    # Parse the main content.
+    wikicode = mwparserfromhell.parse('{{temp|foobar}}')
+
+    # Render the result.
+    composer = WikicodeToHtmlComposer(template_store=template_store)
+    composer.compose(wikicode)
+    assert composer.stream.getvalue() == '<a href="https://en.wikipedia.org/wiki/foobar">See more at foobar</a>'
+
+
+def test_externallink():
+    """Parameters in external links should be replaced."""
+    template_store = {'temp': mwparserfromhell.parse('[https://{{{1}}}.com {{{1}}}]')}
+
+    # Parse the main content.
+    wikicode = mwparserfromhell.parse('{{temp|foobar}}')
+
+    # Render the result.
+    composer = WikicodeToHtmlComposer(template_store=template_store)
+    composer.compose(wikicode)
+    assert composer.stream.getvalue() == '<a href="https://foobar.com">foobar</a>'
+
+
 def test_unknown():
     """An unknown template gets rendered as is."""
     content = '{{temp}}'

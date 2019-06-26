@@ -153,20 +153,25 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         self.write('</h{}>'.format(node.level))
 
     def visit_Wikilink(self, node):
+        # Get the rendered title.
+        composer = self.clone(self._context)
+        composer.visit(node.title)
+        title = composer.stream.getvalue()
+        url = get_article_url(self._base_url, title)
+
+        self.write('<a href="{}">'.format(url))
         # Display text can be optionally specified. Fall back to the article
         # title if it is not given.
-        text = node.text or node.title
-        url = get_article_url(self._base_url, node.title)
-        self.write('<a href="{}">'.format(url))
-        self.visit(text)
+        self.visit(node.text or node.title)
         self.write('</a>')
 
     def visit_ExternalLink(self, node):
+        self.write('<a href="')
+        self.visit(node.url)
+        self.write('">')
         # Display text can be optionally specified. Fall back to the URL if it
         # is not given.
-        text = node.title or node.url
-        self.write('<a href="{}">'.format(node.url))
-        self.visit(text)
+        self.visit(node.title or node.url)
         self.write('</a>')
 
     def visit_Comment(self, node):
