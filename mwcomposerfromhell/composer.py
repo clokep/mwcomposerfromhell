@@ -76,8 +76,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # A place to lookup modules.
         self._module_store = ModuleStore()
 
-    def clone(self, context):
+    def clone(self, context=None):
         """Create a copy of this WikicodeToHtmlComposer."""
+        if context is None:
+            context = self._context
         return WikicodeToHtmlComposer(
             self._base_url,
             template_store=self._template_store,
@@ -98,8 +100,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 break
 
     def visit_Wikicode(self, node):
-        for node in node.ifilter(recursive=False):
-            self.visit(node)
+        for child in node.nodes:
+            self.visit(child)
 
     def visit_Tag(self, node):
         # List tags require a parent tag to be opened first, but get grouped
@@ -121,7 +123,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                     self._close_stack('ul')
 
         else:
-            composer = self.clone(self._context)
+            composer = self.clone()
             composer.visit(node.tag)
             tag = composer.stream.getvalue().strip()
 
@@ -154,7 +156,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
     def visit_Wikilink(self, node):
         # Get the rendered title.
-        composer = self.clone(self._context)
+        composer = self.clone()
         composer.visit(node.title)
         title = composer.stream.getvalue()
         url = get_article_url(self._base_url, title)
@@ -233,7 +235,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
     def visit_Template(self, node):
         # Render the key into a string. This handles weird nested cases, e.g.
         # {{f{{text|oo}}bar}}.
-        composer = self.clone(self._context)
+        composer = self.clone()
         composer.visit(node.name)
         template_name = composer.stream.getvalue().strip()
 
@@ -243,11 +245,11 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         for param in node.params:
             # See https://meta.wikimedia.org/wiki/Help:Template#Parameters
             # for information about stripping whitespace around parameters.
-            composer = self.clone(self._context)
+            composer = self.clone()
             composer.visit(param.name)
             param_name = composer.stream.getvalue().strip()
 
-            composer = self.clone(self._context)
+            composer = self.clone()
             composer.visit(param.value)
             param_value = composer.stream.getvalue()
 
@@ -305,7 +307,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
     def visit_Argument(self, node):
         # There's no provided values, so just render the string.
         # Templates have special handling for Arguments.
-        composer = self.clone(self._context)
+        composer = self.clone()
         composer.visit(node.name)
         param_name = composer.stream.getvalue().strip()
 
@@ -320,7 +322,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # parameter as a string.
             if node.default is not None:
                 # Render the default value.
-                composer = self.clone(self._context)
+                composer = self.clone()
                 composer.visit(node.default)
                 self.write(composer.stream.getvalue())
 
