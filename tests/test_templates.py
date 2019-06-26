@@ -64,6 +64,21 @@ def test_with_blank_default_args():
     assert composer.stream.getvalue() == 'This is a "" ""'
 
 
+def test_with_replaced_default_arg():
+    """A default argument that is another replacement."""
+    # Template that uses a position argument and a keyword argument, both with
+    # defaults.
+    template_store = {'temp': mwparserfromhell.parse('This is a "{{{1|foo {{{default}}}}}}" "{{{key|foo {{{default}}}}}}"')}
+
+    # Parse the main content.
+    wikicode = mwparserfromhell.parse('{{temp|default=bar}}')
+
+    # Render the result.
+    composer = WikicodeToHtmlComposer(template_store=template_store)
+    composer.compose(wikicode)
+    assert composer.stream.getvalue() == 'This is a "foo bar" "foo bar"'
+
+
 def test_without_default_args():
     """Render a template where arguments fall back to their keys."""
     # Template that uses a position argument and a keyword argument, without
