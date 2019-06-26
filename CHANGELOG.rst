@@ -7,6 +7,10 @@ next
 * Stop modifying the mwparserfromhell library.
 * Remove obsolete methods to directly handle a ``list`` or ``tuple`` in the
   ``WikicodeToHtmlComposer``
+* Fix bugs with rendering templates:
+
+  * Default arguments can now use other argument replacements.
+  * Arguments are now properly replaced in wikilink and external links.
 
 0.2 (May 8, 2019)
 =================
