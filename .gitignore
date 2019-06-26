@@ -9,3 +9,6 @@
 mwcomposerfromhell.egg-info
 build
 dist
+
+# Editor related.
+.idea
