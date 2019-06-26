@@ -11,7 +11,7 @@ def long_description():
 setup(
     name='mwcomposerfromhell',
     version='0.2.1',
-    packages=find_packages(),
+    packages=find_packages(exclude=('tests', )),
     description='Convert the parsed MediaWiki wikicode (using mwparserfromhell) to HTML.',
     long_description=long_description(),
     author='Patrick Cloke',
