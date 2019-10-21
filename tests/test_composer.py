@@ -47,6 +47,13 @@ def test_entity():
     assert compose(wikicode) == '&Sigma; &#931; &#x3a3;'
 
 
+def test_entity_in_text():
+    """Test entities appearing in text should be escaped."""
+    content = "<test> &"
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == '&lt;test&gt; &amp;'
+
+
 def test_table():
     """Test an wiki table."""
     content = """{|

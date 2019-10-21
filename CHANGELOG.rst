@@ -4,6 +4,8 @@ Changelog
 next
 ====
 
+* Fix escaping HTML entities in text (e.g. convert < to &lt;).
+
 0.2.1 (June 26, 2019)
 =====================
 

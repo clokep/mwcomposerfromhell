@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import html
 from io import StringIO
 from urllib.parse import quote as url_quote
 
@@ -217,7 +218,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # Reset the list.
             self._pending_lists = []
 
-        self.write(node.value)
+        self.write(html.escape(node.value, quote=False))
 
         # Certain tags get closed when there's a line break.
         num_new_lines = len(node.value) - len(node.value.rstrip('\n'))
