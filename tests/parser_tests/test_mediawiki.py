@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import mwparserfromhell
-
 import pytest
 
 from mwcomposerfromhell import compose
@@ -34,7 +33,7 @@ def pytest_generate_tests(metafunc):
     argnames = ['wikitext', 'html', 'expected_pass']
 
     # Pull out the necessary info for the tests.
-    ids = []
+    test_ids = []
     argvalues = []
     for test_case in parser.test_cases:
         # Ignore tests without HTML.
@@ -42,16 +41,16 @@ def pytest_generate_tests(metafunc):
             continue
 
         # Use the test name as the ID.
-        id = test_case['test'].strip()
-        ids.append(id)
+        test_id = test_case['test'].strip()
+        test_ids.append(test_id)
 
         # Pull out the wikitext and expected HTML.
         # TODO Handle different HTML types.
         argvalues.append(
-            (test_case['wikitext'], test_case['html'], id in WHITELIST)
+            (test_case['wikitext'], test_case['html'], test_id in WHITELIST)
         )
 
-    metafunc.parametrize(argnames, argvalues, ids=ids)
+    metafunc.parametrize(argnames, argvalues, ids=test_ids)
 
 
 def test_parser_tests(wikitext, html, expected_pass):
