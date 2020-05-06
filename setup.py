@@ -38,7 +38,9 @@ setup(
             # Style checking.
             "flake8==3.7.7",
             "flake8-builtins==1.4.1",  # For disallowing shadowing of Python built-ins.
-            "flake8-import-order==0.18.1"
+            "flake8-import-order==0.18.1",
+            # Typing related.
+            "mypy",
         ],
     },
 )

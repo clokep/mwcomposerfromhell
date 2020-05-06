@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import html
 from io import StringIO
+from typing import Dict, List, Optional
 from urllib.parse import quote as url_quote
 
 from mwcomposerfromhell.modules import ModuleStore, UnknownModule
@@ -13,6 +14,9 @@ MARKUP_TO_LIST = {
     ';': ('dl', 'dt'),
 }
 
+# The type for a Template Context.
+TemplateContext = Dict[str, str]
+
 
 class UnknownNode(Exception):
     pass
@@ -22,7 +26,7 @@ class HtmlComposingError(Exception):
     pass
 
 
-def get_article_url(base_url, title):
+def get_article_url(base_url: str, title: str) -> str:
     """Given a page title, return a URL suitable for linking."""
     safe_title = url_quote(title.encode('utf-8'))
     return '{}/{}'.format(base_url, safe_title)
@@ -48,7 +52,11 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
     See https://en.wikipedia.org/wiki/Help:Wikitext for a full definition.
     """
-    def __init__(self, base_url='https://en.wikipedia.org/wiki', stream=None, template_store=None, context=None):
+    def __init__(self,
+                 base_url: str = 'https://en.wikipedia.org/wiki',
+                 stream: StringIO = None,
+                 template_store: Optional[TemplateStore] = None,
+                 context: Optional[TemplateContext] = None):
         # If no output stream is given, use an in-memory I/O sink.
         if stream is None:
             self.stream = StringIO()
@@ -58,10 +66,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # The base URL should be the root that articles sit in.
         self._base_url = base_url.rstrip('/')
 
-        self._pending_lists = []
+        self._pending_lists: List[str] = []
 
         # Track the currently open tags.
-        self._stack = []
+        self._stack: List[str] = []
 
         self._context = context
 
@@ -77,7 +85,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # A place to lookup modules.
         self._module_store = ModuleStore()
 
-    def clone(self, context=None):
+    def clone(self, context: TemplateContext = None) -> 'WikicodeToHtmlComposer':
         """Create a copy of this WikicodeToHtmlComposer."""
         if context is None:
             context = self._context
@@ -86,11 +94,11 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             template_store=self._template_store,
             context=context)
 
-    def write(self, x):
+    def write(self, x: str) -> None:
         """Write a string into the output stream."""
         self.stream.write(x)
 
-    def _close_stack(self, tag):
+    def _close_stack(self, tag: str):
         """Close tags that are on the stack. It closes all tags until ``tag`` is found."""
         # For the given tag, close all tags behind it (in reverse order).
         while len(self._stack):

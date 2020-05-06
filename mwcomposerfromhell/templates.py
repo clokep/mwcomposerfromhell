@@ -1,6 +1,7 @@
 """
 Handle MediaWiki Templates.
 """
+from typing import Any, Dict
 
 
 class TemplateStore:
@@ -10,21 +11,19 @@ class TemplateStore:
 
     """
 
-    def __init__(self, templates=None, *args, **kwargs):
-        super(TemplateStore, self).__init__(*args, **kwargs)
-
+    def __init__(self, templates: Dict[str, Any] = None):
         if templates is None:
             templates = {}
 
         self.templates = templates
 
-    def _clean_name(self, key):
+    def _clean_name(self, key: str) -> str:
         """MediaWiki treats the first character of article names as case-insensitive."""
         return key[0].lower() + key[1:]
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Any:
         return self.templates[self._clean_name(key)]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: Any) -> Any:
         self.templates[self._clean_name(key)] = value
         return value
