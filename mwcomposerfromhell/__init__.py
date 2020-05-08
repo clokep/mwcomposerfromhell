@@ -4,5 +4,4 @@ from mwcomposerfromhell.composer import HtmlComposingError, WikicodeToHtmlCompos
 def compose(wikicode: str) -> str:
     """One-shot to convert an object from parsed Wikicode to HTML."""
     composer = WikicodeToHtmlComposer()
-    composer.compose(wikicode)
-    return composer.stream.getvalue()
+    return composer.compose(wikicode)
