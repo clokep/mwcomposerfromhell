@@ -78,15 +78,6 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # A place to lookup modules.
         self._module_store = ModuleStore()
 
-    def clone(self, context: TemplateContext = None) -> 'WikicodeToHtmlComposer':
-        """Create a copy of this WikicodeToHtmlComposer."""
-        if context is None:
-            context = self._context
-        return WikicodeToHtmlComposer(
-            self._base_url,
-            template_store=self._template_store,
-            context=context)
-
     def _close_stack(self, tag: str):
         """Close tags that are on the stack. It closes all tags until ``tag`` is found."""
         # For the given tag, close all tags behind it (in reverse order).
@@ -125,9 +116,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                     result += self._close_stack('ul')
 
         else:
-            composer = self.clone()
-            composer.visit(node.tag)
-            tag = composer.compose(node.tag)
+            tag = self.visit(node.tag)
 
             # Create an HTML tag.
             result += '<' + tag
@@ -232,8 +221,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
     def visit_Template(self, node):
         # Render the key into a string. This handles weird nested cases, e.g.
         # {{f{{text|oo}}bar}}.
-        composer = self.clone()
-        template_name = composer.visit(node.name).strip()
+        template_name = self.visit(node.name).strip()
 
         # Because each parameter's name and value might include other templates,
         # etc. these need to be rendered in the context of the template call.
@@ -241,11 +229,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         for param in node.params:
             # See https://meta.wikimedia.org/wiki/Help:Template#Parameters
             # for information about stripping whitespace around parameters.
-            composer = self.clone()
-            param_name = composer.visit(param.name).strip()
-
-            composer = self.clone()
-            param_value = composer.visit(param.value)
+            param_name = self.visit(param.name).strip()
+            param_value = self.visit(param.value)
 
             # Only named parameters strip whitespace around the value.
             if param.showkey:
@@ -294,14 +279,16 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 return str(node)
             else:
                 # Render the template in only the context of its parameters.
-                composer = self.clone(context)
+                composer = WikicodeToHtmlComposer(
+                    self._base_url,
+                    template_store=self._template_store,
+                    context=context)
                 return composer.visit(template)
 
     def visit_Argument(self, node):
         # There's no provided values, so just render the string.
         # Templates have special handling for Arguments.
-        composer = self.clone()
-        param_name = composer.visit(node.name).strip()
+        param_name = self.visit(node.name).strip()
 
         # Get the parameter's value from the context (the call to the
         # template we're rendering).
@@ -314,8 +301,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # parameter as a string.
             if node.default is not None:
                 # Render the default value.
-                composer = self.clone()
-                return composer.visit(node.default)
+                return self.visit(node.default)
 
             else:
                 return str(node)
