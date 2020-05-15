@@ -9,6 +9,7 @@ from . import MediaWikiParserTestCasesParser
 # Only a subset of tests pass right now.
 WHITELIST = {
     "Blank input",
+    "Simple paragraph",
     "T17491: <ins>/<del> in blockquote (2)",
     "<pre> with attributes (T5202)",
     "<pre> with width attribute (T5202)",
@@ -70,4 +71,6 @@ def test_parser_tests(wikitext, html, expected_pass):
 
     wikicode = mwparserfromhell.parse(wikitext)
     result = compose(wikicode)
-    assert result == html
+    # TODO Removing trailing whitespace might not be correct here, but it
+    #      shouldn't matter for HTML.
+    assert result.rstrip() == html.rstrip()
