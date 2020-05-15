@@ -23,6 +23,8 @@ WHITELIST = {
     "new support for bdi element (T33817)",
 }
 
+# Whether to only run the tests above or to run them all and skip failing tests.
+ONLY_RUN_WHITELIST = False
 
 def pytest_generate_tests(metafunc):
     """Auto-generate test cases from parserTests.txt."""
@@ -42,12 +44,20 @@ def pytest_generate_tests(metafunc):
 
         # Use the test name as the ID.
         test_id = test_case['test'].strip()
+
+        # Whether the test is expected to pass.
+        expected_pass = test_id in WHITELIST
+
+        # Sometimes it is useful to only run the whitelisted tests.
+        if ONLY_RUN_WHITELIST and not expected_pass:
+            continue
+
         test_ids.append(test_id)
 
         # Pull out the wikitext and expected HTML.
         # TODO Handle different HTML types.
         argvalues.append(
-            (test_case['wikitext'], test_case['html'], test_id in WHITELIST)
+            (test_case['wikitext'], test_case['html'], expected_pass)
         )
 
     metafunc.parametrize(argnames, argvalues, ids=test_ids)
@@ -59,4 +69,5 @@ def test_parser_tests(wikitext, html, expected_pass):
         pytest.xfail("Expected fail")
 
     wikicode = mwparserfromhell.parse(wikitext)
-    assert compose(wikicode) == html
+    result = compose(wikicode)
+    assert result == html

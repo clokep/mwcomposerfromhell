@@ -32,7 +32,7 @@ def get_article_url(base_url: str, title: str) -> str:
 
 
 class WikiNodeVisitor:
-    def visit(self, node, parent):
+    def visit(self, node, in_root=False):
         method_name = 'visit_' + node.__class__.__name__
 
         try:
@@ -40,7 +40,7 @@ class WikiNodeVisitor:
         except AttributeError:
             raise UnknownNode('Unknown node type: {}'.format(node.__class__.__name__))
 
-        return method(node, parent)
+        return method(node, in_root)
 
 
 class WikicodeToHtmlComposer(WikiNodeVisitor):
@@ -91,10 +91,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         return result
 
-    def visit_Wikicode(self, node, parent):
-        return ''.join(map(lambda n: self.visit(n, node), node.nodes))
+    def visit_Wikicode(self, node, in_root=False):
+        return ''.join(map(lambda n: self.visit(n, in_root), node.nodes))
 
-    def visit_Tag(self, node, parent):
+    def visit_Tag(self, node, in_root=False):
         result = ''
 
         # List tags require a parent tag to be opened first, but get grouped
@@ -116,18 +116,18 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                     result += self._close_stack('ul')
 
         else:
-            tag = self.visit(node.tag, node)
+            tag = self.visit(node.tag)
 
             # Create an HTML tag.
             result += '<' + tag
             for attr in node.attributes:
-                result += self.visit(attr, node)
+                result += self.visit(attr)
             result += '>'
             self._stack.append(tag)
 
         # Handle anything inside of the tag.
         if node.contents:
-            result += self.visit(node.contents, node)
+            result += self.visit(node.contents)
 
         # Self closing tags don't need an end tag, this produces "broken"
         # HTML, but readers should handle it fine.
@@ -137,39 +137,47 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         return result
 
-    def visit_Attribute(self, node, parent):
+    def visit_Attribute(self, node, in_root=False):
         # Just use the string version of the attribute, it does all the parsing
         # that we want.
         return str(node)
 
-    def visit_Heading(self, node, parent):
-        return '<h{}>'.format(node.level) +  self.visit(node.title, node) + '</h{}>'.format(node.level)
+    def visit_Heading(self, node, in_root=False):
+        return '<h{}>'.format(node.level) +  self.visit(node.title) + '</h{}>'.format(node.level)
 
-    def visit_Wikilink(self, node, parent):
+    def visit_Wikilink(self, node, in_root=False):
         # Get the rendered title.
-        title = self.visit(node.title, node)
+        title = self.visit(node.title)
         url = get_article_url(self._base_url, title)
 
         # Display text can be optionally specified. Fall back to the article
         # title if it is not given.
-        return '<a href="{}">'.format(url) + self.visit(node.text or node.title, node) + '</a>'
+        return '<a href="{}">'.format(url) + self.visit(node.text or node.title) + '</a>'
 
-    def visit_ExternalLink(self, node, parent):
+    def visit_ExternalLink(self, node, in_root=False):
+        result = ''
+        if in_root:
+            # If the link isn't nested inside of anything else it might be
+            # wrapped in a paragraph.
+            if not self._stack:
+                result += '<p>'
+                self._stack.append('p')
+
         # Display text can be optionally specified. Fall back to the URL if it
         # is not given.
-        return '<a href="' + self.visit(node.url, node) + '">' + self.visit(node.title or node.url, node) + '</a>'
+        return result + '<a href="' + self.visit(node.url) + '">' + self.visit(node.title or node.url) + '</a>'
 
-    def visit_Comment(self, node, parent):
+    def visit_Comment(self, node, in_root=False):
         # Write an HTML comment.
         return '<!-- {} -->'.format(node.contents)
 
-    def visit_Text(self, node, parent):
+    def visit_Text(self, node, in_root=False):
         # Write a text element.
         result = ''
 
         # Handle whether there's any lists to open.
         LIST_TAGS = {'ul', 'ol', 'dl'}
-        TAGS_TO_CLOSE = LIST_TAGS.copy() | {'li', 'dt'}
+        TAGS_TO_CLOSE = LIST_TAGS.copy() | {'li', 'dt', 'p'}
 
         if self._pending_lists:
             stack_lists = [list_node for list_node in self._stack if list_node in LIST_TAGS]
@@ -201,6 +209,13 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # Reset the list.
             self._pending_lists = []
 
+        elif in_root:
+            # If this node isn't nested inside of anything else it might be
+            # wrapped in a paragraph.
+            if not self._stack and node.value.strip():
+                result += '<p>'
+                self._stack.append('p')
+
         result += html.escape(node.value, quote=False)
 
         # Certain tags get closed when there's a line break.
@@ -218,10 +233,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         return result
 
-    def visit_Template(self, node, parent):
+    def visit_Template(self, node, in_root=False):
         # Render the key into a string. This handles weird nested cases, e.g.
         # {{f{{text|oo}}bar}}.
-        template_name = self.visit(node.name, node).strip()
+        template_name = self.visit(node.name).strip()
 
         # Because each parameter's name and value might include other templates,
         # etc. these need to be rendered in the context of the template call.
@@ -229,8 +244,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         for param in node.params:
             # See https://meta.wikimedia.org/wiki/Help:Template#Parameters
             # for information about stripping whitespace around parameters.
-            param_name = self.visit(param.name, node).strip()
-            param_value = self.visit(param.value, node)
+            param_name = self.visit(param.name).strip()
+            param_value = self.visit(param.value)
 
             # Only named parameters strip whitespace around the value.
             if param.showkey:
@@ -285,10 +300,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                     context=context)
                 return composer.visit(template, None)
 
-    def visit_Argument(self, node, parent):
+    def visit_Argument(self, node, in_root=False):
         # There's no provided values, so just render the string.
         # Templates have special handling for Arguments.
-        param_name = self.visit(node.name, node).strip()
+        param_name = self.visit(node.name).strip()
 
         # Get the parameter's value from the context (the call to the
         # template we're rendering).
@@ -301,18 +316,18 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # parameter as a string.
             if node.default is not None:
                 # Render the default value.
-                return self.visit(node.default, node)
+                return self.visit(node.default)
 
             else:
                 return str(node)
 
-    def visit_HTMLEntity(self, node, parent):
+    def visit_HTMLEntity(self, node, in_root=False):
         # Write the original HTML entity.
         return str(node)
 
     def compose(self, node):
         """Converts Wikicode or Node objects to HTML."""
-        result = self.visit(node, None)
+        result = self.visit(node, True)
         # Ensure the stack is closed at the end.
         for current_tag in reversed(self._stack):
             result += '</{}>'.format(current_tag)
