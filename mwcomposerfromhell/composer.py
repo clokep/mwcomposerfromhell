@@ -13,6 +13,9 @@ MARKUP_TO_LIST = {
     ';': ('dl', 'dt'),
 }
 
+# The markup for tags which are inline, as opposed to block.
+INLINE_TAGS = {"''", "'''"}
+
 # The type for a Template Context.
 TemplateContext = Dict[str, str]
 
@@ -78,6 +81,21 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # A place to lookup modules.
         self._module_store = ModuleStore()
 
+    def _maybe_open_paragraph(self, in_root):
+        """
+        Handle the logic for whether this node gets wrapped in a paragraph.
+
+        This only happens if:
+
+        1. The node is in the "root" Wikicode.
+        2. There's nothing on the stack.
+        """
+        if not in_root or self._stack:
+            return ''
+
+        self._stack.append('p')
+        return '<p>'
+
     def _close_stack(self, tag: str):
         """Close tags that are on the stack. It closes all tags until ``tag`` is found."""
         # For the given tag, close all tags behind it (in reverse order).
@@ -118,6 +136,11 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         else:
             tag = self.visit(node.tag)
 
+            # Maybe wrap the tag in a paragraph, notably this gets ignored for
+            # tables and some other tags.
+            if node.wiki_markup in INLINE_TAGS:
+                result += self._maybe_open_paragraph(in_root)
+
             # Create an HTML tag.
             result += '<' + tag
             for attr in node.attributes:
@@ -146,22 +169,18 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         return '<h{}>'.format(node.level) +  self.visit(node.title) + '</h{}>'.format(node.level)
 
     def visit_Wikilink(self, node, in_root=False):
+        result = self._maybe_open_paragraph(in_root)
+
         # Get the rendered title.
         title = self.visit(node.title)
         url = get_article_url(self._base_url, title)
 
         # Display text can be optionally specified. Fall back to the article
         # title if it is not given.
-        return '<a href="{}">'.format(url) + self.visit(node.text or node.title) + '</a>'
+        return result + '<a href="{}">'.format(url) + self.visit(node.text or node.title) + '</a>'
 
     def visit_ExternalLink(self, node, in_root=False):
-        result = ''
-        if in_root:
-            # If the link isn't nested inside of anything else it might be
-            # wrapped in a paragraph.
-            if not self._stack:
-                result += '<p>'
-                self._stack.append('p')
+        result = self._maybe_open_paragraph(in_root)
 
         # Display text can be optionally specified. Fall back to the URL if it
         # is not given.
@@ -210,6 +229,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             self._pending_lists = []
 
         elif in_root:
+            # TODO
+
             # If this node isn't nested inside of anything else it might be
             # wrapped in a paragraph.
             if not self._stack and node.value.strip():
@@ -323,7 +344,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
     def visit_HTMLEntity(self, node, in_root=False):
         # Write the original HTML entity.
-        return str(node)
+        return self._maybe_open_paragraph(in_root) + str(node)
 
     def compose(self, node):
         """Converts Wikicode or Node objects to HTML."""
