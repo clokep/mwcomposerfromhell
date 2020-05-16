@@ -5,6 +5,8 @@ next
 ====
 
 * Fix escaping HTML entities in text (e.g. convert < to &lt;).
+* Better support for paragraphs.
+* The composer no longer supports a streaming interface.
 
 0.2.1 (June 26, 2019)
 =====================
