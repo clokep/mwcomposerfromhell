@@ -1,5 +1,6 @@
 Blank input
 Simple paragraph
+Parsing an URL
 Italics and possessives (2)
 Italics and bold: 2-quote opening sequence: (2,2)
 Italics and bold: 3-quote opening sequence: (3,3)
@@ -9,28 +10,51 @@ Italics and bold: other quote tests: (2,3,5)
 Italics and bold: other quote tests: (2,(3,3),2)
 Italics and bold: other quote tests: (3,(2,2),3)
 Bare pipe character (T54363)
+Comment test 4
+Comment whitespace
 T17491: <ins>/<del> in blockquote (2)
 <pre> with attributes (T5202)
 <pre> with width attribute (T5202)
 Entities inside <pre>
 HTML-pre: 2: indented text
+External links: non-bracketed
+External links: dollar sign in URL
+External links: newline forbidden in text (T8230 regression check)
+External links: protocol-relative URL in free text is left alone
+External links: protocol-relative URL in the middle of a word is left alone (T32269)
+External links: No preceding word characters allowed (T67278)
+External image (when not allowed)
+Link to non-http image, no img tag
+External links: terminating separator
+External links: intervening separator
+External links: raw ampersand
+External links: www.jpeg.org (T2554)
+T2361: URL within URL, not bracketed
+T2289: ">"-token in URL-tail
 Link with 3 brackets
 Piped link with 3 brackets
 Link containing }
 Horizontal ruler -- <4 dashes render as plain text
 __proto__ is treated as normal wikitext (T105997)
+Preprocessor precedence 8: broken language converter is rightmost opening
 Table wikitext syntax outside wiki-tables
+T3186 news: in the middle of text
 div with no attributes
 div with double-quoted attribute
 Non-ASCII pseudo-tags are rendered as text
+Pseudo-tag with URL 'name' renders as url link
 text with amp in the middle of nowhere
+text with entity-escaped character entity-like string: eacute
 text with undefined character entity: xacute
 HTML tag with leading space is parsed as text
+Expansion of multi-line templates in attribute values (T8255 sanity check 2)
 Punctuation: CSS !important (T13874)
 HTML ordered list item with parameters oddity
 Correct handling of <td>, <tr> (T8171)
 Parsing crashing regression (fr:JavaScript)
+HTML Hex character encoding bogus encoding (T28437 regression check)
 ISBN followed by 5 spaces
+Always escape literal '>' in output, not just after '<'
 ISBN with a dummy number
 ISBN with multiple spaces, no number
 Unclosed language converter markup "-{"

@@ -180,15 +180,30 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         return result + '<a href="{}">'.format(url) + self.visit(node.text or node.title) + '</a>'
 
     def visit_ExternalLink(self, node, in_root: bool = False) -> str:
+        """
+        Generate the HTML for an external link.
+
+        External links come in a few forms:
+
+        * A raw link: https://en.wikipedia.org/
+        * A bracketed link: [https://en.wikipedia.org/]
+        * A link with a title: [https://en.wikipedia.org/ Wikipedia]
+        """
         result = self._maybe_open_paragraph(in_root)
 
         # Display text can be optionally specified. Fall back to the URL if it
         # is not given.
-        return result + '<a href="' + self.visit(node.url) + '">' + self.visit(node.title or node.url) + '</a>'
+        text = self.visit(node.title or node.url)
+
+        extra = ''
+        if not node.brackets:
+            extra = 'rel="nofollow" class="external free" '
+
+        return result + '<a ' + extra + 'href="' + self.visit(node.url) + '">' + text + '</a>'
 
     def visit_Comment(self, node, in_root: bool = False) -> str:
-        # Write an HTML comment.
-        return '<!-- {} -->'.format(node.contents)
+        """HTML comments just get ignored."""
+        return ''
 
     def visit_Text(self, node, in_root: bool = False) -> str:
         # Write a text element.

@@ -6,6 +6,7 @@ next
 
 * Fix escaping HTML entities in text (e.g. convert < to &lt;).
 * Better support for paragraphs.
+* Properly strip comments instead of propagating them to the output.
 * The composer no longer supports a streaming interface.
 
 0.2.1 (June 26, 2019)
