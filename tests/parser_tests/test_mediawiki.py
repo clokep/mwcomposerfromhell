@@ -50,6 +50,7 @@ WHITELIST = {
 # Whether to only run the tests above or to run them all and skip failing tests.
 ONLY_RUN_WHITELIST = False
 
+
 def pytest_generate_tests(metafunc):
     """Auto-generate test cases from parserTests.txt."""
     with open(Path(__file__).parent.joinpath('parserTests.txt')) as f:
@@ -85,6 +86,7 @@ def pytest_generate_tests(metafunc):
         )
 
     metafunc.parametrize(argnames, argvalues, ids=test_ids)
+
 
 def test_parser_tests(wikitext, html, expected_pass):
     """Handle an individual parser test from parserTests.txt."""

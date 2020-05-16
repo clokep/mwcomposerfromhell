@@ -166,7 +166,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         return str(node)
 
     def visit_Heading(self, node, in_root=False):
-        return '<h{}>'.format(node.level) +  self.visit(node.title) + '</h{}>'.format(node.level)
+        return '<h{}>'.format(node.level) + self.visit(node.title) + '</h{}>'.format(node.level)
 
     def visit_Wikilink(self, node, in_root=False):
         result = self._maybe_open_paragraph(in_root)
