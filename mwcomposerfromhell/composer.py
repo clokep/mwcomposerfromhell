@@ -96,7 +96,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         self._stack.append('p')
         return '<p>'
 
-    def _close_stack(self, tag: str):
+    def _close_stack(self, tag: str) -> str:
         """Close tags that are on the stack. It closes all tags until ``tag`` is found."""
         # For the given tag, close all tags behind it (in reverse order).
         result = ''
@@ -293,14 +293,13 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 # MediaWiki lets you have non-named parameters after named
                 # parameters. We do need to re-number them, however, so that
                 # they begin at '1' and not '2'.
-                function_context = OrderedDict()
+                function_context = OrderedDict()  # OrderedDict[str, str]
                 for key, value in context.items():  # type: Tuple[Union[str, int], str]
                     try:
                         key = int(key) - 1
                     except ValueError:
                         pass
-                    finally:
-                        function_context[str(key)] = value
+                    function_context[str(key)] = value
 
                 return function(function_context)
 
