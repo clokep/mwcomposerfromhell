@@ -1,0 +1,37 @@
+Blank input
+Simple paragraph
+Italics and possessives (2)
+Italics and bold: 2-quote opening sequence: (2,2)
+Italics and bold: 3-quote opening sequence: (3,3)
+Italics and bold: 5-quote opening sequence: (5,3+2)
+Italics and bold: 5-quote opening sequence: (5,5)
+Italics and bold: other quote tests: (2,3,5)
+Italics and bold: other quote tests: (2,(3,3),2)
+Italics and bold: other quote tests: (3,(2,2),3)
+Bare pipe character (T54363)
+T17491: <ins>/<del> in blockquote (2)
+<pre> with attributes (T5202)
+<pre> with width attribute (T5202)
+Entities inside <pre>
+HTML-pre: 2: indented text
+Link with 3 brackets
+Piped link with 3 brackets
+Link containing }
+Horizontal ruler -- <4 dashes render as plain text
+__proto__ is treated as normal wikitext (T105997)
+Table wikitext syntax outside wiki-tables
+div with no attributes
+div with double-quoted attribute
+Non-ASCII pseudo-tags are rendered as text
+text with amp in the middle of nowhere
+text with undefined character entity: xacute
+HTML tag with leading space is parsed as text
+Punctuation: CSS !important (T13874)
+HTML ordered list item with parameters oddity
+Correct handling of <td>, <tr> (T8171)
+Parsing crashing regression (fr:JavaScript)
+ISBN followed by 5 spaces
+ISBN with a dummy number
+ISBN with multiple spaces, no number
+Unclosed language converter markup "-{"
+new support for bdi element (T33817)
