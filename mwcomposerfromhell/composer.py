@@ -1,6 +1,6 @@
 from collections import OrderedDict
 import html
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple, Union
 from urllib.parse import quote as url_quote
 
 from mwcomposerfromhell.modules import ModuleStore, UnknownModule
@@ -35,7 +35,7 @@ def get_article_url(base_url: str, title: str) -> str:
 
 
 class WikiNodeVisitor:
-    def visit(self, node, in_root=False):
+    def visit(self, node, in_root: bool = False) -> str:
         method_name = 'visit_' + node.__class__.__name__
 
         try:
@@ -62,12 +62,12 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # The base URL should be the root that articles sit in.
         self._base_url = base_url.rstrip('/')
 
-        self._pending_lists: List[str] = []
+        self._pending_lists = []  # type: List[Tuple[str, str]]
 
         # Track the currently open tags.
-        self._stack: List[str] = []
+        self._stack = []  # type: List[str]
 
-        self._context = context
+        self._context = context or {}
 
         # A place to lookup templates.
         if template_store is None:
@@ -81,7 +81,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # A place to lookup modules.
         self._module_store = ModuleStore()
 
-    def _maybe_open_paragraph(self, in_root):
+    def _maybe_open_paragraph(self, in_root: bool) -> str:
         """
         Handle the logic for whether this node gets wrapped in a paragraph.
 
@@ -109,10 +109,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         return result
 
-    def visit_Wikicode(self, node, in_root=False):
+    def visit_Wikicode(self, node, in_root: bool = False) -> str:
         return ''.join(map(lambda n: self.visit(n, in_root), node.nodes))
 
-    def visit_Tag(self, node, in_root=False):
+    def visit_Tag(self, node, in_root: bool = False) -> str:
         result = ''
 
         # List tags require a parent tag to be opened first, but get grouped
@@ -160,15 +160,15 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         return result
 
-    def visit_Attribute(self, node, in_root=False):
+    def visit_Attribute(self, node, in_root: bool = False) -> str:
         # Just use the string version of the attribute, it does all the parsing
         # that we want.
         return str(node)
 
-    def visit_Heading(self, node, in_root=False):
+    def visit_Heading(self, node, in_root: bool = False) -> str:
         return '<h{}>'.format(node.level) + self.visit(node.title) + '</h{}>'.format(node.level)
 
-    def visit_Wikilink(self, node, in_root=False):
+    def visit_Wikilink(self, node, in_root: bool = False) -> str:
         result = self._maybe_open_paragraph(in_root)
 
         # Get the rendered title.
@@ -179,18 +179,18 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # title if it is not given.
         return result + '<a href="{}">'.format(url) + self.visit(node.text or node.title) + '</a>'
 
-    def visit_ExternalLink(self, node, in_root=False):
+    def visit_ExternalLink(self, node, in_root: bool = False) -> str:
         result = self._maybe_open_paragraph(in_root)
 
         # Display text can be optionally specified. Fall back to the URL if it
         # is not given.
         return result + '<a href="' + self.visit(node.url) + '">' + self.visit(node.title or node.url) + '</a>'
 
-    def visit_Comment(self, node, in_root=False):
+    def visit_Comment(self, node, in_root: bool = False) -> str:
         # Write an HTML comment.
         return '<!-- {} -->'.format(node.contents)
 
-    def visit_Text(self, node, in_root=False):
+    def visit_Text(self, node, in_root: bool = False) -> str:
         # Write a text element.
         result = ''
 
@@ -254,14 +254,14 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         return result
 
-    def visit_Template(self, node, in_root=False):
+    def visit_Template(self, node, in_root: bool = False) -> str:
         # Render the key into a string. This handles weird nested cases, e.g.
         # {{f{{text|oo}}bar}}.
         template_name = self.visit(node.name).strip()
 
         # Because each parameter's name and value might include other templates,
         # etc. these need to be rendered in the context of the template call.
-        context = OrderedDict()
+        context = OrderedDict()  # type: OrderedDict[str, str]
         for param in node.params:
             # See https://meta.wikimedia.org/wiki/Help:Template#Parameters
             # for information about stripping whitespace around parameters.
@@ -294,13 +294,11 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 # parameters. We do need to re-number them, however, so that
                 # they begin at '1' and not '2'.
                 function_context = OrderedDict()
-                for key, value in context.items():
+                for key, value in context.items():  # type: Tuple[Union[str, int], str]
                     try:
-                        key = int(key)
+                        key = int(key) - 1
                     except ValueError:
                         pass
-                    else:
-                        key -= 1
                     finally:
                         function_context[str(key)] = value
 
@@ -319,9 +317,9 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                     self._base_url,
                     template_store=self._template_store,
                     context=context)
-                return composer.visit(template, None)
+                return composer.visit(template, False)
 
-    def visit_Argument(self, node, in_root=False):
+    def visit_Argument(self, node, in_root: bool = False) -> str:
         # There's no provided values, so just render the string.
         # Templates have special handling for Arguments.
         param_name = self.visit(node.name).strip()
@@ -342,11 +340,11 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             else:
                 return str(node)
 
-    def visit_HTMLEntity(self, node, in_root=False):
+    def visit_HTMLEntity(self, node, in_root: bool = False) -> str:
         # Write the original HTML entity.
         return self._maybe_open_paragraph(in_root) + str(node)
 
-    def compose(self, node):
+    def compose(self, node) -> str:
         """Converts Wikicode or Node objects to HTML."""
         result = self.visit(node, True)
         # Ensure the stack is closed at the end.
