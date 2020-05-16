@@ -9,28 +9,28 @@ def test_formatting():
     """Test that simple formatting works."""
     content = "''foobar''"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<i>foobar</i>'
+    assert compose(wikicode) == '<p><i>foobar</i></p>'
 
 
 def test_formatting_link():
     """Ensure an external link is rendered properly with a title that's formatted."""
     content = "[http://google.com ''foobar'']"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<a href="http://google.com"><i>foobar</i></a>'
+    assert compose(wikicode) == '<p><a href="http://google.com"><i>foobar</i></a></p>'
 
 
 def test_internal_link():
     """Ensure an internal link is rendered properly."""
     content = "[[Foobar]]"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<a href="https://en.wikipedia.org/wiki/Foobar">Foobar</a>'
+    assert compose(wikicode) == '<p><a href="https://en.wikipedia.org/wiki/Foobar">Foobar</a></p>'
 
 
 def test_internal_link_title():
     """Ensure an internal link with a title is rendered properly."""
     content = "[[Foobar|fuzzbar]]"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<a href="https://en.wikipedia.org/wiki/Foobar">fuzzbar</a>'
+    assert compose(wikicode) == '<p><a href="https://en.wikipedia.org/wiki/Foobar">fuzzbar</a></p>'
 
 
 def test_heading():
@@ -44,14 +44,14 @@ def test_entity():
     """Test HTML entities."""
     content = "&Sigma; &#931; &#x3a3;"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '&Sigma; &#931; &#x3a3;'
+    assert compose(wikicode) == '<p>&Sigma; &#931; &#x3a3;</p>'
 
 
 def test_entity_in_text():
     """Test entities appearing in text should be escaped."""
     content = "<test> &"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '&lt;test&gt; &amp;'
+    assert compose(wikicode) == '<p>&lt;test&gt; &amp;</p>'
 
 
 def test_table():

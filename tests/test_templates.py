@@ -16,8 +16,7 @@ def test_simple():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    composer.compose(wikicode)
-    assert composer.stream.getvalue() == template
+    assert composer.compose(wikicode) == template
 
 
 def test_with_args():
@@ -30,8 +29,7 @@ def test_with_args():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    composer.compose(wikicode)
-    assert composer.stream.getvalue() == 'This is a "foobar" "value"'
+    assert composer.compose(wikicode) == 'This is a "foobar" "value"'
 
 
 def test_with_default_args():
@@ -45,8 +43,7 @@ def test_with_default_args():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    composer.compose(wikicode)
-    assert composer.stream.getvalue() == 'This is a "first" "second"'
+    assert composer.compose(wikicode) == 'This is a "first" "second"'
 
 
 def test_with_blank_default_args():
@@ -60,8 +57,7 @@ def test_with_blank_default_args():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    composer.compose(wikicode)
-    assert composer.stream.getvalue() == 'This is a "" ""'
+    assert composer.compose(wikicode) == 'This is a "" ""'
 
 
 def test_with_replaced_default_arg():
@@ -75,8 +71,7 @@ def test_with_replaced_default_arg():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    composer.compose(wikicode)
-    assert composer.stream.getvalue() == 'This is a "foo bar" "foo bar"'
+    assert composer.compose(wikicode) == 'This is a "foo bar" "foo bar"'
 
 
 def test_without_default_args():
@@ -91,8 +86,7 @@ def test_without_default_args():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    composer.compose(wikicode)
-    assert composer.stream.getvalue() == template
+    assert composer.compose(wikicode) == template
 
 
 def test_complex_name():
@@ -107,8 +101,7 @@ def test_complex_name():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    composer.compose(wikicode)
-    assert composer.stream.getvalue() == 'This is a test'
+    assert composer.compose(wikicode) == 'This is a test'
 
 
 def test_complex_parameter_name():
@@ -123,8 +116,7 @@ def test_complex_parameter_name():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    composer.compose(wikicode)
-    assert composer.stream.getvalue() == 'This is a "first" "second"'
+    assert composer.compose(wikicode) == 'This is a "first" "second"'
 
 
 def test_complex_parameter_value():
@@ -139,8 +131,7 @@ def test_complex_parameter_value():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    composer.compose(wikicode)
-    assert composer.stream.getvalue() == 'This is a "first" "second"'
+    assert composer.compose(wikicode) == 'This is a "first" "second"'
 
 
 def test_complex_arg():
@@ -155,8 +146,7 @@ def test_complex_arg():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    composer.compose(wikicode)
-    assert composer.stream.getvalue() == 'This is a "first" "second"'
+    assert composer.compose(wikicode) == 'This is a "first" "second"'
 
 
 def test_spaces():
@@ -170,8 +160,7 @@ def test_spaces():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    composer.compose(wikicode)
-    assert composer.stream.getvalue() == template
+    assert composer.compose(wikicode) == template
 
 
 def test_spaces_with_parameter():
@@ -184,8 +173,7 @@ def test_spaces_with_parameter():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    composer.compose(wikicode)
-    assert composer.stream.getvalue() == 'This is a " foobar " "value"'
+    assert composer.compose(wikicode) == 'This is a " foobar " "value"'
 
 
 def test_capitalization():
@@ -199,8 +187,7 @@ def test_capitalization():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    composer.compose(wikicode)
-    assert composer.stream.getvalue() == template
+    assert composer.compose(wikicode) == template
 
 
 def test_wikilink():
@@ -212,8 +199,7 @@ def test_wikilink():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    composer.compose(wikicode)
-    assert composer.stream.getvalue() == '<a href="https://en.wikipedia.org/wiki/foobar">See more at foobar</a>'
+    assert composer.compose(wikicode) == '<a href="https://en.wikipedia.org/wiki/foobar">See more at foobar</a>'
 
 
 def test_externallink():
@@ -225,8 +211,7 @@ def test_externallink():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    composer.compose(wikicode)
-    assert composer.stream.getvalue() == '<a href="https://foobar.com">foobar</a>'
+    assert composer.compose(wikicode) == '<a href="https://foobar.com">foobar</a>'
 
 
 def test_unknown():
