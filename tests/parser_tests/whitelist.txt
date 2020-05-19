@@ -20,6 +20,7 @@ Italics and bold: other quote tests: (2,(3,3),2)
 Italics and bold: other quote tests: (3,(2,2),3)
 Italicized possessive
 Bare pipe character (T54363)
+Bare pipe character from a template (T54363)
 Comment test 4
 Comment whitespace
 Comment semantics and delimiters
@@ -30,6 +31,7 @@ T17491: <ins>/<del> in blockquote (2)
 <pre> with attributes (T5202)
 <pre> with width attribute (T5202)
 Entities inside <pre>
+Templates: Indent-Pre: 1a. Templates that break a line should suppress <pre>
 Parsoid: handle pre with space after attribute
 Templates: Don't recognize targets split by newlines
 5. Indent-Pre and html pre
@@ -73,17 +75,28 @@ Link to numeric-equivalent title
 Internal link with ca linktrail, surrounded by bold apostrophes (T29473 primary issue)
 Internal link with ca linktrail, surrounded by italic apostrophes (T29473 primary issue)
 Handle title parsing for subpages
+Ensure that transclusion titles are not url-decoded
 Horizontal ruler -- <4 dashes render as plain text
 __proto__ is treated as normal wikitext (T105997)
 Magic links: All disabled (T47942)
 Template with invalid target containing wikilink
+Simple template
+Template parameter
+Template unnamed parameter
+Template with template name as unnamed argument
+Template with template name as argument
+Template with template name as argument (2)
+Template with default value
+Template with default value (value set)
+Template with argument in separate line
+Template with complex template as argument
+Template parameter as link source
 Preprocessor precedence 4: left-most angle bracket
 Preprocessor precedence 8: broken language converter is rightmost opening
 Preprocessor precedence 18: another rightmost wins scenario
 Preprocessor precedence 19: break syntax
 Table wikitext syntax outside wiki-tables
-pre-save transform: normal template
-pre-save transform: nonexistent template
+Templates: Ugly templates: 3. newline-only template parameter
 Broken image caption with link
 T3186 news: in the middle of text
 div with no attributes
@@ -106,6 +119,7 @@ Correct handling of <td>, <tr> (T8171)
 Parsing crashing regression (fr:JavaScript)
 HTML Hex character encoding bogus encoding (T28437 regression check)
 ISBN followed by 5 spaces
+Non-transclusion because of too many up levels
 Always escape literal '>' in output, not just after '<'
 ISBN with a dummy number
 ISBN with multiple spaces, no number

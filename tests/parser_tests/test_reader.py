@@ -13,7 +13,7 @@ blah blah
 """))
     parser.parse()
 
-    assert parser.articles == [{'article': 'Main Page\n', 'text': 'blah blah\n'}]
+    assert parser.articles == {'Main Page': 'blah blah\n'}
     assert parser.test_cases == []
 
 
@@ -29,7 +29,7 @@ blah blah
 """))
     parser.parse()
 
-    assert parser.articles == [{'article': 'Main Page\n', 'text': 'blah blah\n'}]
+    assert parser.articles == {'Main Page': 'blah blah\n'}
     assert parser.test_cases == []
 
 
@@ -46,7 +46,7 @@ This is a simple paragraph.
 """))
     parser.parse()
 
-    assert parser.articles == []
+    assert parser.articles == {}
     assert parser.test_cases == [{
         'test': 'Simple paragraph\n',
         'wikitext': 'This is a simple paragraph.\n',
@@ -64,7 +64,7 @@ Blank input
 """))
     parser.parse()
 
-    assert parser.articles == []
+    assert parser.articles == {}
     assert parser.test_cases == [{
         'test': 'Blank input\n',
         'wikitext': '',

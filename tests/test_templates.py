@@ -16,7 +16,7 @@ def test_simple():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    assert composer.compose(wikicode) == template
+    assert composer.compose(wikicode) == '<p>' + template + '</p>'
 
 
 def test_with_args():
@@ -29,7 +29,7 @@ def test_with_args():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    assert composer.compose(wikicode) == 'This is a "foobar" "value"'
+    assert composer.compose(wikicode) == '<p>This is a "foobar" "value"</p>'
 
 
 def test_with_default_args():
@@ -43,7 +43,7 @@ def test_with_default_args():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    assert composer.compose(wikicode) == 'This is a "first" "second"'
+    assert composer.compose(wikicode) == '<p>This is a "first" "second"</p>'
 
 
 def test_with_blank_default_args():
@@ -57,7 +57,7 @@ def test_with_blank_default_args():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    assert composer.compose(wikicode) == 'This is a "" ""'
+    assert composer.compose(wikicode) == '<p>This is a "" ""</p>'
 
 
 def test_with_replaced_default_arg():
@@ -71,7 +71,7 @@ def test_with_replaced_default_arg():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    assert composer.compose(wikicode) == 'This is a "foo bar" "foo bar"'
+    assert composer.compose(wikicode) == '<p>This is a "foo bar" "foo bar"</p>'
 
 
 def test_without_default_args():
@@ -86,7 +86,7 @@ def test_without_default_args():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    assert composer.compose(wikicode) == template
+    assert composer.compose(wikicode) == '<p>' + template + '</p>'
 
 
 def test_complex_name():
@@ -101,7 +101,7 @@ def test_complex_name():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    assert composer.compose(wikicode) == 'This is a test'
+    assert composer.compose(wikicode) == '<p>This is a test</p>'
 
 
 def test_complex_parameter_name():
@@ -116,7 +116,7 @@ def test_complex_parameter_name():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    assert composer.compose(wikicode) == 'This is a "first" "second"'
+    assert composer.compose(wikicode) == '<p>This is a "first" "second"</p>'
 
 
 def test_complex_parameter_value():
@@ -131,7 +131,7 @@ def test_complex_parameter_value():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    assert composer.compose(wikicode) == 'This is a "first" "second"'
+    assert composer.compose(wikicode) == '<p>This is a "first" "second"</p>'
 
 
 def test_complex_arg():
@@ -146,7 +146,7 @@ def test_complex_arg():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    assert composer.compose(wikicode) == 'This is a "first" "second"'
+    assert composer.compose(wikicode) == '<p>This is a "first" "second"</p>'
 
 
 def test_spaces():
@@ -160,7 +160,7 @@ def test_spaces():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    assert composer.compose(wikicode) == template
+    assert composer.compose(wikicode) == '<p>' + template + '</p>'
 
 
 def test_spaces_with_parameter():
@@ -173,7 +173,7 @@ def test_spaces_with_parameter():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    assert composer.compose(wikicode) == 'This is a " foobar " "value"'
+    assert composer.compose(wikicode) == '<p>This is a " foobar " "value"</p>'
 
 
 def test_capitalization():
@@ -187,7 +187,7 @@ def test_capitalization():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    assert composer.compose(wikicode) == template
+    assert composer.compose(wikicode) == '<p>' + template + '</p>'
 
 
 def test_wikilink():
@@ -199,7 +199,7 @@ def test_wikilink():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    assert composer.compose(wikicode) == '<a href="https://en.wikipedia.org/wiki/Foobar" title="Foobar">See more at foobar</a>'
+    assert composer.compose(wikicode) == '<p><a href="https://en.wikipedia.org/wiki/Foobar" title="Foobar">See more at foobar</a></p>'
 
 
 def test_externallink():
@@ -211,7 +211,7 @@ def test_externallink():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    assert composer.compose(wikicode) == '<a href="https://foobar.com">foobar</a>'
+    assert composer.compose(wikicode) == '<p><a href="https://foobar.com">foobar</a></p>'
 
 
 def test_unknown():
@@ -220,7 +220,7 @@ def test_unknown():
     wikicode = mwparserfromhell.parse(content)
 
     # Render the result.
-    assert compose(wikicode) == content
+    assert compose(wikicode) == '<p>' + content + '</p>'
 
 
 def test_invalid_template_store():

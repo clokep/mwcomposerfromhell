@@ -325,14 +325,18 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 template = self._template_store[template_name]
             except KeyError:
                 # Template was not found, simply output the template call.
-                return str(node)
+                return self._maybe_open_paragraph(in_root) + str(node)
             else:
                 # Render the template in only the context of its parameters.
                 composer = WikicodeToHtmlComposer(
                     self._base_url,
                     template_store=self._template_store,
                     context=context)
-                return composer.visit(template, False)
+                result = composer.visit(template, in_root)
+                # Ensure the stack is closed at the end.
+                for current_tag in reversed(composer._stack):
+                    result += '</{}>'.format(current_tag)
+                return result
 
     def visit_Argument(self, node, in_root: bool = False) -> str:
         # There's no provided values, so just render the string.

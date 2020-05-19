@@ -27,7 +27,15 @@ def pytest_generate_tests(metafunc):
         parser = MediaWikiParserTestCasesParser(f)
         parser.parse()
 
-    argnames = ['wikitext', 'html', 'expected_pass']
+    argnames = ('wikitext', 'html', 'templates', 'expected_pass')
+
+    # For now only care about templates.
+    templates = {}
+    for article_name, article_contents in parser.articles.items():
+        if not article_name.startswith('Template:'):
+            continue
+
+        templates[article_name[len('Template:'):]] = mwparserfromhell.parse(article_contents)
 
     # Pull out the necessary info for the tests.
     test_ids = []
@@ -58,20 +66,23 @@ def pytest_generate_tests(metafunc):
 
         # Add the current test arguments to the list of values.
         argvalues.append(
-            (test_case['wikitext'], html, expected_pass)
+            (test_case['wikitext'], html, templates, expected_pass)
         )
 
     metafunc.parametrize(argnames, argvalues, ids=test_ids)
 
 
-def test_parser_tests(wikitext, html, expected_pass):
+def test_parser_tests(wikitext, html, templates, expected_pass):
     """Handle an individual parser test from parserTests.txt."""
     if not expected_pass:
         pytest.xfail("Expected fail")
 
+    # Parse the incoming article.
     wikicode = mwparserfromhell.parse(wikitext)
 
-    composer = WikicodeToHtmlComposer(base_url='/wiki')
+    # Generate the composer with the current templates.
+    composer = WikicodeToHtmlComposer(base_url='/wiki', template_store=templates)
+    # Convert the wikicode to HTML.
     result = composer.compose(wikicode)
 
     # TODO Removing trailing whitespace might not be correct here, but it

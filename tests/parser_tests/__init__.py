@@ -21,7 +21,7 @@
 class MediaWikiParserTestCasesParser:
     def __init__(self, file):
         self._file = file
-        self.articles = []
+        self.articles = {}
         self.test_cases = []
 
     def visit(self, section, contents):
@@ -35,7 +35,18 @@ class MediaWikiParserTestCasesParser:
         method(contents)
 
     def visit_article(self, contents):
-        self.articles.append(contents)
+        # Ensure articles don't have other info we're missing.
+        unknown_params = set(contents.keys()) - {"article", "text"}
+        if unknown_params:
+            raise ValueError(
+                "Unknown parameters: %s" % ' '.join(sorted(unknown_params)))
+
+        # Articles should be unique.
+        article_name = contents["article"].strip()
+        if article_name in self.articles:
+            raise ValueError("Cannot overwrite an article: %s" % article_name)
+
+        self.articles[article_name] = contents["text"]
 
     def visit_test(self, contents):
         self.test_cases.append(contents)
