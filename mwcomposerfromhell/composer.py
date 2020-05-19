@@ -30,7 +30,8 @@ class HtmlComposingError(Exception):
 
 def get_article_url(base_url: str, title: str) -> str:
     """Given a page title, return a URL suitable for linking."""
-    safe_title = url_quote(title.encode('utf-8'))
+    # MediaWiki replaces spaces with underscores, then URL encodes.
+    safe_title = url_quote(title.replace(' ', '_').encode('utf-8'))
     return '{}/{}'.format(base_url, safe_title)
 
 
@@ -172,12 +173,12 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         result = self._maybe_open_paragraph(in_root)
 
         # Get the rendered title.
-        title = self.visit(node.title)
+        title = self.visit(node.title).title()
         url = get_article_url(self._base_url, title)
 
         # Display text can be optionally specified. Fall back to the article
         # title if it is not given.
-        return result + '<a href="{}">'.format(url) + self.visit(node.text or node.title) + '</a>'
+        return result + '<a href="{}" title="{}">'.format(url, title) + self.visit(node.text or node.title) + '</a>'
 
     def visit_ExternalLink(self, node, in_root: bool = False) -> str:
         """

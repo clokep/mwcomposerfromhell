@@ -199,7 +199,7 @@ def test_wikilink():
 
     # Render the result.
     composer = WikicodeToHtmlComposer(template_store=template_store)
-    assert composer.compose(wikicode) == '<a href="https://en.wikipedia.org/wiki/foobar">See more at foobar</a>'
+    assert composer.compose(wikicode) == '<a href="https://en.wikipedia.org/wiki/Foobar" title="Foobar">See more at foobar</a>'
 
 
 def test_externallink():

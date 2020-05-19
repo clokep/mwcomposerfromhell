@@ -3,7 +3,7 @@ from pathlib import Path
 import mwparserfromhell
 import pytest
 
-from mwcomposerfromhell import compose
+from mwcomposerfromhell import WikicodeToHtmlComposer
 from . import MediaWikiParserTestCasesParser
 
 # Only a subset of tests pass right now.
@@ -57,7 +57,10 @@ def test_parser_tests(wikitext, html, expected_pass):
         pytest.xfail("Expected fail")
 
     wikicode = mwparserfromhell.parse(wikitext)
-    result = compose(wikicode)
+
+    composer = WikicodeToHtmlComposer(base_url='/wiki')
+    result = composer.compose(wikicode)
+
     # TODO Removing trailing whitespace might not be correct here, but it
     #      shouldn't matter for HTML.
     assert result.rstrip() == html.rstrip()

@@ -31,9 +31,19 @@ External links: raw ampersand
 External links: www.jpeg.org (T2554)
 T2361: URL within URL, not bracketed
 T2289: ">"-token in URL-tail
+Plain link, capitalized
+Plain link, uncapitalized
+Piped link
+Piped link with comment in link text
+Link with prefix
 Link with 3 brackets
+Link with 4 brackets
 Piped link with 3 brackets
+Link with multiple pipes
 Link containing }
+Link to numeric-equivalent title
+Internal link with ca linktrail, surrounded by bold apostrophes (T29473 primary issue)
+Internal link with ca linktrail, surrounded by italic apostrophes (T29473 primary issue)
 Horizontal ruler -- <4 dashes render as plain text
 __proto__ is treated as normal wikitext (T105997)
 Preprocessor precedence 8: broken language converter is rightmost opening
@@ -47,6 +57,7 @@ text with amp in the middle of nowhere
 text with entity-escaped character entity-like string: eacute
 text with undefined character entity: xacute
 HTML tag with leading space is parsed as text
+Character reference normalization in link text (T3938)
 Expansion of multi-line templates in attribute values (T8255 sanity check 2)
 Punctuation: CSS !important (T13874)
 HTML ordered list item with parameters oddity
