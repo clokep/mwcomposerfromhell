@@ -14,6 +14,13 @@ with open(Path(__file__).parent / 'whitelist.txt') as f:
 ONLY_RUN_WHITELIST = False
 
 
+# Some tests have a standard HTML output, while others differ based on the
+# parser. Prefer the standard output, then the PHP parser's.
+PREFERRED_HTML = ('html', 'html/*', 'html/php')
+# A known object.
+_SENTINEL = object()
+
+
 def pytest_generate_tests(metafunc):
     """Auto-generate test cases from parserTests.txt."""
     with open(Path(__file__).parent.joinpath('parserTests.txt')) as f:
@@ -26,8 +33,15 @@ def pytest_generate_tests(metafunc):
     test_ids = []
     argvalues = []
     for test_case in parser.test_cases:
+        # Find the best matching output from this test.
+        html = _SENTINEL
+        for html_section in PREFERRED_HTML:
+            html = test_case.get(html_section, _SENTINEL)
+            if html is not _SENTINEL:
+                break
+
         # Ignore tests without HTML.
-        if 'html' not in test_case:
+        if html is _SENTINEL:
             continue
 
         # Use the test name as the ID.
@@ -42,10 +56,9 @@ def pytest_generate_tests(metafunc):
 
         test_ids.append(test_id)
 
-        # Pull out the wikitext and expected HTML.
-        # TODO Handle different HTML types.
+        # Add the current test arguments to the list of values.
         argvalues.append(
-            (test_case['wikitext'], test_case['html'], expected_pass)
+            (test_case['wikitext'], html, expected_pass)
         )
 
     metafunc.parametrize(argnames, argvalues, ids=test_ids)

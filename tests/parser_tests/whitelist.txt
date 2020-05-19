@@ -3,39 +3,67 @@ Simple paragraph
 Parsing an URL
 Italics and possessives (2)
 Italics and bold: 2-quote opening sequence: (2,2)
+Italics and bold: 2-quote opening sequence: (2,3)
+Italics and bold: 2-quote opening sequence: (2,4)
+Italics and bold: 3-quote opening sequence: (3,2)
 Italics and bold: 3-quote opening sequence: (3,3)
+Italics and bold: 3-quote opening sequence: (3,4)
+Italics and bold: 4-quote opening sequence: (4,2)
+Italics and bold: 4-quote opening sequence: (4,3)
+Italics and bold: 4-quote opening sequence: (4,4)
+Italics and bold: 5-quote opening sequence: (5,2+3)
 Italics and bold: 5-quote opening sequence: (5,3+2)
 Italics and bold: 5-quote opening sequence: (5,5)
+Italics and bold: 5-quote opening sequence: (5,6)
 Italics and bold: other quote tests: (2,3,5)
 Italics and bold: other quote tests: (2,(3,3),2)
 Italics and bold: other quote tests: (3,(2,2),3)
+Italicized possessive
 Bare pipe character (T54363)
 Comment test 4
 Comment whitespace
+Comment semantics and delimiters
+Comment semantics and delimiters, redux
+Comment semantics and delimiters: directors cut
+Comment semantics: nesting
 T17491: <ins>/<del> in blockquote (2)
 <pre> with attributes (T5202)
 <pre> with width attribute (T5202)
 Entities inside <pre>
+Parsoid: handle pre with space after attribute
+Templates: Don't recognize targets split by newlines
+5. Indent-Pre and html pre
 HTML-pre: 2: indented text
+HTML-pre: 3: other wikitext
 External links: non-bracketed
 External links: dollar sign in URL
+External links: open square bracket forbidden in URL (T6377)
 External links: newline forbidden in text (T8230 regression check)
 External links: protocol-relative URL in free text is left alone
 External links: protocol-relative URL in the middle of a word is left alone (T32269)
+External links: tricky Parsoid html2html case
 External links: No preceding word characters allowed (T67278)
 External image (when not allowed)
 Link to non-http image, no img tag
 External links: terminating separator
 External links: intervening separator
 External links: raw ampersand
+External links: encoded ampersand
 External links: www.jpeg.org (T2554)
 T2361: URL within URL, not bracketed
 T2289: ">"-token in URL-tail
+T2289: literal ">"-token in URL-tail
+T6781: %26 in URL
+T6781, T7267: %25 in URL
+T6781, T7267: %28, %29 in URL
+Use url link syntax for links where the content is equal the link target
 Plain link, capitalized
 Plain link, uncapitalized
 Piped link
 Piped link with comment in link text
+Piped link with multiple pipe characters in link text
 Link with prefix
+Link with HTML entity in suffix / tail
 Link with 3 brackets
 Link with 4 brackets
 Piped link with 3 brackets
@@ -44,10 +72,19 @@ Link containing }
 Link to numeric-equivalent title
 Internal link with ca linktrail, surrounded by bold apostrophes (T29473 primary issue)
 Internal link with ca linktrail, surrounded by italic apostrophes (T29473 primary issue)
+Handle title parsing for subpages
 Horizontal ruler -- <4 dashes render as plain text
 __proto__ is treated as normal wikitext (T105997)
+Magic links: All disabled (T47942)
+Template with invalid target containing wikilink
+Preprocessor precedence 4: left-most angle bracket
 Preprocessor precedence 8: broken language converter is rightmost opening
+Preprocessor precedence 18: another rightmost wins scenario
+Preprocessor precedence 19: break syntax
 Table wikitext syntax outside wiki-tables
+pre-save transform: normal template
+pre-save transform: nonexistent template
+Broken image caption with link
 T3186 news: in the middle of text
 div with no attributes
 div with double-quoted attribute
@@ -58,9 +95,13 @@ text with entity-escaped character entity-like string: eacute
 text with undefined character entity: xacute
 HTML tag with leading space is parsed as text
 Character reference normalization in link text (T3938)
+T4095: link with three closing brackets
+T4095: link with pipe and three closing brackets
 Expansion of multi-line templates in attribute values (T8255 sanity check 2)
 Punctuation: CSS !important (T13874)
 HTML ordered list item with parameters oddity
+Fuzz testing: encoded newline in generated HTML replacements (T8577)
+Templates in extension attributes are not expanded
 Correct handling of <td>, <tr> (T8171)
 Parsing crashing regression (fr:JavaScript)
 HTML Hex character encoding bogus encoding (T28437 regression check)
@@ -69,4 +110,6 @@ Always escape literal '>' in output, not just after '<'
 ISBN with a dummy number
 ISBN with multiple spaces, no number
 Unclosed language converter markup "-{"
+Id starting with underscore
 new support for bdi element (T33817)
+Links 7b. Don't add spurious <nowiki/>s between text-nodes and url-links (T66300)
