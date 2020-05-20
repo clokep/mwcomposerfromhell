@@ -102,3 +102,10 @@ def test_list_with_formatting():
     assert compose(wikicode) == '''<ul><li> <b>foo</b>
 </li><li> <i>bar</i>
 </li></ul>'''
+
+
+def test_html():
+    """An HTML list should pass throw sanely."""
+    content = """<ul><li>foo</li><li>bar</li></ul>"""
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == content

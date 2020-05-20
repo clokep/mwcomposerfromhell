@@ -89,3 +89,10 @@ def test_unknown_node():
     """An unknown node type should raise an error."""
     with pytest.raises(UnknownNode):
         compose('')
+
+
+def test_html():
+    """Test a couple of HTML aspects."""
+    content = "<hr></hr><hr/><hr /><a ></a >"
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == "<hr /><hr /><hr /><hr /><a></a>"

@@ -146,18 +146,23 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             result += '<' + tag
             for attr in node.attributes:
                 result += self.visit(attr)
+            if node.self_closing:
+                result += ' /'
             result += '>'
-            self._stack.append(tag)
+
+            # If this is not a self-closing tag, add it to the stack.
+            if not node.self_closing:
+                self._stack.append(tag)
 
         # Handle anything inside of the tag.
         if node.contents:
             result += self.visit(node.contents)
 
-        # Self closing tags don't need an end tag, this produces "broken"
-        # HTML, but readers should handle it fine.
+        # If this is not self-closing, close this tag and any other open tags
+        # after it.
+        # TODO This only happens to work because lists are not self-closing.
         if not node.self_closing:
-            # Close this tag and any other open tags after it.
-            result += self._close_stack(node.tag)
+            result += self._close_stack(tag)
 
         return result
 

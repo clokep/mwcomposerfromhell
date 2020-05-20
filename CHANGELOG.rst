@@ -7,6 +7,7 @@ next
 * Fix escaping HTML entities in text (e.g. convert < to &lt;).
 * Better support for paragraphs.
 * Links now include a ``title`` attribute and are properly capitalized.
+* Properly handle self-closing tags (e.g. ``<hr />``).
 * Properly strip comments instead of propagating them to the output.
 * The composer no longer supports a streaming interface.
 
