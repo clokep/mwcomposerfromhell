@@ -13,7 +13,6 @@ with open(Path(__file__).parent / 'whitelist.txt') as f:
 # Whether to only run the tests above or to run them all and skip failing tests.
 ONLY_RUN_WHITELIST = False
 
-
 # Some tests have a standard HTML output, while others differ based on the
 # parser. Prefer the standard output, then the PHP parser's.
 PREFERRED_HTML = ('html', 'html/*', 'html/php')
@@ -27,7 +26,7 @@ def pytest_generate_tests(metafunc):
         parser = MediaWikiParserTestCasesParser(f)
         parser.parse()
 
-    argnames = ('wikitext', 'html', 'templates', 'expected_pass')
+    argnames = ('wikitext', 'html', 'templates', 'skip', 'expected_pass')
 
     # For now only care about templates.
     templates = {}
@@ -64,18 +63,24 @@ def pytest_generate_tests(metafunc):
 
         test_ids.append(test_id)
 
+        # Skip some tests based on their options.
+        options = test_case.get('options', {})
+        skip = 'pst' in options or 'msg' in options
+
         # Add the current test arguments to the list of values.
         argvalues.append(
-            (test_case['wikitext'], html, templates, expected_pass)
+            (test_case['wikitext'], html, templates, skip, expected_pass)
         )
 
     metafunc.parametrize(argnames, argvalues, ids=test_ids)
 
 
-def test_parser_tests(wikitext, html, templates, expected_pass):
+def test_parser_tests(wikitext, html, templates, skip, expected_pass):
     """Handle an individual parser test from parserTests.txt."""
+    if skip:
+        pytest.skip('Skipping test')
     if not expected_pass:
-        pytest.xfail("Expected fail")
+        pytest.xfail('Expected fail')
 
     # Parse the incoming article.
     wikicode = mwparserfromhell.parse(wikitext)
