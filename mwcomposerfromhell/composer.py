@@ -76,7 +76,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # The base URL should be the root that articles sit in.
         self._base_url = base_url.rstrip('/')
 
-        self._pending_lists = []  # type: List[Tuple[str, str]]
+        self._pending_lists = []  # type: List[str]
 
         # Track the currently open tags.
         self._stack = []  # type: List[str]

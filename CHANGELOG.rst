@@ -1,15 +1,17 @@
 Changelog
 #########
 
-next
-====
+0.3 (May 21, 2020)
+==================
 
-* Fix escaping HTML entities in text (e.g. convert < to &lt;).
-* Better support for paragraphs.
+* Fix escaping HTML entities in text (e.g. convert ``<`` to ``&lt;``).
+* Handling of paragraphs and multiple line breaks has been greatly improved.
 * Links now include a ``title`` attribute and are properly capitalized.
 * Properly handle self-closing tags (e.g. ``<hr />``).
-* Properly strip comments instead of propagating them to the output.
+* Descriptions lists with details are properly handled.
+* Comments are ignored instead of propagating them to the output.
 * The composer no longer supports a streaming interface.
+* Basic type hints are included.
 
 0.2.1 (June 26, 2019)
 =====================
