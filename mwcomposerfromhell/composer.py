@@ -11,16 +11,20 @@ from mwcomposerfromhell.templates import TemplateStore
 
 # The markup for different lists mapped to the list tag and list item tag.
 MARKUP_TO_LIST = {
+    # Unordered list.
     '*': ('ul', 'li'),
+    # Ordered list.
     '#': ('ol', 'li'),
+    # Definition lists.
     ';': ('dl', 'dt'),
+    ':': ('dl', 'dd'),
 }
 
 # The markup for tags which are inline, as opposed to block.
 INLINE_TAGS = {"''", "'''"}
 
 # Tags that represent a list or list items.
-LIST_TAGS = {'ul', 'ol', 'dl', 'li', 'dt'}
+LIST_TAGS = {'ul', 'ol', 'li', 'dl', 'dt', 'dd'}
 
 # One or more line breaks.
 LINE_BREAK_PATTERN = re.compile(r'(\n+)')

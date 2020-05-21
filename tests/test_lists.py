@@ -1,5 +1,4 @@
 import mwparserfromhell
-import pytest
 
 from mwcomposerfromhell import compose
 
@@ -44,7 +43,6 @@ def test_definition_list():
     assert compose(wikicode) == '<dl><dt>Foobar</dt></dl>'
 
 
-@pytest.mark.skip
 def test_definition_list_single_item():
     """A definition list with a single item."""
     content = ";Foo : Bar"
@@ -52,7 +50,6 @@ def test_definition_list_single_item():
     assert compose(wikicode) == '<dl><dt>Foo </dt><dd> Bar</dd></dl>'
 
 
-@pytest.mark.skip
 def test_definition_list_multiple_items():
     """A definition list with multiple items."""
     content = """;Foo
