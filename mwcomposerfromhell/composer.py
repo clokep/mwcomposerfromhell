@@ -3,6 +3,8 @@ import html
 from typing import Dict, List, Optional, Tuple, Union
 from urllib.parse import quote as url_quote
 
+from mwparserfromhell.nodes import Comment, Text
+
 from mwcomposerfromhell.modules import ModuleStore, UnknownModule
 from mwcomposerfromhell.templates import TemplateStore
 
@@ -110,8 +112,34 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         return result
 
+    def _iter_nodes(self, nodes):
+        """
+        Iterate through nodes, skipping comment blocks and combing adjacets text nodes.
+
+        Transforms [Text, Comment, Text] -> [Text]
+        """
+        prev_node = None
+        for node in nodes:
+            # Skip comment nodes.
+            if isinstance(node, Comment):
+                continue
+
+            # Two (now adjacent) text nodes are combined.
+            if isinstance(prev_node, Text) and isinstance(node, Text):
+                prev_node = Text(prev_node.value + node.value)
+                continue
+
+            # Otherwise, yield the previous node and store the current one.
+            if prev_node:
+                yield prev_node
+            prev_node = node
+
+        # Yield the last node.
+        if prev_node:
+            yield prev_node
+
     def visit_Wikicode(self, node, in_root: bool = False) -> str:
-        return ''.join(map(lambda n: self.visit(n, in_root), node.nodes))
+        return ''.join(map(lambda n: self.visit(n, in_root), self._iter_nodes(node.nodes)))
 
     def visit_Tag(self, node, in_root: bool = False) -> str:
         result = ''
