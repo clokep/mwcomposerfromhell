@@ -149,7 +149,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         if node.wiki_markup in MARKUP_TO_LIST:
             list_tag, item_tag = MARKUP_TO_LIST[node.wiki_markup]
             # Mark that this tag needs to be opened.
-            self._pending_lists.append((list_tag, item_tag))
+            self._pending_lists.extend((list_tag, item_tag))
 
             # ul and ol cannot be inside of a dl and a dl cannot be in a ul or
             # ol.
@@ -244,37 +244,39 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         result = ''
 
         # Handle whether there's any lists to open.
-        LIST_TAGS = {'ul', 'ol', 'dl'}
-        TAGS_TO_CLOSE = LIST_TAGS.copy() | {'li', 'dt', 'p'}
+        LIST_TAGS = {'ul', 'ol', 'dl', 'li', 'dt'}
 
         if self._pending_lists:
-            stack_lists = [list_node for list_node in self._stack if list_node in LIST_TAGS]
+            # The overall algorithm for deciding which tags to open and which to
+            # close is nuanced:
+            #
+            # 1. Calculate the portion of lists and list items that are identical.
+            # 2. Close the end of what doesn't match.
+            # 3. Open the new tags.
 
-            # Remove the prefixed part of the lists that match.
-            i = 0
-            shortest = min([len(stack_lists), len(self._pending_lists)])
+            # The currently open lists.
+            stack_lists = [list_tag for list_tag in self._stack if list_tag in LIST_TAGS]
+
+            # Don't consider the latest list item to open in the comparison, it
+            # always needs to be opened.
+            shortest = min([len(stack_lists), len(self._pending_lists) - 1])
+            # Find the index of the last matching item.
             for i in range(shortest):
-                # Each element of _pending_lists is a tuple of (list tag, item tag).
-                if stack_lists[i] != self._pending_lists[i][0]:
+                if stack_lists[i] != self._pending_lists[i]:
                     break
             else:
                 i = shortest
 
-            # Now close anything left in stack_lists.
+            # Close anything past the matching items.
             for stack_node in reversed(stack_lists[i:]):
                 result += self._close_stack(stack_node)
 
-            # Re-open anything that is pending..
-            for list_tag, item_tag in self._pending_lists[i:]:
-                self._stack.append(list_tag)
-                result += '<{}>'.format(list_tag)
+            # Open any items that are left from the pending list.
+            for tag in self._pending_lists[i:]:
+                self._stack.append(tag)
+                result += '<{}>'.format(tag)
 
-            # For the last pending list, also open the list item.
-            item_tag = self._pending_lists[-1][1]
-            result += '<{}>'.format(item_tag)
-            self._stack.append(item_tag)
-
-            # Reset the list.
+            # Reset the pending list.
             self._pending_lists = []
 
         elif in_root:
