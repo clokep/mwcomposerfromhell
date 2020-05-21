@@ -1,5 +1,6 @@
 Blank input
 Simple paragraph
+Paragraphs with extra newline spacing
 Parsing an URL
 Italics and possessives (2)
 Italics and bold: 2-quote opening sequence: (2,2)
@@ -27,16 +28,17 @@ Comment semantics and delimiters
 Comment semantics and delimiters, redux
 Comment semantics and delimiters: directors cut
 Comment semantics: nesting
+No block tags
 T17491: <ins>/<del> in blockquote (2)
 <pre> with attributes (T5202)
 <pre> with width attribute (T5202)
 Entities inside <pre>
-Templates: Indent-Pre: 1a. Templates that break a line should suppress <pre>
 Parsoid: handle pre with space after attribute
 Templates: Don't recognize targets split by newlines
-5. Indent-Pre and html pre
 HTML-pre: 2: indented text
 HTML-pre: 3: other wikitext
+T13748: Literal closing tags
+Nested definition lists using html syntax
 External links: non-bracketed
 External links: dollar sign in URL
 External links: open square bracket forbidden in URL (T6377)
@@ -55,10 +57,12 @@ External links: www.jpeg.org (T2554)
 T2361: URL within URL, not bracketed
 T2289: ">"-token in URL-tail
 T2289: literal ">"-token in URL-tail
+T2787: Links with one slash after the url protocol are invalid
 T6781: %26 in URL
 T6781, T7267: %25 in URL
 T6781, T7267: %28, %29 in URL
 Use url link syntax for links where the content is equal the link target
+Quotes
 Plain link, capitalized
 Plain link, uncapitalized
 Piped link
@@ -71,11 +75,13 @@ Link with 4 brackets
 Piped link with 3 brackets
 Link with multiple pipes
 Link containing }
+Link containing % (not as a hex sequence)
 Link to numeric-equivalent title
 Internal link with ca linktrail, surrounded by bold apostrophes (T29473 primary issue)
 Internal link with ca linktrail, surrounded by italic apostrophes (T29473 primary issue)
 Handle title parsing for subpages
 Ensure that transclusion titles are not url-decoded
+Parsoid T55221: Wikilinks should be properly entity-escaped
 <br> to <br />
 Horizontal ruler -- 4+ dashes render hr
 Horizontal ruler -- eats additional dashes on the same line
@@ -100,7 +106,6 @@ Preprocessor precedence 8: broken language converter is rightmost opening
 Preprocessor precedence 18: another rightmost wins scenario
 Preprocessor precedence 19: break syntax
 Table wikitext syntax outside wiki-tables
-Templates: Ugly templates: 3. newline-only template parameter
 Broken image caption with link
 T3186 news: in the middle of text
 div with no attributes
@@ -115,7 +120,12 @@ Character reference normalization in link text (T3938)
 T4095: link with three closing brackets
 T4095: link with pipe and three closing brackets
 Expansion of multi-line templates in attribute values (T8255 sanity check 2)
+Parser hook: Don't allow unclosed extension tags
 Punctuation: CSS !important (T13874)
+HTML bullet list, closed tags (T7497)
+HTML ordered list, closed tags (T7497)
+HTML nested bullet list, closed tags (T7497)
+HTML nested ordered list, closed tags (T7497)
 HTML ordered list item with parameters oddity
 Fuzz testing: encoded newline in generated HTML replacements (T8577)
 Templates in extension attributes are not expanded
@@ -130,4 +140,6 @@ ISBN with multiple spaces, no number
 Unclosed language converter markup "-{"
 Id starting with underscore
 new support for bdi element (T33817)
+Links 3. WikiLinks: No escapes needed
 Links 7b. Don't add spurious <nowiki/>s between text-nodes and url-links (T66300)
+Tag-like HTML structures are passed through as text
