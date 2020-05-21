@@ -19,6 +19,12 @@ MARKUP_TO_LIST = {
 # The markup for tags which are inline, as opposed to block.
 INLINE_TAGS = {"''", "'''"}
 
+# Tags that represent a list or list items.
+LIST_TAGS = {'ul', 'ol', 'dl', 'li', 'dt'}
+
+# One or more line breaks.
+LINE_BREAK_PATTERN = re.compile(r'(\n+)')
+
 # The type for a Template Context.
 TemplateContext = Dict[str, str]
 
@@ -245,8 +251,6 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         result = ''
 
         # Handle whether there's any lists to open.
-        LIST_TAGS = {'ul', 'ol', 'dl', 'li', 'dt'}
-
         if self._pending_lists:
             # The overall algorithm for deciding which tags to open and which to
             # close is nuanced:
@@ -284,7 +288,6 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         text_result = html.escape(node.value, quote=False)
 
         # Handle line breaks, which modify paragraphs and how elements get closed.
-        LINE_BREAK_PATTERN = re.compile(r'(\n+)')
         # Filter out blank strings after splitting on line breaks.
         chunks = list(filter(None, LINE_BREAK_PATTERN.split(text_result)))
 
