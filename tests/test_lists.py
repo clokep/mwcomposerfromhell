@@ -15,14 +15,14 @@ def test_subitem_list():
     """Ensure a list with another list inside of it is rendered properly."""
     content = "* Foobar\n** Subitem"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<ul><li> Foobar\n</li><ul><li> Subitem</li></ul></ul>'
+    assert compose(wikicode) == '<ul><li> Foobar\n<ul><li> Subitem</li></ul></li></ul>'
 
 
 def test_subitem_list_complex():
     """Ensure a list with another list inside of it is rendered properly."""
     content = "* Foobar\n** Subitem\n* Barfoo"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<ul><li> Foobar\n</li><ul><li> Subitem\n</li></ul><li> Barfoo</li></ul>'
+    assert compose(wikicode) == '<ul><li> Foobar\n<ul><li> Subitem\n</li></ul></li><li> Barfoo</li></ul>'
 
 
 def test_abutting_lists():
@@ -34,7 +34,7 @@ def test_abutting_lists():
 * List 2
 """
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<ul><li> List 1\n</li><li> List 1\n\n</li></ul><ul><li> List 2\n</li><li> List 2\n</li></ul>'
+    assert compose(wikicode) == '<ul><li> List 1\n</li><li> List 1\n</li></ul><ul><li> List 2\n</li><li> List 2\n</li></ul>'
 
 
 def test_definition_list():
@@ -72,7 +72,7 @@ def test_nested_list():
 
 """
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<ul><li>Foo\n</li><ul><li>Bar\n\n</li></ul>\n\n</ul>'
+    assert compose(wikicode) == '<ul><li>Foo\n<ul><li>Bar\n</li></ul></li></ul><p><br />\n</p>'
 
 
 def test_nested_list_types():

@@ -1,7 +1,10 @@
 from collections import OrderedDict
 import html
+import re
 from typing import Dict, List, Optional, Tuple, Union
 from urllib.parse import quote as url_quote
+
+from mwparserfromhell.nodes import Comment, Text
 
 from mwcomposerfromhell.modules import ModuleStore, UnknownModule
 from mwcomposerfromhell.templates import TemplateStore
@@ -110,8 +113,34 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         return result
 
+    def _iter_nodes(self, nodes):
+        """
+        Iterate through nodes, skipping comment blocks and combing adjacets text nodes.
+
+        Transforms [Text, Comment, Text] -> [Text]
+        """
+        prev_node = None
+        for node in nodes:
+            # Skip comment nodes.
+            if isinstance(node, Comment):
+                continue
+
+            # Two (now adjacent) text nodes are combined.
+            if isinstance(prev_node, Text) and isinstance(node, Text):
+                prev_node = Text(prev_node.value + node.value)
+                continue
+
+            # Otherwise, yield the previous node and store the current one.
+            if prev_node:
+                yield prev_node
+            prev_node = node
+
+        # Yield the last node.
+        if prev_node:
+            yield prev_node
+
     def visit_Wikicode(self, node, in_root: bool = False) -> str:
-        return ''.join(map(lambda n: self.visit(n, in_root), node.nodes))
+        return ''.join(map(lambda n: self.visit(n, in_root), self._iter_nodes(node.nodes)))
 
     def visit_Tag(self, node, in_root: bool = False) -> str:
         result = ''
@@ -121,7 +150,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         if node.wiki_markup in MARKUP_TO_LIST:
             list_tag, item_tag = MARKUP_TO_LIST[node.wiki_markup]
             # Mark that this tag needs to be opened.
-            self._pending_lists.append((list_tag, item_tag))
+            self._pending_lists.extend((list_tag, item_tag))
 
             # ul and ol cannot be inside of a dl and a dl cannot be in a ul or
             # ol.
@@ -216,62 +245,82 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         result = ''
 
         # Handle whether there's any lists to open.
-        LIST_TAGS = {'ul', 'ol', 'dl'}
-        TAGS_TO_CLOSE = LIST_TAGS.copy() | {'li', 'dt', 'p'}
+        LIST_TAGS = {'ul', 'ol', 'dl', 'li', 'dt'}
 
         if self._pending_lists:
-            stack_lists = [list_node for list_node in self._stack if list_node in LIST_TAGS]
+            # The overall algorithm for deciding which tags to open and which to
+            # close is nuanced:
+            #
+            # 1. Calculate the portion of lists and list items that are identical.
+            # 2. Close the end of what doesn't match.
+            # 3. Open the new tags.
 
-            # Remove the prefixed part of the lists that match.
-            i = 0
-            shortest = min([len(stack_lists), len(self._pending_lists)])
+            # The currently open lists.
+            stack_lists = [list_tag for list_tag in self._stack if list_tag in LIST_TAGS]
+
+            # Don't consider the latest list item to open in the comparison, it
+            # always needs to be opened.
+            shortest = min([len(stack_lists), len(self._pending_lists) - 1])
+            # Find the index of the last matching item.
             for i in range(shortest):
-                # Each element of _pending_lists is a tuple of (list tag, item tag).
-                if stack_lists[i] != self._pending_lists[i][0]:
+                if stack_lists[i] != self._pending_lists[i]:
                     break
             else:
                 i = shortest
 
-            # Now close anything left in stack_lists.
+            # Close anything past the matching items.
             for stack_node in reversed(stack_lists[i:]):
                 result += self._close_stack(stack_node)
 
-            # Re-open anything that is pending..
-            for list_tag, item_tag in self._pending_lists[i:]:
-                self._stack.append(list_tag)
-                result += '<{}>'.format(list_tag)
+            # Open any items that are left from the pending list.
+            for tag in self._pending_lists[i:]:
+                self._stack.append(tag)
+                result += '<{}>'.format(tag)
 
-            # For the last pending list, also open the list item.
-            item_tag = self._pending_lists[-1][1]
-            result += '<{}>'.format(item_tag)
-            self._stack.append(item_tag)
-
-            # Reset the list.
+            # Reset the pending list.
             self._pending_lists = []
 
-        elif in_root:
-            # TODO
+        # Render the text.
+        text_result = html.escape(node.value, quote=False)
 
-            # If this node isn't nested inside of anything else it might be
-            # wrapped in a paragraph.
-            if not self._stack and node.value.strip():
-                result += '<p>'
-                self._stack.append('p')
+        # Handle line breaks, which modify paragraphs and how elements get closed.
+        LINE_BREAK_PATTERN = re.compile(r'(\n+)')
+        # Filter out blank strings after splitting on line breaks.
+        chunks = list(filter(None, LINE_BREAK_PATTERN.split(text_result)))
 
-        result += html.escape(node.value, quote=False)
+        for it, chunk in enumerate(chunks):
+            # Each chunk will either be all line breaks, or just content.
+            if '\n' in chunk:
+                line_breaks = len(chunk)
 
-        # Certain tags get closed when there's a line break.
-        num_new_lines = len(node.value) - len(node.value.rstrip('\n'))
+                if it > 0 or line_breaks == 1 or line_breaks == 2:
+                    result += '\n'
 
-        for i in range(num_new_lines):
-            # Since _close_stack mutates the _stack, check on each iteration if
-            # _stack is still truth-y.
-            if not self._stack:
-                break
+                # If more than two line breaks exist, close previous paragraphs.
+                if line_breaks >= 2:
+                    result += self._close_stack('p')
 
-            # Close an element in the stack.
-            if self._stack[-1] in TAGS_TO_CLOSE:
-                result += self._close_stack(self._stack[-1])
+                # If this node isn't nested inside of anything else it might be
+                # wrapped in a paragraph.
+                if not self._stack and in_root:
+                    # A paragraph with a line break is added for every two
+                    # additional line breaks.
+                    additional_p = max((line_breaks - 2) // 2, 0)
+                    result += additional_p * '<p><br />\n</p>'
+
+                    # If there is more content after this set of line breaks,
+                    # open a paragraph.
+                    if it != len(chunks) - 1:
+                        result += '<p>'
+                        self._stack.append('p')
+
+                        # An odd number of line breaks get a line break inside of the
+                        # paragraph.
+                        if line_breaks % 2 == 1:
+                            result += '<br />\n'
+            else:
+                result += self._maybe_open_paragraph(in_root)
+                result += chunk
 
         return result
 
