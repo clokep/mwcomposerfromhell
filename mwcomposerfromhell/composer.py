@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import html
+import re
 from typing import Dict, List, Optional, Tuple, Union
 from urllib.parse import quote as url_quote
 
@@ -279,29 +280,47 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # Reset the pending list.
             self._pending_lists = []
 
-        elif in_root:
-            # TODO
+        # Render the text.
+        text_result = html.escape(node.value, quote=False)
 
-            # If this node isn't nested inside of anything else it might be
-            # wrapped in a paragraph.
-            if not self._stack and node.value.strip():
-                result += '<p>'
-                self._stack.append('p')
+        # Handle line breaks, which modify paragraphs and how elements get closed.
+        LINE_BREAK_PATTERN = re.compile(r'(\n+)')
+        # Filter out blank strings after splitting on line breaks.
+        chunks = list(filter(None, LINE_BREAK_PATTERN.split(text_result)))
 
-        result += html.escape(node.value, quote=False)
+        for it, chunk in enumerate(chunks):
+            # Each chunk will either be all line breaks, or just content.
+            if '\n' in chunk:
+                line_breaks = len(chunk)
 
-        # Certain tags get closed when there's a line break.
-        num_new_lines = len(node.value) - len(node.value.rstrip('\n'))
+                if it > 0 or line_breaks == 1 or line_breaks == 2:
+                    result += '\n'
 
-        for i in range(num_new_lines):
-            # Since _close_stack mutates the _stack, check on each iteration if
-            # _stack is still truth-y.
-            if not self._stack:
-                break
+                # If more than two line breaks exist, close previous paragraphs.
+                if line_breaks >= 2:
+                    result += self._close_stack('p')
 
-            # Close an element in the stack.
-            if self._stack[-1] in TAGS_TO_CLOSE:
-                result += self._close_stack(self._stack[-1])
+                # If this node isn't nested inside of anything else it might be
+                # wrapped in a paragraph.
+                if not self._stack and in_root:
+                    # A paragraph with a line break is added for every two
+                    # additional line breaks.
+                    additional_p = max((line_breaks - 2) // 2, 0)
+                    result += additional_p * '<p><br />\n</p>'
+
+                    # If there is more content after this set of line breaks,
+                    # open a paragraph.
+                    if it != len(chunks) - 1:
+                        result += '<p>'
+                        self._stack.append('p')
+
+                        # An odd number of line breaks get a line break inside of the
+                        # paragraph.
+                        if line_breaks % 2 == 1:
+                            result += '<br />\n'
+            else:
+                result += self._maybe_open_paragraph(in_root)
+                result += chunk
 
         return result
 
