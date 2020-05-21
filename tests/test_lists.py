@@ -96,11 +96,16 @@ def test_nested_list_types2():
 def test_list_with_formatting():
     """A list that has formatted entries."""
     content = """* '''foo'''
-* ''bar''
+*''bar''
 """
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '''<ul><li> <b>foo</b>
-</li><li> <i>bar</i>
+    result = compose(wikicode)
+    print(repr(result))
+    print(repr('''<ul><li> <b>foo</b>
+</li><li><i>bar</i>
+</li></ul>'''))
+    assert result == '''<ul><li> <b>foo</b>
+</li><li><i>bar</i>
 </li></ul>'''
 
 

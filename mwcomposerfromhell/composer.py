@@ -91,20 +91,57 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # A place to lookup modules.
         self._module_store = ModuleStore()
 
-    def _maybe_open_paragraph(self, in_root: bool) -> str:
+    def _maybe_open_tag(self, in_root: bool) -> str:
         """
-        Handle the logic for whether this node gets wrapped in a paragraph.
-
-        This only happens if:
-
-        1. The node is in the "root" Wikicode.
-        2. There's nothing on the stack.
+        Handle the logic for whether this node gets wrapped in a list or a paragraph.
         """
-        if not in_root or self._stack:
+        # If the node is not currently in the "root" Wikicode, nothing is done.
+        if not in_root:
             return ''
 
-        self._stack.append('p')
-        return '<p>'
+        # Handle whether there's any lists to open.
+        if self._pending_lists:
+            # The overall algorithm for deciding which tags to open and which to
+            # close is nuanced:
+            #
+            # 1. Calculate the portion of lists and list items that are identical.
+            # 2. Close the end of what doesn't match.
+            # 3. Open the new tags.
+            result = ''
+
+            # The currently open lists.
+            stack_lists = [list_tag for list_tag in self._stack if list_tag in LIST_TAGS]
+
+            # Don't consider the latest list item to open in the comparison, it
+            # always needs to be opened.
+            shortest = min([len(stack_lists), len(self._pending_lists) - 1])
+            # Find the index of the last matching item.
+            for i in range(shortest):
+                if stack_lists[i] != self._pending_lists[i]:
+                    break
+            else:
+                i = shortest
+
+            # Close anything past the matching items.
+            for stack_node in reversed(stack_lists[i:]):
+                result += self._close_stack(stack_node)
+
+            # Open any items that are left from the pending list.
+            for tag in self._pending_lists[i:]:
+                self._stack.append(tag)
+                result += '<{}>'.format(tag)
+
+            # Reset the pending list.
+            self._pending_lists = []
+            return result
+
+        # Paragraphs do not go inside of other elements.
+        if not self._stack:
+            self._stack.append('p')
+            return '<p>'
+
+        # Otherwise, do nothing.
+        return ''
 
     def _close_stack(self, tag: str) -> str:
         """Close tags that are on the stack. It closes all tags until ``tag`` is found."""
@@ -175,7 +212,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # Maybe wrap the tag in a paragraph, notably this gets ignored for
             # tables and some other tags.
             if node.wiki_markup in INLINE_TAGS:
-                result += self._maybe_open_paragraph(in_root)
+                result += self._maybe_open_tag(in_root)
 
             # Create an HTML tag.
             result += '<' + tag
@@ -210,7 +247,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         return '<h{}>'.format(node.level) + self.visit(node.title) + '</h{}>'.format(node.level)
 
     def visit_Wikilink(self, node, in_root: bool = False) -> str:
-        result = self._maybe_open_paragraph(in_root)
+        result = self._maybe_open_tag(in_root)
 
         # Get the rendered title.
         title = self.visit(node.title).title()
@@ -230,7 +267,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         * A bracketed link: [https://en.wikipedia.org/]
         * A link with a title: [https://en.wikipedia.org/ Wikipedia]
         """
-        result = self._maybe_open_paragraph(in_root)
+        result = self._maybe_open_tag(in_root)
 
         # Display text can be optionally specified. Fall back to the URL if it
         # is not given.
@@ -249,40 +286,6 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
     def visit_Text(self, node, in_root: bool = False) -> str:
         # Write a text element.
         result = ''
-
-        # Handle whether there's any lists to open.
-        if self._pending_lists:
-            # The overall algorithm for deciding which tags to open and which to
-            # close is nuanced:
-            #
-            # 1. Calculate the portion of lists and list items that are identical.
-            # 2. Close the end of what doesn't match.
-            # 3. Open the new tags.
-
-            # The currently open lists.
-            stack_lists = [list_tag for list_tag in self._stack if list_tag in LIST_TAGS]
-
-            # Don't consider the latest list item to open in the comparison, it
-            # always needs to be opened.
-            shortest = min([len(stack_lists), len(self._pending_lists) - 1])
-            # Find the index of the last matching item.
-            for i in range(shortest):
-                if stack_lists[i] != self._pending_lists[i]:
-                    break
-            else:
-                i = shortest
-
-            # Close anything past the matching items.
-            for stack_node in reversed(stack_lists[i:]):
-                result += self._close_stack(stack_node)
-
-            # Open any items that are left from the pending list.
-            for tag in self._pending_lists[i:]:
-                self._stack.append(tag)
-                result += '<{}>'.format(tag)
-
-            # Reset the pending list.
-            self._pending_lists = []
 
         # Render the text.
         text_result = html.escape(node.value, quote=False)
@@ -322,7 +325,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                         if line_breaks % 2 == 1:
                             result += '<br />\n'
             else:
-                result += self._maybe_open_paragraph(in_root)
+                result += self._maybe_open_tag(in_root)
                 result += chunk
 
         return result
@@ -382,7 +385,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 template = self._template_store[template_name]
             except KeyError:
                 # Template was not found, simply output the template call.
-                return self._maybe_open_paragraph(in_root) + str(node)
+                return self._maybe_open_tag(in_root) + str(node)
             else:
                 # Render the template in only the context of its parameters.
                 composer = WikicodeToHtmlComposer(
@@ -418,7 +421,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
     def visit_HTMLEntity(self, node, in_root: bool = False) -> str:
         # Write the original HTML entity.
-        return self._maybe_open_paragraph(in_root) + str(node)
+        return self._maybe_open_tag(in_root) + str(node)
 
     def compose(self, node) -> str:
         """Converts Wikicode or Node objects to HTML."""
