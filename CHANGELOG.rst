@@ -4,8 +4,15 @@ Changelog
 next
 ====
 
+.. warning::
+
+  The constructor to ``WikicodeToHtmlComposer`` has changed to support articles
+  in multiple namespaces. Be sure to adapt your code if you're instantiating
+  a composer directly.
+
 * Basic support for magic words.
 * Better handling of text surroundg comment tags.
+* Handling of article content outside of the ``Template`` namespace is supported.
 * Ensure there isn't an infinite loop in template transclusion.
 
 0.3 (May 21, 2020)

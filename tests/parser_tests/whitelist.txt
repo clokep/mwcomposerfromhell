@@ -32,6 +32,7 @@ Comment semantics and delimiters, redux
 Comment semantics and delimiters: directors cut
 Comment semantics: nesting
 Comment semantics: normalize comments to play nice with XML and browsers
+Comment in template title
 No block tags
 T17491: <ins>/<del> in blockquote (2)
 <pre> with attributes (T5202)
@@ -95,6 +96,7 @@ __proto__ is treated as normal wikitext (T105997)
 Magic links: All disabled (T47942)
 Template with invalid target containing wikilink
 Simple template
+Template with explicit namespace
 Template parameter
 Template unnamed parameter
 Template with template name as unnamed argument
@@ -106,6 +108,7 @@ Template with argument in separate line
 Template with complex template as argument
 Template parameter as link source
 Template infinite loop
+Template from main namespace
 Preprocessor precedence 4: left-most angle bracket
 Preprocessor precedence 8: broken language converter is rightmost opening
 Preprocessor precedence 18: another rightmost wins scenario
@@ -126,6 +129,7 @@ T4095: link with three closing brackets
 T4095: link with pipe and three closing brackets
 Expansion of multi-line templates in attribute values (T8255 sanity check 2)
 Parser hook: Don't allow unclosed extension tags
+Nested template calls
 Punctuation: CSS !important (T13874)
 HTML bullet list, closed tags (T7497)
 HTML ordered list, closed tags (T7497)

@@ -1,7 +1,7 @@
 import mwparserfromhell
 import pytest
 
-from mwcomposerfromhell import compose
+from mwcomposerfromhell import compose, WikicodeToHtmlComposer
 from mwcomposerfromhell.composer import UnknownNode
 
 
@@ -96,3 +96,9 @@ def test_html():
     content = "<hr></hr><hr/><hr /><a ></a >"
     wikicode = mwparserfromhell.parse(content)
     assert compose(wikicode) == "<hr /><hr /><hr /><hr /><a></a>"
+
+
+def test_invalid_resolver():
+    """An unknown resolver type should raise an error."""
+    with pytest.raises(ValueError):
+        WikicodeToHtmlComposer(resolver='')

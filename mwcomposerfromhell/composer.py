@@ -8,7 +8,7 @@ from mwparserfromhell.nodes import Comment, Text
 
 from mwcomposerfromhell.magic_words import MAGIC_WORDS
 from mwcomposerfromhell.modules import ModuleStore, UnknownModule
-from mwcomposerfromhell.templates import TemplateStore
+from mwcomposerfromhell.namespace import ArticleNotFound, ArticleResolver
 
 # The markup for different lists mapped to the list tag and list item tag.
 MARKUP_TO_LIST = {
@@ -78,7 +78,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
     """
     def __init__(self,
                  base_url: str = 'https://en.wikipedia.org/wiki',
-                 template_store: Optional[TemplateStore] = None,
+                 resolver: Optional[ArticleResolver] = None,
                  context: Optional[TemplateContext] = None,
                  open_templates: Optional[Set[str]] = None):
 
@@ -96,13 +96,11 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         self._context = context or {}
 
         # A place to lookup templates.
-        if template_store is None:
-            template_store = TemplateStore()
-        elif isinstance(template_store, dict):
-            template_store = TemplateStore(template_store)
-        elif not isinstance(template_store, TemplateStore):
-            raise ValueError('template_store must be an instance of TemplateStore')
-        self._template_store = template_store
+        if resolver is None:
+            resolver = ArticleResolver()
+        elif not isinstance(resolver, ArticleResolver):
+            raise ValueError('resolver must be an instance of ArticleResolver')
+        self._resolver = resolver
 
         # A place to lookup modules.
         self._module_store = ModuleStore()
@@ -377,7 +375,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # Handle magic words: https://www.mediawiki.org/wiki/Help:Magic_words
         #
         # The template name might have a colon in it, if so there's a
-        # "magic word", followed by a single parameter.
+        # "magic word" or a namespace, followed by a single parameter.
         magic_word, _, param = template_name.partition(':')
 
         if magic_word in MAGIC_WORDS:
@@ -419,15 +417,15 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             self._open_templates.add(template_name)
 
             try:
-                template = self._template_store[template_name]
-            except KeyError:
+                template = self._resolver.get_article(template_name, 'Template')
+            except ArticleNotFound:
                 # Template was not found, simply output the template call.
                 return self._maybe_open_tag(in_root) + str(node)
             else:
                 # Render the template in only the context of its parameters.
                 composer = WikicodeToHtmlComposer(
                     self._base_url,
-                    template_store=self._template_store,
+                    resolver=self._resolver,
                     context=context,
                     open_templates=self._open_templates)
                 result = composer.visit(template, in_root)

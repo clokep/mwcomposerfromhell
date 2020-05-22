@@ -1,9 +1,10 @@
+from collections import defaultdict
 from pathlib import Path
 
 import mwparserfromhell
 import pytest
 
-from mwcomposerfromhell import WikicodeToHtmlComposer
+from mwcomposerfromhell import ArticleResolver, Namespace, WikicodeToHtmlComposer
 from . import MediaWikiParserTestCasesParser
 
 # Only a subset of tests pass right now.
@@ -26,15 +27,21 @@ def pytest_generate_tests(metafunc):
         parser = MediaWikiParserTestCasesParser(f)
         parser.parse()
 
-    argnames = ('wikitext', 'html', 'templates', 'skip', 'expected_pass')
+    argnames = ('wikitext', 'html', 'resolver', 'skip', 'expected_pass')
 
-    # For now only care about templates.
-    templates = {}
+    # Namespace -> {Article name -> contents}
+    namespaces = defaultdict(Namespace)
     for article_name, article_contents in parser.articles.items():
-        if not article_name.startswith('Template:'):
-            continue
+        namespace, _, article_name = article_name.partition(':')
+        # If there's no name, it means that it is in the main namespace.
+        if not article_name:
+            article_name = namespace
+            namespace = ''
 
-        templates[article_name[len('Template:'):]] = mwparserfromhell.parse(article_contents)
+        namespaces[namespace][article_name] = mwparserfromhell.parse(article_contents)
+    resolver = ArticleResolver()
+    for namespace_name, namespace in namespaces.items():
+        resolver.add_namespace(namespace_name, namespace)
 
     # Pull out the necessary info for the tests.
     test_ids = []
@@ -69,13 +76,13 @@ def pytest_generate_tests(metafunc):
 
         # Add the current test arguments to the list of values.
         argvalues.append(
-            (test_case['wikitext'], html, templates, skip, expected_pass)
+            (test_case['wikitext'], html, resolver, skip, expected_pass)
         )
 
     metafunc.parametrize(argnames, argvalues, ids=test_ids)
 
 
-def test_parser_tests(wikitext, html, templates, skip, expected_pass):
+def test_parser_tests(wikitext, html, resolver, skip, expected_pass):
     """Handle an individual parser test from parserTests.txt."""
     if skip:
         pytest.skip('Skipping test')
@@ -84,7 +91,7 @@ def test_parser_tests(wikitext, html, templates, skip, expected_pass):
     wikicode = mwparserfromhell.parse(wikitext)
 
     # Generate the composer with the current templates.
-    composer = WikicodeToHtmlComposer(base_url='/wiki', template_store=templates)
+    composer = WikicodeToHtmlComposer(base_url='/wiki', resolver=resolver)
     # Convert the wikicode to HTML.
     result = composer.compose(wikicode)
 

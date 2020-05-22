@@ -1,4 +1,5 @@
 from mwcomposerfromhell.composer import HtmlComposingError, WikicodeToHtmlComposer  # noqa: F401
+from mwcomposerfromhell.namespace import ArticleResolver, Namespace  # noqa: F401
 
 
 def compose(wikicode: str) -> str:
