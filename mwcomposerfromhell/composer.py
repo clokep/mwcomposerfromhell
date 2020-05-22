@@ -77,7 +77,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
     See https://en.wikipedia.org/wiki/Help:Wikitext for a full definition.
     """
     def __init__(self,
-                 base_url: str = 'https://en.wikipedia.org/wiki',
+                 base_url: str = '/wiki',
                  resolver: Optional[ArticleResolver] = None,
                  context: Optional[TemplateContext] = None,
                  open_templates: Optional[Set[str]] = None):

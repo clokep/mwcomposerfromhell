@@ -23,14 +23,14 @@ def test_internal_link():
     """Ensure an internal link is rendered properly."""
     content = "[[Foobar]]"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<p><a href="https://en.wikipedia.org/wiki/Foobar" title="Foobar">Foobar</a></p>'
+    assert compose(wikicode) == '<p><a href="/wiki/Foobar" title="Foobar">Foobar</a></p>'
 
 
 def test_internal_link_title():
     """Ensure an internal link with a title is rendered properly."""
     content = "[[Foobar|fuzzbar]]"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<p><a href="https://en.wikipedia.org/wiki/Foobar" title="Foobar">fuzzbar</a></p>'
+    assert compose(wikicode) == '<p><a href="/wiki/Foobar" title="Foobar">fuzzbar</a></p>'
 
 
 def test_heading():
