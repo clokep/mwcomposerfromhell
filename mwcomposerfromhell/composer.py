@@ -6,6 +6,7 @@ from urllib.parse import quote as url_quote
 
 from mwparserfromhell.nodes import Comment, Text
 
+from mwcomposerfromhell.magic_words import MAGIC_WORDS
 from mwcomposerfromhell.modules import ModuleStore, UnknownModule
 from mwcomposerfromhell.templates import TemplateStore
 
@@ -354,16 +355,24 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
             context[param_name] = param_value
 
+        # Handle magic words: https://www.mediawiki.org/wiki/Help:Magic_words
+        #
+        # The template name might have a colon in it, if so there's a
+        # "magic word", followed by a single parameter.
+        magic_word, _, param = template_name.partition(':')
+
+        if magic_word in MAGIC_WORDS:
+            return self._maybe_open_tag(in_root) + MAGIC_WORDS[magic_word]()
+
         # This represents a script, see https://www.mediawiki.org/wiki/Extension:Scribunto
-        if template_name.startswith('#invoke:'):
-            template_name, _, module_name = template_name.partition(':')
+        elif magic_word == '#invoke':
 
             try:
                 # Get the function names from the parameters.
                 _, function_name = context.popitem(last=False)
 
                 # Get the actual function.
-                function = self._module_store.get_function(module_name, function_name)
+                function = self._module_store.get_function(param, function_name)
             except UnknownModule:
                 # TODO
                 return str(node)

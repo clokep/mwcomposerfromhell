@@ -1,6 +1,11 @@
 Changelog
 #########
 
+next
+====
+
+* Basic support for magic words.
+
 0.3 (May 21, 2020)
 ==================
 
