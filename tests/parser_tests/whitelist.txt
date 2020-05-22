@@ -22,6 +22,9 @@ Italics and bold: other quote tests: (3,(2,2),3)
 Italicized possessive
 Bare pipe character (T54363)
 Bare pipe character from a template (T54363)
+Comment test 2a
+Comment test 2b
+Comment test 3
 Comment test 4
 Comment whitespace
 Comment semantics and delimiters

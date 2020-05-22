@@ -29,6 +29,9 @@ LIST_TAGS = {'ul', 'ol', 'li', 'dl', 'dt', 'dd'}
 
 # One or more line breaks.
 LINE_BREAK_PATTERN = re.compile(r'(\n+)')
+# Patterns used to strip comments.
+LINE_BREAK_SPACES_PATTERN = re.compile(r'\n *')
+SPACES_LINE_BREAK_PATTERN = re.compile(r' *\n')
 
 # The type for a Template Context.
 TemplateContext = Dict[str, str]
@@ -161,7 +164,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         return result
 
-    def _iter_nodes(self, nodes):
+    def _collapse_comments(self, nodes):
         """
         Iterate through nodes, skipping comment blocks and combing adjacets text nodes.
 
@@ -175,7 +178,13 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
             # Two (now adjacent) text nodes are combined.
             if isinstance(prev_node, Text) and isinstance(node, Text):
-                prev_node = Text(prev_node.value + node.value)
+                # A removed comment strips any spaces on the line it was on,
+                # plus a single newline. In order to get all whitespace, look at
+                # both text nodes.
+                prev = LINE_BREAK_SPACES_PATTERN.sub('', prev_node.value, count=1)
+                current = SPACES_LINE_BREAK_PATTERN.sub('\n', node.value, count=1)
+
+                prev_node = Text(prev + current)
                 continue
 
             # Otherwise, yield the previous node and store the current one.
@@ -188,7 +197,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             yield prev_node
 
     def visit_Wikicode(self, node, in_root: bool = False) -> str:
-        return ''.join(map(lambda n: self.visit(n, in_root), self._iter_nodes(node.nodes)))
+        return ''.join(map(lambda n: self.visit(n, in_root), self._collapse_comments(node.nodes)))
 
     def visit_Tag(self, node, in_root: bool = False) -> str:
         result = ''
@@ -295,19 +304,19 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # Render the text.
         text_result = html.escape(node.value, quote=False)
 
-        # Handle line breaks, which modify paragraphs and how elements get closed.
-        # Filter out blank strings after splitting on line breaks.
+        # Handle newlines, which modify paragraphs and how elements get closed.
+        # Filter out blank strings after splitting on newlines.
         chunks = list(filter(None, LINE_BREAK_PATTERN.split(text_result)))
 
         for it, chunk in enumerate(chunks):
-            # Each chunk will either be all line breaks, or just content.
+            # Each chunk will either be all newlines, or just content.
             if '\n' in chunk:
                 line_breaks = len(chunk)
 
                 if it > 0 or line_breaks == 1 or line_breaks == 2:
                     result += '\n'
 
-                # If more than two line breaks exist, close previous paragraphs.
+                # If more than two newlines exist, close previous paragraphs.
                 if line_breaks >= 2:
                     result += self._close_stack('p')
 
@@ -315,18 +324,20 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 # wrapped in a paragraph.
                 if not self._stack and in_root:
                     # A paragraph with a line break is added for every two
-                    # additional line breaks.
+                    # additional newlines.
                     additional_p = max((line_breaks - 2) // 2, 0)
                     result += additional_p * '<p><br />\n</p>'
 
-                    # If there is more content after this set of line breaks,
-                    # open a paragraph.
-                    if it != len(chunks) - 1:
+                    # If there is more content after this set of newlines, or
+                    # this is the last chunk of content and there are 3 line
+                    # breaks.
+                    last_chunk = it == len(chunks) - 1
+                    if not last_chunk or (last_chunk and line_breaks == 3):
                         result += '<p>'
                         self._stack.append('p')
 
-                        # An odd number of line breaks get a line break inside of the
-                        # paragraph.
+                        # An odd number of newlines get a line break inside of
+                        # the paragraph.
                         if line_breaks % 2 == 1:
                             result += '<br />\n'
             else:
