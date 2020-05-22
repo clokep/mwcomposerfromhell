@@ -338,7 +338,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
                         # An odd number of newlines get a line break inside of
                         # the paragraph.
-                        if line_breaks % 2 == 1:
+                        if line_breaks > 1 and line_breaks % 2 == 1:
                             result += '<br />\n'
             else:
                 result += self._maybe_open_tag(in_root)

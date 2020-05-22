@@ -31,6 +31,7 @@ Comment semantics and delimiters
 Comment semantics and delimiters, redux
 Comment semantics and delimiters: directors cut
 Comment semantics: nesting
+Comment semantics: normalize comments to play nice with XML and browsers
 No block tags
 T17491: <ins>/<del> in blockquote (2)
 <pre> with attributes (T5202)
