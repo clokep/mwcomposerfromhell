@@ -79,8 +79,6 @@ def test_parser_tests(wikitext, html, templates, skip, expected_pass):
     """Handle an individual parser test from parserTests.txt."""
     if skip:
         pytest.skip('Skipping test')
-    if not expected_pass:
-        pytest.xfail('Expected fail')
 
     # Parse the incoming article.
     wikicode = mwparserfromhell.parse(wikitext)
@@ -90,6 +88,15 @@ def test_parser_tests(wikitext, html, templates, skip, expected_pass):
     # Convert the wikicode to HTML.
     result = composer.compose(wikicode)
 
+    # Print out the results for comparison if the test fails.
+    print(repr(result))
+    print(repr(html))
+
     # TODO Removing trailing whitespace might not be correct here, but it
     #      shouldn't matter for HTML.
-    assert result.rstrip() == html.rstrip()
+    try:
+        assert result.strip() == html.strip()
+    except AssertionError:
+        if not expected_pass:
+            pytest.xfail('Expected fail')
+        raise
