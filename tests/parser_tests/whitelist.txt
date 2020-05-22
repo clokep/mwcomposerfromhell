@@ -105,6 +105,7 @@ Template with default value (value set)
 Template with argument in separate line
 Template with complex template as argument
 Template parameter as link source
+Template infinite loop
 Preprocessor precedence 4: left-most angle bracket
 Preprocessor precedence 8: broken language converter is rightmost opening
 Preprocessor precedence 18: another rightmost wins scenario

@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import html
 import re
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
 from urllib.parse import quote as url_quote
 
 from mwparserfromhell.nodes import Comment, Text
@@ -41,6 +41,10 @@ class UnknownNode(Exception):
     pass
 
 
+class TemplateLoop(Exception):
+    """A template loop was found, bail rendering."""
+
+
 class HtmlComposingError(Exception):
     pass
 
@@ -48,7 +52,7 @@ class HtmlComposingError(Exception):
 def get_article_url(base_url: str, title: str) -> str:
     """Given a page title, return a URL suitable for linking."""
     # MediaWiki replaces spaces with underscores, then URL encodes.
-    safe_title = url_quote(title.replace(' ', '_').encode('utf-8'))
+    safe_title = url_quote(title.replace(' ', '_').encode('utf-8'), safe='/:')
     return '{}/{}'.format(base_url, safe_title)
 
 
@@ -75,7 +79,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
     def __init__(self,
                  base_url: str = 'https://en.wikipedia.org/wiki',
                  template_store: Optional[TemplateStore] = None,
-                 context: Optional[TemplateContext] = None):
+                 context: Optional[TemplateContext] = None,
+                 open_templates: Optional[Set[str]] = None):
 
         # The base URL should be the root that articles sit in.
         self._base_url = base_url.rstrip('/')
@@ -84,6 +89,9 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         # Track the currently open tags.
         self._stack = []  # type: List[str]
+
+        # Track current templates to avoid a loop.
+        self._open_templates = open_templates or set()
 
         self._context = context or {}
 
@@ -405,6 +413,11 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         # Otherwise, this is a normal template.
         else:
+            # Ensure that we don't end up in an infinite loop of templates.
+            if template_name in self._open_templates:
+                raise TemplateLoop(template_name)
+            self._open_templates.add(template_name)
+
             try:
                 template = self._template_store[template_name]
             except KeyError:
@@ -415,11 +428,16 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 composer = WikicodeToHtmlComposer(
                     self._base_url,
                     template_store=self._template_store,
-                    context=context)
+                    context=context,
+                    open_templates=self._open_templates)
                 result = composer.visit(template, in_root)
                 # Ensure the stack is closed at the end.
                 for current_tag in reversed(composer._stack):
                     result += '</{}>'.format(current_tag)
+
+                # Remove it from the open templates.
+                self._open_templates.remove(template_name)
+
                 return result
 
     def visit_Argument(self, node, in_root: bool = False) -> str:
@@ -449,8 +467,19 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
     def compose(self, node) -> str:
         """Converts Wikicode or Node objects to HTML."""
-        result = self.visit(node, True)
-        # Ensure the stack is closed at the end.
-        for current_tag in reversed(self._stack):
-            result += '</{}>'.format(current_tag)
-        return result
+        try:
+            result = self.visit(node, True)
+            # Ensure the stack is closed at the end.
+            for current_tag in reversed(self._stack):
+                result += '</{}>'.format(current_tag)
+            return result
+        except TemplateLoop as e:
+            # The template name is the first argument.
+            template_name = e.args[0]
+            # Capitalize the first letter of the template name.
+            template_name = 'Template:' + template_name[0].upper() + template_name[1:]
+            # TODO Should this create an ExternalLink and use that?
+            url = get_article_url(self._base_url, template_name)
+            return ('<p><span class="error">Template loop detected: ' +
+                    '<a href="{url}" title="{template_name}">{template_name}</a>' +
+                    '</span>\n</p>').format(url=url, template_name=template_name)

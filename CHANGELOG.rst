@@ -6,6 +6,7 @@ next
 
 * Basic support for magic words.
 * Better handling of text surroundg comment tags.
+* Ensure there isn't an infinite loop in template transclusion.
 
 0.3 (May 21, 2020)
 ==================
