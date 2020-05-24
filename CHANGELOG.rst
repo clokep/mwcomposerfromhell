@@ -16,6 +16,7 @@ next
 * Handling of article content outside of the ``Template`` namespace is supported.
 * Ensure there isn't an infinite loop in template transclusion.
 * Partially support rendering of edit links.
+* Properly strip ``nowiki`` tags from the output.
 
 0.3 (May 21, 2020)
 ==================

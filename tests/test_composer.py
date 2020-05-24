@@ -98,6 +98,13 @@ def test_html():
     assert compose(wikicode) == "<hr /><hr /><hr /><hr /><a></a>"
 
 
+def test_nowiki():
+    """The contents of the nowiki tag should not be considered wiki."""
+    content = "''<nowiki>'''Foo'''</nowiki>bar''"
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == "<p><i>'''Foo'''bar</i></p>"
+
+
 def test_invalid_resolver():
     """An unknown resolver type should raise an error."""
     with pytest.raises(ValueError):
