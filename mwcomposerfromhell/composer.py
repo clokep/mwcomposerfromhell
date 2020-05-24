@@ -251,14 +251,27 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         else:
             tag = self.visit(node.tag)
 
-            # nowiki tags don't end up in the resulting content. Note that the
+            # nowiki tags do not end up in the resulting content. Note that the
             # parser handles the nowiki tag: the contents should just be a Text
             # node.
             if tag == 'nowiki':
                 if node.contents:
                     return self.visit(node.contents)
-                else:
-                    return ''
+                return ''
+
+            # noinclude and includeonly tags do not end up in the resulting
+            # content. Their contents depend on whether the current content is
+            # transcluded or not.
+            #
+            # See https://www.mediawiki.org/wiki/Transclusion
+            if tag == 'noinclude':
+                if not self._open_templates and node.contents:
+                    return self.visit(node.contents)
+                return ''
+            if tag == 'includeonly':
+                if self._open_templates and node.contents:
+                    return self.visit(node.contents)
+                return ''
 
             # Maybe wrap the tag in a paragraph, notably this gets ignored for
             # tables and some other tags.

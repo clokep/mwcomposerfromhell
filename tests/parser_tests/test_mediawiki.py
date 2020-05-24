@@ -16,7 +16,7 @@ ONLY_RUN_WHITELIST = False
 
 # Some tests have a standard HTML output, while others differ based on the
 # parser. Prefer the standard output, then the PHP parser's.
-PREFERRED_HTML = ('html', 'html/*', 'html/php')
+PREFERRED_HTML = ('html', 'html/*', 'html/php', 'html/php+tidy')
 # A known object.
 _SENTINEL = object()
 

@@ -47,6 +47,7 @@ T17491: <ins>/<del> in blockquote (2)
 Entities inside <pre>
 Parsoid: handle pre with space after attribute
 Templates: Don't recognize targets split by newlines
+Indent-Pre: Newlines in comments shouldn't affect sol state
 HTML-pre: 2: indented text
 HTML-pre: 3: other wikitext
 T13748: Literal closing tags
@@ -93,6 +94,7 @@ Link containing % (not as a hex sequence)
 Link containing double-single-quotes '' in text (T6598 sanity check)
 Link containing double-single-quotes '' in text embedded in italics (T6598 sanity check)
 Link to numeric-equivalent title
+<nowiki> inside a link
 Internal link with ca linktrail, surrounded by bold apostrophes (T29473 primary issue)
 Internal link with ca linktrail, surrounded by italic apostrophes (T29473 primary issue)
 Internal link with en linktrail: no apostrophes (T29473)
@@ -120,11 +122,14 @@ Template with complex template as argument
 Template parameter as link source
 Template infinite loop
 Template from main namespace
+<includeonly> and <noinclude> being included
+<includeonly> and <noinclude> on a page
 Preprocessor precedence 4: left-most angle bracket
 Preprocessor precedence 8: broken language converter is rightmost opening
 Preprocessor precedence 18: another rightmost wins scenario
 Preprocessor precedence 19: break syntax
 Table wikitext syntax outside wiki-tables
+subst: does not work during normal parse
 Broken image caption with link
 T3186 news: in the middle of text
 div with no attributes
@@ -167,3 +172,5 @@ Links 3. WikiLinks: No escapes needed
 Links 7b. Don't add spurious <nowiki/>s between text-nodes and url-links (T66300)
 Links 14. Protect link-like plain text. (Parsoid bug T78425)
 Tag-like HTML structures are passed through as text
+Serialize wikitext list items as HTML list items when embedded in a HTML list
+Do not trim whitespace in links and quotes
