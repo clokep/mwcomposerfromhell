@@ -91,7 +91,11 @@ def test_parser_tests(wikitext, html, resolver, skip, expected_pass):
     wikicode = mwparserfromhell.parse(wikitext)
 
     # Generate the composer with the current templates.
-    composer = WikicodeToHtmlComposer(base_url='/wiki', resolver=resolver)
+    composer = WikicodeToHtmlComposer(
+        base_url='/wiki',
+        resolver=resolver,
+        red_links=True,
+    )
     # Convert the wikicode to HTML.
     result = composer.compose(wikicode)
 

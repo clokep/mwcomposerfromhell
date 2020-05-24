@@ -15,6 +15,7 @@ next
 * Better handling of text surroundg comment tags.
 * Handling of article content outside of the ``Template`` namespace is supported.
 * Ensure there isn't an infinite loop in template transclusion.
+* Partially support rendering of edit links.
 
 0.3 (May 21, 2020)
 ==================

@@ -2,7 +2,7 @@ from collections import OrderedDict
 import html
 import re
 from typing import Dict, List, Optional, Set, Tuple, Union
-from urllib.parse import quote as url_quote
+from urllib.parse import quote as urlquote, urlencode
 
 from mwparserfromhell.nodes import Comment, Text
 
@@ -49,11 +49,24 @@ class HtmlComposingError(Exception):
     pass
 
 
+def _safe_title(title: str) -> str:
+    """MediaWiki replaces spaces with underscores, then URL encodes."""
+    return title.replace(' ', '_')
+
+
 def get_article_url(base_url: str, title: str) -> str:
     """Given a page title, return a URL suitable for linking."""
-    # MediaWiki replaces spaces with underscores, then URL encodes.
-    safe_title = url_quote(title.replace(' ', '_').encode('utf-8'), safe='/:')
-    return '{}/{}'.format(base_url, safe_title)
+    return '{}/{}'.format(base_url, urlquote(_safe_title(title), safe='/:'))
+
+
+def get_edit_url(base_url: str, title: str) -> str:
+    """Given a page title, return a URL suitable for editing that page."""
+    params = (
+        ('title', _safe_title(title)),
+        ('action', 'edit'),
+        ('redlink', '1'),
+    )
+    return '{}?{}'.format(base_url, html.escape(urlencode(params, safe=':')))
 
 
 class WikiNodeVisitor:
@@ -79,11 +92,14 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
     def __init__(self,
                  base_url: str = '/wiki',
                  resolver: Optional[ArticleResolver] = None,
+                 red_links: bool = False,
                  context: Optional[TemplateContext] = None,
                  open_templates: Optional[Set[str]] = None):
 
         # The base URL should be the root that articles sit in.
         self._base_url = base_url.rstrip('/')
+        # Whether to render links to unknown articles as red links or normal links.
+        self._red_links = red_links
 
         self._pending_lists = []  # type: List[str]
 
@@ -202,6 +218,12 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         if prev_node:
             yield prev_node
 
+    def _get_edit_link(self, title: str, text: str) -> str:
+        # TODO This should be configurable.
+        url = get_edit_url('/index.php', title)
+        title += ' (page does not exist)'
+        return '<a href="{}" class="new" title="{}">'.format(url, title) + text + '</a>'
+
     def visit_Wikicode(self, node, in_root: bool = False) -> str:
         return ''.join(map(lambda n: self.visit(n, in_root), self._collapse_comments(node.nodes)))
 
@@ -272,10 +294,22 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # Get the rendered title.
         title = self.visit(node.title).title()
         url = get_article_url(self._base_url, title)
+        text = self.visit(node.text or node.title)
+
+        # Figure out whether the article exists or not.
+        article_exists = True
+        if self._red_links:
+            try:
+                self._resolver.get_article(title, default_namespace='')
+            except ArticleNotFound:
+                article_exists = False
 
         # Display text can be optionally specified. Fall back to the article
         # title if it is not given.
-        return result + '<a href="{}" title="{}">'.format(url, title) + self.visit(node.text or node.title) + '</a>'
+        if article_exists:
+            return result + '<a href="{}" title="{}">'.format(url, title) + text + '</a>'
+        else:
+            return result + self._get_edit_link(title, text)
 
     def visit_ExternalLink(self, node, in_root: bool = False) -> str:
         """
@@ -419,8 +453,16 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             try:
                 template = self._resolver.get_article(template_name, 'Template')
             except ArticleNotFound:
-                # Template was not found, simply output the template call.
-                return self._maybe_open_tag(in_root) + str(node)
+                # Template was not found.
+                result = self._maybe_open_tag(in_root)
+
+                # When transcluding a non-template
+                if self._red_links:
+                    # Render an edit link.
+                    return result + self._get_edit_link(template_name, template_name)
+                else:
+                    # Otherwise, simply output the template call.
+                    return result + self._maybe_open_tag(in_root) + str(node)
             else:
                 # Render the template in only the context of its parameters.
                 composer = WikicodeToHtmlComposer(

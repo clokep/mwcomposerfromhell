@@ -2,6 +2,7 @@ Blank input
 Simple paragraph
 Paragraphs with extra newline spacing
 Parsing an URL
+Italics and possessives (1)
 Italics and possessives (2)
 Italics and bold: 2-quote opening sequence: (2,2)
 Italics and bold: 2-quote opening sequence: (2,3)
@@ -73,19 +74,23 @@ Plain link, uncapitalized
 Piped link
 Piped link with comment in link text
 Piped link with multiple pipe characters in link text
+Broken link
 Link with prefix
 Link with HTML entity in suffix / tail
 Link with 3 brackets
 Link with 4 brackets
 Piped link with 3 brackets
 Link with multiple pipes
+Piped link to namespace
 Link containing }
 Link containing % (not as a hex sequence)
+Link containing double-single-quotes '' in text (T6598 sanity check)
+Link containing double-single-quotes '' in text embedded in italics (T6598 sanity check)
 Link to numeric-equivalent title
 Internal link with ca linktrail, surrounded by bold apostrophes (T29473 primary issue)
 Internal link with ca linktrail, surrounded by italic apostrophes (T29473 primary issue)
+Internal link with en linktrail: no apostrophes (T29473)
 Handle title parsing for subpages
-Ensure that transclusion titles are not url-decoded
 Parsoid T55221: Wikilinks should be properly entity-escaped
 <br> to <br />
 Horizontal ruler -- 4+ dashes render hr
@@ -140,9 +145,9 @@ Fuzz testing: encoded newline in generated HTML replacements (T8577)
 Templates in extension attributes are not expanded
 Correct handling of <td>, <tr> (T8171)
 Parsing crashing regression (fr:JavaScript)
+Transclusion of nonexistent MediaWiki message
 HTML Hex character encoding bogus encoding (T28437 regression check)
 ISBN followed by 5 spaces
-Non-transclusion because of too many up levels
 Always escape literal '>' in output, not just after '<'
 ISBN with a dummy number
 ISBN with multiple spaces, no number
