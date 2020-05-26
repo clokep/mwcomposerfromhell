@@ -54,6 +54,14 @@ def test_entity_in_text():
     assert compose(wikicode) == '<p>&lt;test&gt; &amp;</p>'
 
 
+@pytest.mark.skip('Not currently supported')
+def test_preformatted():
+    """Preformatted text should work properly."""
+    content = " foo"
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == '<pre>foo</pre>'
+
+
 def test_unknown_node():
     """An unknown node type should raise an error."""
     with pytest.raises(UnknownNode):
