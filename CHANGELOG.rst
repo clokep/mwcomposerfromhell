@@ -12,11 +12,12 @@ next
 
 * The default base URL was changed to ``/wiki``.
 * Basic support for magic words.
-* Better handling of text surroundg comment tags.
+* Better handling of text surrounding comment tags.
 * Handling of article content outside of the ``Template`` namespace is supported.
 * Ensure there isn't an infinite loop in template transclusion.
 * Partially support rendering of edit links.
 * Properly handle ``nowiki``, ``includeonly``, and `noinclude`` tags.
+* Support link trails (e.g. ``[[Foo]]bar``).
 
 0.3 (May 21, 2020)
 ==================

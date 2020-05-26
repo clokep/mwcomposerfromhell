@@ -103,9 +103,8 @@ def test_parser_tests(wikitext, html, resolver, skip, expected_pass):
     print(repr(result))
     print(repr(html))
 
-    # TODO Removing trailing whitespace might not be correct here, but it
-    #      shouldn't matter for HTML.
     try:
+        # Remove trailing whitespace for comparison.
         assert result.strip() == html.strip()
     except AssertionError:
         if not expected_pass:

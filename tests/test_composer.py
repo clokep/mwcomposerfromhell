@@ -26,11 +26,25 @@ def test_internal_link():
     assert compose(wikicode) == '<p><a href="/wiki/Foobar" title="Foobar">Foobar</a></p>'
 
 
-def test_internal_link_title():
-    """Ensure an internal link with a title is rendered properly."""
+def test_internal_link_text():
+    """Ensure an internal link with text is rendered properly."""
     content = "[[Foobar|fuzzbar]]"
     wikicode = mwparserfromhell.parse(content)
     assert compose(wikicode) == '<p><a href="/wiki/Foobar" title="Foobar">fuzzbar</a></p>'
+
+
+def test_link_trail():
+    """Ensure an internal link with trail is rendered properly."""
+    content = "[[Foo]]bar"
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == '<p><a href="/wiki/Foo" title="Foo">Foobar</a></p>'
+
+
+def test_link_trail_text():
+    """Ensure an internal link with trail and text is rendered properly."""
+    content = "[[Foo|foo]]bar"
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == '<p><a href="/wiki/Foo" title="Foo">foobar</a></p>'
 
 
 def test_heading():

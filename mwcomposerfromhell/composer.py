@@ -4,11 +4,12 @@ import re
 from typing import Dict, List, Optional, Set, Tuple, Union
 from urllib.parse import quote as urlquote, urlencode
 
-from mwparserfromhell.nodes import Comment, Text
+from mwparserfromhell import nodes
 
 from mwcomposerfromhell.magic_words import MAGIC_WORDS
 from mwcomposerfromhell.modules import ModuleStore, UnknownModule
 from mwcomposerfromhell.namespace import ArticleNotFound, ArticleResolver
+from mwcomposerfromhell.nodes import Wikilink
 
 # The markup for different lists mapped to the list tag and list item tag.
 MARKUP_TO_LIST = {
@@ -27,11 +28,13 @@ INLINE_TAGS = {"''", "'''"}
 # Tags that represent a list or list items.
 LIST_TAGS = {'ul', 'ol', 'li', 'dl', 'dt', 'dd'}
 
-# One or more line breaks.
+# One or more new-line.
 LINE_BREAK_PATTERN = re.compile(r'(\n+)')
 # Patterns used to strip comments.
 LINE_BREAK_SPACES_PATTERN = re.compile(r'\n *')
 SPACES_LINE_BREAK_PATTERN = re.compile(r' *\n')
+# Link trails are any words followed by a space or new-line.
+LINK_TRAIL_PATTERN = re.compile(r'^([a-zA-Z]+)\b')
 
 # The type for a Template Context.
 TemplateContext = Dict[str, str]
@@ -186,28 +189,46 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         return result
 
-    def _collapse_comments(self, nodes):
+    def _fix_nodes(self, nodes_iterator):
         """
-        Iterate through nodes, skipping comment blocks and combing adjacets text nodes.
+        Iterate through nodes making some fixes:
+
+        * Skip comment nodes.
+        * Combine adjecent text nodes.
+        * Handle link trails.
 
         Transforms [Text, Comment, Text] -> [Text]
         """
         prev_node = None
-        for node in nodes:
+        for node in nodes_iterator:
             # Skip comment nodes.
-            if isinstance(node, Comment):
+            if isinstance(node, nodes.Comment):
                 continue
 
+            # Convert Wikilinks to the mwcomposerfromhell subclass.
+            if isinstance(node, nodes.Wikilink):
+                node = Wikilink(node.title, node.text)
+
             # Two (now adjacent) text nodes are combined.
-            if isinstance(prev_node, Text) and isinstance(node, Text):
+            if isinstance(prev_node, nodes.Text) and isinstance(node, nodes.Text):
                 # A removed comment strips any spaces on the line it was on,
                 # plus a single newline. In order to get all whitespace, look at
                 # both text nodes.
                 prev = LINE_BREAK_SPACES_PATTERN.sub('', prev_node.value, count=1)
                 current = SPACES_LINE_BREAK_PATTERN.sub('\n', node.value, count=1)
 
-                prev_node = Text(prev + current)
+                prev_node = nodes.Text(value=prev + current)
                 continue
+
+            elif isinstance(prev_node, Wikilink) and isinstance(node, nodes.Text):
+                # Try to find a link trail and apply it to the previous link.
+                # TODO This should NOT apply if the previous link was to an image.
+                match = LINK_TRAIL_PATTERN.match(node.value)
+                if match:
+                    # The link gets the link trail added to the text.
+                    prev_node = Wikilink(prev_node.title, prev_node.text, match[1])
+                    # The text gets the link trailed removed from it.
+                    node = nodes.Text(value=node.value[len(match[1]):])
 
             # Otherwise, yield the previous node and store the current one.
             if prev_node:
@@ -225,7 +246,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         return '<a href="{}" class="new" title="{}">'.format(url, title) + text + '</a>'
 
     def visit_Wikicode(self, node, in_root: bool = False) -> str:
-        return ''.join(map(lambda n: self.visit(n, in_root), self._collapse_comments(node.nodes)))
+        return ''.join(map(lambda n: self.visit(n, in_root), self._fix_nodes(node.nodes)))
 
     def visit_Tag(self, node, in_root: bool = False) -> str:
         result = ''
@@ -316,7 +337,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # Get the rendered title.
         title = self.visit(node.title).title()
         url = get_article_url(self._base_url, title)
-        text = self.visit(node.text or node.title)
+        text = self.visit(node.text or node.title) + (node.trail or '')
 
         # Figure out whether the article exists or not.
         article_exists = True
