@@ -51,11 +51,6 @@ class HtmlComposingError(Exception):
     pass
 
 
-def _safe_title(title: str) -> str:
-    """MediaWiki replaces spaces with underscores, then URL encodes."""
-    return title.replace(' ', '_')
-
-
 class WikiNodeVisitor:
     def visit(self, node, in_root: bool = False) -> str:
         method_name = 'visit_' + node.__class__.__name__
