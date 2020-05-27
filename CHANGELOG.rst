@@ -10,7 +10,8 @@ next
   in multiple namespaces. Be sure to adapt your code if you're instantiating
   a composer directly.
 
-* The default base URL was changed to ``/wiki``.
+* Article resolution was modified and is now handled in a separate base class.
+  As part of this, the default base URL was changed to ``/wiki``.
 * Basic support for magic words.
 * Better handling of text surrounding comment tags.
 * Handling of article content outside of the ``Template`` namespace is supported.
