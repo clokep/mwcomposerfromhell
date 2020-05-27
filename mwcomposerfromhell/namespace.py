@@ -2,25 +2,36 @@ from collections import namedtuple
 import html
 import re
 from typing import Any, Dict, Tuple
-from urllib.parse import unquote
+from urllib.parse import quote, unquote, urlencode
 
 
-MULTIPLE_UNDERSCORES = re.compile(r'_+')
+MULTIPLE_SPACES = re.compile(r' +')
 
 
 class ArticleNotFound(Exception):
     """The article was not found."""
 
 
-CanonicalTitle = namedtuple('CanonicalTitle', ('namespace', 'title', 'interwiki'))
+class CanonicalTitle(namedtuple('CanonicalTitle', ('namespace', 'title', 'interwiki'))):
+    @property
+    def full_title(self):
+        if self.namespace:
+            return self.namespace + ':' + self.title
+        else:
+            return self.title
+
+    @property
+    def link(self):
+        """Get a version of the canonical title appropriate for links."""
+        return self.full_title.replace(' ', '_')
 
 
 def _normalize_spaces(key: str) -> str:
     """Spaces and turned to underscores, multiple get combined, and stripped from the beginning and end."""
     # Convert spaces to underscores.
-    key = key.replace(' ', '_')
+    key = key.replace('_', ' ')
     # Replace strings of underscores with a single underscore.
-    key = MULTIPLE_UNDERSCORES.sub('_', key)
+    key = MULTIPLE_SPACES.sub(' ', key)
     # Remove all underscores from the start and end.
     return key.strip('_')
 
@@ -54,11 +65,11 @@ def canonicalize_title(title: str, default_namespace: str = '') -> str:
     title = html.unescape(unquote(title))
 
     # Convert spaces to underscores.
-    title = title.replace(' ', '_')
+    title = title.replace('_', ' ')
     # Replace strings of underscores with a single underscore.
-    title = MULTIPLE_UNDERSCORES.sub('_', title)
+    title = MULTIPLE_SPACES.sub(' ', title)
     # Remove all underscores from the start and end.
-    title = title.strip('_')
+    title = title.strip()
 
     # The parts are separate by colons.
     parts = title.split(':')
@@ -93,9 +104,9 @@ def canonicalize_title(title: str, default_namespace: str = '') -> str:
         title = parts[0]
 
     # Each of the pieces again has and starting / trailing underscores removed.
-    interwiki = interwiki.strip('_')
-    namespace = namespace.strip('_')
-    title = title.strip('_')
+    interwiki = interwiki.strip()
+    namespace = namespace.strip()
+    title = title.strip()
 
     return CanonicalTitle(_normalize_namespace(namespace), _normalize_title(title), interwiki)
 
@@ -126,21 +137,39 @@ class Namespace:
 
 
 class ArticleResolver:
-    def __init__(self):
+    def __init__(self, base_url: str = '/wiki/', edit_url: str = '/index.php'):
+        # The base URL should be the root that articles sit in.
+        self._base_url = base_url.rstrip('/')
+        self._edit_url = edit_url
         self._namespaces = {}  # Dict[str, Namespace]
 
     def add_namespace(self, name: str, namespace: Namespace) -> None:
         self._namespaces[_normalize_namespace(name)] = namespace
 
-    def resolve_article(self, name: str, default_namespace: str) -> Tuple[str, str]:
+    def get_article_url(self, canonical_title: CanonicalTitle) -> str:
+        """Given a canonical title, return a URL suitable for linking."""
+        # TODO Handle interwiki links.
+        title = quote(canonical_title.title.replace(' ', '_'), safe='/:')
+        return '{}/{}'.format(self._base_url, title)
+
+    def get_edit_url(self, canonical_title: CanonicalTitle) -> str:
+        """Given a page title, return a URL suitable for editing that page."""
+        params = (
+            ('title', canonical_title.link),
+            ('action', 'edit'),
+            ('redlink', '1'),
+        )
+        # MediaWiki generates an escaped URL.
+        return '{}?{}'.format(self._edit_url, html.escape(urlencode(params, safe=':')))
+
+    def resolve_article(self, name: str, default_namespace: str) -> CanonicalTitle:
         """
         Get the canonical namespace and name for an article.
 
         :param name: The name of the article to find.
         :param default_namespace: The namespace to use, if one is not provided.
         """
-        canonical_title = canonicalize_title(name, default_namespace)
-        return canonical_title
+        return canonicalize_title(name, default_namespace)
 
     def get_article(self, name: str, default_namespace: str = ''):
         """

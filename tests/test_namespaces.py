@@ -98,7 +98,7 @@ def test_case_sensitivity(resolver):
 ])
 def test_canonicalize(input):
     """Test canonicalizing a domain in the main namespace"""
-    assert canonicalize_title(input) == ('', 'Main_page', '')
+    assert canonicalize_title(input) == ('', 'Main page', '')
 
 
 @pytest.mark.parametrize(('input', ), [
@@ -115,7 +115,7 @@ def test_canonicalize(input):
 ])
 def test_canonicalize_with_namespace(input):
     """Test canonicalizing a domain in the main namespace"""
-    assert canonicalize_title(input) == ('Template', 'Foo_bar', '')
+    assert canonicalize_title(input) == ('Template', 'Foo bar', '')
 
 
 @pytest.mark.parametrize(('input', ), [
@@ -130,7 +130,7 @@ def test_canonicalize_with_namespace(input):
 ])
 def test_canonicalize_with_interwiki(input):
     """Test canonicalizing a domain in the main namespace"""
-    assert canonicalize_title(input) == ('', 'Foo_bar', 'en')
+    assert canonicalize_title(input) == ('', 'Foo bar', 'en')
 
 
 
@@ -146,7 +146,7 @@ def test_canonicalize_with_interwiki(input):
 ])
 def test_canonicalize_with_namespace_and_interwiki(input):
     """Test canonicalizing a domain in the main namespace"""
-    assert canonicalize_title(input) == ('Template', 'Foo_bar', 'en')
+    assert canonicalize_title(input) == ('Template', 'Foo bar', 'en')
 
 
 @pytest.mark.parametrize(('input', 'expected'), [
@@ -182,4 +182,4 @@ def test_canonicalize_escape(input, expected):
 ])
 def test_canonicalize_with_default_namespace(input, expected_interwiki):
     """Test canonicalizing a domain in the main namespace"""
-    assert canonicalize_title(input, 'Default') == ('Default', 'Main_page', expected_interwiki)
+    assert canonicalize_title(input, 'Default') == ('Default', 'Main page', expected_interwiki)

@@ -2,13 +2,12 @@ from collections import OrderedDict
 import html
 import re
 from typing import Dict, List, Optional, Set, Tuple, Union
-from urllib.parse import quote as urlquote, urlencode
 
 from mwparserfromhell import nodes
 
 from mwcomposerfromhell.magic_words import MAGIC_WORDS
 from mwcomposerfromhell.modules import ModuleStore, UnknownModule
-from mwcomposerfromhell.namespace import ArticleNotFound, ArticleResolver
+from mwcomposerfromhell.namespace import ArticleNotFound, ArticleResolver, CanonicalTitle
 from mwcomposerfromhell.nodes import Wikilink
 
 # The markup for different lists mapped to the list tag and list item tag.
@@ -57,21 +56,6 @@ def _safe_title(title: str) -> str:
     return title.replace(' ', '_')
 
 
-def get_article_url(base_url: str, title: str) -> str:
-    """Given a page title, return a URL suitable for linking."""
-    return '{}/{}'.format(base_url, urlquote(_safe_title(title), safe='/:'))
-
-
-def get_edit_url(base_url: str, title: str) -> str:
-    """Given a page title, return a URL suitable for editing that page."""
-    params = (
-        ('title', _safe_title(title)),
-        ('action', 'edit'),
-        ('redlink', '1'),
-    )
-    return '{}?{}'.format(base_url, html.escape(urlencode(params, safe=':')))
-
-
 class WikiNodeVisitor:
     def visit(self, node, in_root: bool = False) -> str:
         method_name = 'visit_' + node.__class__.__name__
@@ -93,14 +77,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
     See https://en.wikipedia.org/wiki/Help:Wikitext for a full definition.
     """
     def __init__(self,
-                 base_url: str = '/wiki',
                  resolver: Optional[ArticleResolver] = None,
                  red_links: bool = False,
                  context: Optional[TemplateContext] = None,
                  open_templates: Optional[Set[str]] = None):
-
-        # The base URL should be the root that articles sit in.
-        self._base_url = base_url.rstrip('/')
         # Whether to render links to unknown articles as red links or normal links.
         self._red_links = red_links
 
@@ -239,10 +219,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         if prev_node:
             yield prev_node
 
-    def _get_edit_link(self, title: str, text: str) -> str:
-        # TODO This should be configurable.
-        url = get_edit_url('/index.php', title)
-        title += ' (page does not exist)'
+    def _get_edit_link(self, canonical_title: CanonicalTitle, text: str) -> str:
+        """Generate a link to an article's edit page."""
+        url = self._resolver.get_edit_url(canonical_title)
+        title = canonical_title.full_title + ' (page does not exist)'
         return '<a href="{}" class="new" title="{}">'.format(url, title) + text + '</a>'
 
     def visit_Wikicode(self, node, in_root: bool = False) -> str:
@@ -335,9 +315,15 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         result = self._maybe_open_tag(in_root)
 
         # Get the rendered title.
-        title = self.visit(node.title).title()
-        url = get_article_url(self._base_url, title)
-        text = self.visit(node.text or node.title) + (node.trail or '')
+        title = self.visit(node.title)
+        canonical_title = self._resolver.resolve_article(title, default_namespace='')
+        url = self._resolver.get_article_url(canonical_title)
+        # The text is either what was provided or the non-canonicalized title.
+        if node.text:
+            text = self.visit(node.text)
+        else:
+            text = title
+        text += (node.trail or '')
 
         # Figure out whether the article exists or not.
         article_exists = True
@@ -350,9 +336,9 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # Display text can be optionally specified. Fall back to the article
         # title if it is not given.
         if article_exists:
-            return result + '<a href="{}" title="{}">'.format(url, title) + text + '</a>'
+            return result + '<a href="{}" title="{}">'.format(url, canonical_title.title) + text + '</a>'
         else:
-            return result + self._get_edit_link(title, text)
+            return result + self._get_edit_link(canonical_title, text)
 
     def visit_ExternalLink(self, node, in_root: bool = False) -> str:
         """
@@ -502,14 +488,14 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 # When transcluding a non-template
                 if self._red_links:
                     # Render an edit link.
-                    return result + self._get_edit_link(template_name, template_name)
+                    canonical_title = self._resolver.resolve_article(template_name, 'Template')
+                    return result + self._get_edit_link(canonical_title, template_name)
                 else:
                     # Otherwise, simply output the template call.
                     return result + self._maybe_open_tag(in_root) + str(node)
             else:
                 # Render the template in only the context of its parameters.
                 composer = WikicodeToHtmlComposer(
-                    self._base_url,
                     resolver=self._resolver,
                     context=context,
                     open_templates=self._open_templates)
@@ -559,10 +545,9 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         except TemplateLoop as e:
             # The template name is the first argument.
             template_name = e.args[0]
-            # Capitalize the first letter of the template name.
-            template_name = 'Template:' + template_name[0].upper() + template_name[1:]
             # TODO Should this create an ExternalLink and use that?
-            url = get_article_url(self._base_url, template_name)
+            canonical_title = self._resolver.resolve_article(template_name, 'Template')
+            url = self._resolver.get_article_url(canonical_title)
             return ('<p><span class="error">Template loop detected: ' +
                     '<a href="{url}" title="{template_name}">{template_name}</a>' +
-                    '</span>\n</p>').format(url=url, template_name=template_name)
+                    '</span>\n</p>').format(url=url, template_name=canonical_title.title)
