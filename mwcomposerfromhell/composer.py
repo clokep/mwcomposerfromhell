@@ -550,4 +550,4 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             url = self._resolver.get_article_url(canonical_title)
             return ('<p><span class="error">Template loop detected: ' +
                     '<a href="{url}" title="{template_name}">{template_name}</a>' +
-                    '</span>\n</p>').format(url=url, template_name=canonical_title.title)
+                    '</span>\n</p>').format(url=url, template_name=canonical_title.full_title)

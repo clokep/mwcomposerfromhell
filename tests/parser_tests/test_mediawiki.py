@@ -38,6 +38,11 @@ def pytest_generate_tests(metafunc):
             article_name = namespace
             namespace = ''
 
+        # The articles are inconsistent about what the case of the MediaWiki
+        # namespace. Hard-code it.
+        if namespace.lower() == 'mediawiki':
+            namespace = 'MediaWiki'
+
         namespaces[namespace][article_name] = mwparserfromhell.parse(article_contents)
     resolver = ArticleResolver('/wiki/', '/index.php')
     for namespace_name, namespace in namespaces.items():

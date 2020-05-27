@@ -4,7 +4,6 @@ import pytest
 from mwcomposerfromhell.namespace import (
     ArticleNotFound,
     ArticleResolver,
-    canonicalize_title,
     Namespace,
 )
 
@@ -27,7 +26,7 @@ def resolver():
     # Create the resolver and add the namespaces to it.
     resolver = ArticleResolver()
 
-    for name, articles in (('', main), ('Template', templates)):
+    for name, articles in (('', main), ('Template', templates), ('MediaWiki', {})):
         articles = {
             name: mwparserfromhell.parse(article) for name, article in articles.items()
         }
@@ -96,9 +95,9 @@ def test_case_sensitivity(resolver):
     # Namespace.
     (':main page', ),
 ])
-def test_canonicalize(input):
-    """Test canonicalizing a domain in the main namespace"""
-    assert canonicalize_title(input) == ('', 'Main page', '')
+def test_canonicalize(input, resolver):
+    """Test canonicalizing an article in the main namespace."""
+    assert resolver.canonicalize_title(input) == ('', 'Main page', '')
 
 
 @pytest.mark.parametrize(('input', ), [
@@ -113,9 +112,16 @@ def test_canonicalize(input):
     # Extra spaces.
     ('  template   :  foo bar   ', ),
 ])
-def test_canonicalize_with_namespace(input):
-    """Test canonicalizing a domain in the main namespace"""
-    assert canonicalize_title(input) == ('Template', 'Foo bar', '')
+def test_canonicalize_with_namespace(input, resolver):
+    """Test canonicalizing an article in the template namespace."""
+    assert resolver.canonicalize_title(input) == ('Template', 'Foo bar', '')
+
+
+def test_canonicalize_with_odd_namespace(resolver):
+    """Test canonicalizing an article in the main namespace."""
+    assert resolver.canonicalize_title('MediaWiki:Foo') == ('MediaWiki', 'Foo', '')
+    # An unknown namespace passes through without being modified.
+    assert resolver.canonicalize_title('UNknown:Foo') == ('UNknown', 'Foo', '')
 
 
 @pytest.mark.parametrize(('input', ), [
@@ -128,9 +134,9 @@ def test_canonicalize_with_namespace(input):
     # Extra spaces.
     ('  :  en   :  foo bar   ', ),
 ])
-def test_canonicalize_with_interwiki(input):
-    """Test canonicalizing a domain in the main namespace"""
-    assert canonicalize_title(input) == ('', 'Foo bar', 'en')
+def test_canonicalize_with_interwiki(input, resolver):
+    """Test canonicalizing an interwiki article in the main namespace."""
+    assert resolver.canonicalize_title(input) == ('', 'Foo bar', 'en')
 
 
 
@@ -144,9 +150,9 @@ def test_canonicalize_with_interwiki(input):
     # Extra spaces.
     ('  :  en   :  Template  :  foo bar   ', ),
 ])
-def test_canonicalize_with_namespace_and_interwiki(input):
-    """Test canonicalizing a domain in the main namespace"""
-    assert canonicalize_title(input) == ('Template', 'Foo bar', 'en')
+def test_canonicalize_with_namespace_and_interwiki(input, resolver):
+    """Test canonicalizing an interwiki article in the template namespace"""
+    assert resolver.canonicalize_title(input) == ('Template', 'Foo bar', 'en')
 
 
 @pytest.mark.parametrize(('input', 'expected'), [
@@ -159,11 +165,11 @@ def test_canonicalize_with_namespace_and_interwiki(input):
     # Encoded colons get unescaped first.
     ('%3Ade%3AFoo', ('', 'Foo', 'de')),
 ])
-def test_canonicalize_escape(input, expected):
-    """Test canonicalizing a domain in the main namespace"""
+def test_canonicalize_escape(input, expected, resolver):
+    """Test canonicalizing an article with oddly encoded characters."""
     if isinstance(expected, str):
         expected = ('', expected, '')
-    assert canonicalize_title(input) == expected
+    assert resolver.canonicalize_title(input) == expected
 
 
 @pytest.mark.parametrize(('input', 'expected_interwiki'), [
@@ -180,6 +186,6 @@ def test_canonicalize_escape(input, expected):
     # Only an interwiki.
     (':en:Main page', 'en', ),
 ])
-def test_canonicalize_with_default_namespace(input, expected_interwiki):
-    """Test canonicalizing a domain in the main namespace"""
-    assert canonicalize_title(input, 'Default') == ('Default', 'Main page', expected_interwiki)
+def test_canonicalize_with_default_namespace(input, expected_interwiki, resolver):
+    """Test canonicalizing an article with a default namespace."""
+    assert resolver.canonicalize_title(input, 'Default') == ('Default', 'Main page', expected_interwiki)

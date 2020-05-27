@@ -22,7 +22,7 @@ class CanonicalTitle(namedtuple('CanonicalTitle', ('namespace', 'title', 'interw
 
     @property
     def link(self):
-        """Get a version of the canonical title appropriate for links."""
+        """Get a version of the canonical title appropriate for a URL."""
         return self.full_title.replace(' ', '_')
 
 
@@ -50,65 +50,6 @@ def _normalize_title(key: str) -> str:
         return ''
     key = _normalize_spaces(key)
     return key[0].upper() + key[1:]
-
-
-def canonicalize_title(title: str, default_namespace: str = '') -> str:
-    """
-    Generate the canonical form of a title.
-
-    See https://en.wikipedia.org/wiki/Help:Link#Conversion_to_canonical_form
-
-    TODO Handle anonymous user pages.
-    """
-    # HTML entities and percent encoded characters get converted to their raw
-    # character.
-    title = html.unescape(unquote(title))
-
-    # Convert spaces to underscores.
-    title = title.replace('_', ' ')
-    # Replace strings of underscores with a single underscore.
-    title = MULTIPLE_SPACES.sub(' ', title)
-    # Remove all underscores from the start and end.
-    title = title.strip()
-
-    # The parts are separate by colons.
-    parts = title.split(':')
-    has_interwiki = title and title[0] == ':'
-
-    # Generally only 1 - 3 parts are expected (interwiki, namespace, and title).
-    num_parts = len(parts)
-    if num_parts >= 4:
-        if has_interwiki:
-            interwiki = parts[1]
-            parts = parts[2:]
-        else:
-            interwiki = ''
-        namespace = parts[0]
-        title = ':'.join(parts[1:])
-    elif num_parts == 3:
-        if has_interwiki:
-            _, interwiki, title = parts
-            namespace = default_namespace
-        else:
-            interwiki = ''
-            namespace = parts[0]
-            title = ':'.join(parts[1:])
-    elif num_parts == 2:
-        # In this case an interwiki link cannot be given.
-        interwiki = ''
-        namespace, title = parts
-    else:
-        # No colons, it is just a page title.
-        interwiki = ''
-        namespace = default_namespace
-        title = parts[0]
-
-    # Each of the pieces again has and starting / trailing underscores removed.
-    interwiki = interwiki.strip()
-    namespace = namespace.strip()
-    title = title.strip()
-
-    return CanonicalTitle(_normalize_namespace(namespace), _normalize_title(title), interwiki)
 
 
 class Namespace:
@@ -142,14 +83,17 @@ class ArticleResolver:
         self._base_url = base_url.rstrip('/')
         self._edit_url = edit_url
         self._namespaces = {}  # Dict[str, Namespace]
+        # A map of the "canonical" namespace to the "human" capitalization.
+        self._canonical_namespaces = {}  # Dict[str, str]
 
     def add_namespace(self, name: str, namespace: Namespace) -> None:
         self._namespaces[_normalize_namespace(name)] = namespace
+        self._canonical_namespaces[_normalize_namespace(name)] = name
 
     def get_article_url(self, canonical_title: CanonicalTitle) -> str:
         """Given a canonical title, return a URL suitable for linking."""
         # TODO Handle interwiki links.
-        title = quote(canonical_title.title.replace(' ', '_'), safe='/:')
+        title = quote(canonical_title.link, safe='/:')
         return '{}/{}'.format(self._base_url, title)
 
     def get_edit_url(self, canonical_title: CanonicalTitle) -> str:
@@ -169,7 +113,7 @@ class ArticleResolver:
         :param name: The name of the article to find.
         :param default_namespace: The namespace to use, if one is not provided.
         """
-        return canonicalize_title(name, default_namespace)
+        return self.canonicalize_title(name, default_namespace)
 
     def get_article(self, name: str, default_namespace: str = ''):
         """
@@ -184,3 +128,69 @@ class ArticleResolver:
             return self._namespaces[canonical_title.namespace][canonical_title.title]
         except KeyError:
             raise ArticleNotFound(canonical_title)
+
+    def canonicalize_title(self, title: str, default_namespace: str = '') -> CanonicalTitle:
+        """
+        Generate the canonical form of a title.
+
+        See https://en.wikipedia.org/wiki/Help:Link#Conversion_to_canonical_form
+
+        TODO Handle anonymous user pages.
+        """
+        # HTML entities and percent encoded characters get converted to their raw
+        # character.
+        title = html.unescape(unquote(title))
+
+        # Convert spaces to underscores.
+        title = title.replace('_', ' ')
+        # Replace strings of underscores with a single underscore.
+        title = MULTIPLE_SPACES.sub(' ', title)
+        # Remove all underscores from the start and end.
+        title = title.strip()
+
+        # The parts are separate by colons.
+        parts = title.split(':')
+        has_interwiki = title and title[0] == ':'
+
+        # Generally only 1 - 3 parts are expected (interwiki, namespace, and title).
+        num_parts = len(parts)
+        if num_parts >= 4:
+            if has_interwiki:
+                interwiki = parts[1]
+                parts = parts[2:]
+            else:
+                interwiki = ''
+            namespace = parts[0]
+            title = ':'.join(parts[1:])
+        elif num_parts == 3:
+            if has_interwiki:
+                _, interwiki, title = parts
+                namespace = default_namespace
+            else:
+                interwiki = ''
+                namespace = parts[0]
+                title = ':'.join(parts[1:])
+        elif num_parts == 2:
+            # In this case an interwiki link cannot be given.
+            interwiki = ''
+            namespace, title = parts
+        else:
+            # No colons, it is just a page title.
+            interwiki = ''
+            namespace = default_namespace
+            title = parts[0]
+
+        # Each of the pieces again has and starting / trailing underscores removed.
+        interwiki = interwiki.strip()
+        namespace = namespace.strip()
+        title = title.strip()
+
+        # According to the MediaWiki docs, the namespace gets canonicalized to
+        # upper-case, then all lower-case. This doesn't seem accurate (see how
+        # it treats the "MediaWiki" namespace).
+        try:
+            canonical_namespace = self._canonical_namespaces[_normalize_namespace(namespace)]
+        except KeyError:
+            canonical_namespace = namespace
+
+        return CanonicalTitle(canonical_namespace, _normalize_title(title), interwiki)
