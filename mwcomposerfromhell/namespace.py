@@ -1,7 +1,7 @@
 from collections import namedtuple
 import html
 import re
-from typing import Any, Dict, Tuple
+from typing import Any, Dict
 from urllib.parse import quote, unquote, urlencode
 
 
@@ -82,9 +82,9 @@ class ArticleResolver:
         # The base URL should be the root that articles sit in.
         self._base_url = base_url.rstrip('/')
         self._edit_url = edit_url
-        self._namespaces = {}  # Dict[str, Namespace]
+        self._namespaces = {}  # type: Dict[str, Namespace]
         # A map of the "canonical" namespace to the "human" capitalization.
-        self._canonical_namespaces = {}  # Dict[str, str]
+        self._canonical_namespaces = {}  # type: Dict[str, str]
 
     def add_namespace(self, name: str, namespace: Namespace) -> None:
         self._namespaces[_normalize_namespace(name)] = namespace
