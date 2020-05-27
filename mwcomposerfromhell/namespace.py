@@ -41,7 +41,7 @@ def _normalize_title(key: str) -> str:
     return key[0].upper() + key[1:]
 
 
-def canonicalize_title(title: str) -> str:
+def canonicalize_title(title: str, default_namespace: str = '') -> str:
     """
     Generate the canonical form of a title.
 
@@ -62,7 +62,7 @@ def canonicalize_title(title: str) -> str:
 
     # The parts are separate by colons.
     parts = title.split(':')
-    has_interwiki = title[0] == ':'
+    has_interwiki = title and title[0] == ':'
 
     # Generally only 1 - 3 parts are expected (interwiki, namespace, and title).
     num_parts = len(parts)
@@ -77,7 +77,7 @@ def canonicalize_title(title: str) -> str:
     elif num_parts == 3:
         if has_interwiki:
             _, interwiki, title = parts
-            namespace = ''
+            namespace = default_namespace
         else:
             interwiki = ''
             namespace = parts[0]
@@ -89,7 +89,7 @@ def canonicalize_title(title: str) -> str:
     else:
         # No colons, it is just a page title.
         interwiki = ''
-        namespace = ''
+        namespace = default_namespace
         title = parts[0]
 
     # Each of the pieces again has and starting / trailing underscores removed.
@@ -139,10 +139,7 @@ class ArticleResolver:
         :param name: The name of the article to find.
         :param default_namespace: The namespace to use, if one is not provided.
         """
-        canonical_title = canonicalize_title(name)
-        # Use the default namespace if one was not parsed.
-        if not canonical_title.namespace and default_namespace:
-            return CanonicalTitle(default_namespace, *canonical_title[1:])
+        canonical_title = canonicalize_title(name, default_namespace)
         return canonical_title
 
     def get_article(self, name: str, default_namespace: str = ''):

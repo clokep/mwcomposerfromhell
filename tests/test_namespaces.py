@@ -164,3 +164,22 @@ def test_canonicalize_escape(input, expected):
     if isinstance(expected, str):
         expected = ('', expected, '')
     assert canonicalize_title(input) == expected
+
+
+@pytest.mark.parametrize(('input', 'expected_interwiki'), [
+    # Standard form.
+    ('Main page', '', ),
+    # First character gets upper-cased.
+    ('main page', '', ),
+    # Underscores.
+    ('Main_page', '', ),
+    # Extra underscores.
+    ('__Main_page___', '', ),
+    # Extra spaces.
+    ('  Main page   ', '', ),
+    # Only an interwiki.
+    (':en:Main page', 'en', ),
+])
+def test_canonicalize_with_default_namespace(input, expected_interwiki):
+    """Test canonicalizing a domain in the main namespace"""
+    assert canonicalize_title(input, 'Default') == ('Default', 'Main_page', expected_interwiki)
