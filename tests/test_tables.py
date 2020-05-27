@@ -2,6 +2,7 @@ import mwparserfromhell
 
 from mwcomposerfromhell import compose
 
+
 def test_table():
     """Test an wiki table."""
     content = """{|

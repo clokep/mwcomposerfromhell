@@ -83,18 +83,24 @@ Piped link with comment in link text
 Piped link with multiple pipe characters in link text
 Broken link
 Link with prefix
+T45661: Piped links with identical prefixes
 Link with HTML entity in suffix / tail
 Link with 3 brackets
 Link with 4 brackets
 Piped link with 3 brackets
 Link with multiple pipes
+Link to namespaces
+Link with space in namespace
 Piped link to namespace
 Link containing }
 Link containing % (not as a hex sequence)
+Link containing a tilde
 Link containing double-single-quotes '' in text (T6598 sanity check)
 Link containing double-single-quotes '' in text embedded in italics (T6598 sanity check)
+Plain link to page with question mark in title
 Link to numeric-equivalent title
 <nowiki> inside a link
+Multiple spaces in titles should normalize to a single underscore
 Internal link with ca linktrail, surrounded by bold apostrophes (T29473 primary issue)
 Internal link with ca linktrail, surrounded by italic apostrophes (T29473 primary issue)
 Internal link with en linktrail: no apostrophes (T29473)
@@ -106,6 +112,7 @@ Horizontal ruler -- eats additional dashes on the same line
 Horizontal ruler -- does not collapse dashes on consecutive lines
 Horizontal ruler -- <4 dashes render as plain text
 __proto__ is treated as normal wikitext (T105997)
+Magic links: internal link to RFC (T2479)
 Magic links: All disabled (T47942)
 Template with invalid target containing wikilink
 Simple template
@@ -129,6 +136,7 @@ Preprocessor precedence 8: broken language converter is rightmost opening
 Preprocessor precedence 18: another rightmost wins scenario
 Preprocessor precedence 19: break syntax
 Table wikitext syntax outside wiki-tables
+Templates: Links: 2. Generation of link href
 subst: does not work during normal parse
 Broken image caption with link
 T3186 news: in the middle of text
@@ -161,6 +169,7 @@ Parsing crashing regression (fr:JavaScript)
 Transclusion of nonexistent MediaWiki message
 HTML Hex character encoding bogus encoding (T28437 regression check)
 ISBN followed by 5 spaces
+Double RFC with a wiki link
 Always escape literal '>' in output, not just after '<'
 ISBN with a dummy number
 ISBN with multiple spaces, no number

@@ -38,8 +38,13 @@ def pytest_generate_tests(metafunc):
             article_name = namespace
             namespace = ''
 
+        # The articles are inconsistent about what the case of the MediaWiki
+        # namespace. Hard-code it.
+        if namespace.lower() == 'mediawiki':
+            namespace = 'MediaWiki'
+
         namespaces[namespace][article_name] = mwparserfromhell.parse(article_contents)
-    resolver = ArticleResolver()
+    resolver = ArticleResolver('/wiki/', '/index.php')
     for namespace_name, namespace in namespaces.items():
         resolver.add_namespace(namespace_name, namespace)
 
@@ -92,7 +97,6 @@ def test_parser_tests(wikitext, html, resolver, skip, expected_pass):
 
     # Generate the composer with the current templates.
     composer = WikicodeToHtmlComposer(
-        base_url='/wiki',
         resolver=resolver,
         red_links=True,
     )
