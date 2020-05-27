@@ -12,10 +12,6 @@ class ArticleNotFound(Exception):
     """The article was not found."""
 
 
-class InvalidTitle(Exception):
-    """The given title cannot point to an article."""
-
-
 CanonicalTitle = namedtuple('CanonicalTitle', ('namespace', 'title', 'interwiki'))
 
 
@@ -90,10 +86,6 @@ def canonicalize_title(title: str) -> str:
         # In this case an interwiki link cannot be given.
         interwiki = ''
         namespace, title = parts
-        # Not providing a title in this case is invalid, e.g. [[Foo:]] is not a
-        # valid link.
-        if not title:
-            raise InvalidTitle(title)
     else:
         # No colons, it is just a page title.
         interwiki = ''
