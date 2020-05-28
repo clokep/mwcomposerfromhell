@@ -111,6 +111,20 @@ Horizontal ruler -- 4+ dashes render hr
 Horizontal ruler -- eats additional dashes on the same line
 Horizontal ruler -- does not collapse dashes on consecutive lines
 Horizontal ruler -- <4 dashes render as plain text
+Magic Word: {{CURRENTDAY}}
+Magic Word: {{CURRENTDAY2}}
+Magic Word: {{CURRENTDAYNAME}}
+Magic Word: {{CURRENTDOW}}
+Magic Word: {{CURRENTMONTH}}
+Magic Word: {{CURRENTMONTH1}}
+Magic Word: {{CURRENTMONTHABBREV}}
+Magic Word: {{CURRENTMONTHNAME}}
+Magic Word: {{CURRENTMONTHNAMEGEN}}
+Magic Word: {{CURRENTTIME}}
+Magic Word: {{CURRENTHOUR}}
+Magic Word: {{CURRENTWEEK}} (T6594)
+Magic Word: {{CURRENTYEAR}}
+Magic Word: {{CURRENTTIMESTAMP}}
 __proto__ is treated as normal wikitext (T105997)
 Magic links: internal link to RFC (T2479)
 Magic links: All disabled (T47942)

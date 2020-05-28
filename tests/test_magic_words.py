@@ -1,24 +1,12 @@
 from datetime import datetime
 
 import mwparserfromhell
-import pytest
 
-from mwcomposerfromhell import compose, magic_words
+from mwcomposerfromhell import compose
+from tests import patch_datetime
 
-
-@pytest.fixture
-def patch_datetime_now(monkeypatch):
-    """Give a stable date for the tests."""
-    class MockDatetime:
-        @classmethod
-        def now(cls):
-            return datetime(2001, 8, 3, 9, 2, 3)
-
-        @classmethod
-        def utcnow(cls):
-            return datetime(2001, 8, 3, 9, 2, 3)
-
-    monkeypatch.setattr(magic_words, 'datetime', MockDatetime)
+# Set the current time to a particular date.
+patch_datetime_fixture = patch_datetime(datetime(2001, 8, 3, 9, 2, 3))
 
 
 def pytest_generate_tests(metafunc):
@@ -35,7 +23,7 @@ def pytest_generate_tests(metafunc):
         ('DAYNAME', 'Friday'),
         ('TIME', '09:02'),
         ('HOUR', '09'),
-        ('WEEK', '30'),
+        ('WEEK', '32'),
         ('TIMESTAMP', '20010803090203'),
     ]
     # Generate both a current and local version of the tests.
@@ -48,7 +36,7 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize(argnames, argvalues, ids=[v[0] for v in argvalues])
 
 
-def test_magic_words(magic_word, output, patch_datetime_now):
+def test_magic_words(magic_word, output):
     """Test that simple formatting works."""
     content = "{{%s}}" % magic_word
     wikicode = mwparserfromhell.parse(content)

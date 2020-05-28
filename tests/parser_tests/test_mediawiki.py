@@ -1,11 +1,13 @@
 from collections import defaultdict
+from datetime import datetime
 from pathlib import Path
 
 import mwparserfromhell
 import pytest
 
 from mwcomposerfromhell import ArticleResolver, Namespace, WikicodeToHtmlComposer
-from . import MediaWikiParserTestCasesParser
+from tests import patch_datetime
+from tests.parser_tests import MediaWikiParserTestCasesParser
 
 # Only a subset of tests pass right now.
 with open(Path(__file__).parent / 'whitelist.txt') as f:
@@ -19,6 +21,10 @@ ONLY_RUN_WHITELIST = False
 PREFERRED_HTML = ('html', 'html/*', 'html/php', 'html/php+tidy')
 # A known object.
 _SENTINEL = object()
+
+
+# Set the current time to a particular date.
+patch_datetime_fixture = patch_datetime(datetime(1970, 1, 1, 0, 2, 3))
 
 
 def pytest_generate_tests(metafunc):
@@ -77,7 +83,7 @@ def pytest_generate_tests(metafunc):
 
         # Skip some tests based on their options.
         options = test_case.get('options', {})
-        skip = 'pst' in options or 'msg' in options
+        skip = 'pst' in options or 'msg' in options or 'disabled' in options
 
         # Add the current test arguments to the list of values.
         argvalues.append(
