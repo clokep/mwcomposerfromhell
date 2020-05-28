@@ -93,7 +93,7 @@ class ArticleResolver:
     def get_article_url(self, canonical_title: CanonicalTitle) -> str:
         """Given a canonical title, return a URL suitable for linking."""
         # TODO Handle interwiki links.
-        title = quote(canonical_title.link, safe='/:')
+        title = quote(canonical_title.link, safe='/:~')
         return '{}/{}'.format(self._base_url, title)
 
     def get_edit_url(self, canonical_title: CanonicalTitle) -> str:
