@@ -76,6 +76,7 @@ T6781, T7267: %25 in URL
 T6781, T7267: %28, %29 in URL
 Use url link syntax for links where the content is equal the link target
 Quotes
+Element attributes with double ! should not be broken up by <th>
 Plain link, capitalized
 Plain link, uncapitalized
 Piped link
@@ -190,6 +191,10 @@ ISBN with multiple spaces, no number
 Unclosed language converter markup "-{"
 Id starting with underscore
 new support for bdi element (T33817)
+Tables: 2c. Nested in td -- no escaping needed
+Tables: 3a. Nested in th
+Tables: 4a. Escape -
+Tables: 4b. Escape +
 Links 2. WikiLinks: Escapes needed
 Links 3. WikiLinks: No escapes needed
 Links 7b. Don't add spurious <nowiki/>s between text-nodes and url-links (T66300)

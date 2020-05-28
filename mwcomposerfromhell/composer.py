@@ -291,7 +291,27 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                     self._stack.index('tr', last_table)
                 except ValueError:
                     self._stack.append('tr')
-                    result += '<tr>'
+                    result += '<tr>\n'
+
+            # Because we sometimes open a new row without the contents directly
+            # tied to it (see above), we need to ensure that old rows are closed
+            # before opening a new one.
+            elif node.wiki_markup in {'!-', '|-'}:
+                # Find the part of the stack since the last table was opened.
+                last_table = -1
+                for it, stack_tag in enumerate(self._stack):
+                    if stack_tag == 'table':
+                        last_table = it
+
+                # A table should always be found.
+                assert last_table != -1
+
+                # If a row is currently open, close it.
+                try:
+                    self._stack.index('tr', last_table)
+                    result += self._close_stack('tr') + '\n'
+                except ValueError:
+                    pass
 
             # Create an HTML tag.
             result += '<' + tag
@@ -300,6 +320,11 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             if node.self_closing:
                 result += ' /'
             result += '>'
+
+            # The documentation says padding is BEFORE the final >, but for
+            # table nodes it seems to be the padding after it
+            if node.wiki_markup in {'{|', '!-', '|-'}:
+                result += node.padding
 
             # If this is not a self-closing tag, add it to the stack.
             if not node.self_closing:

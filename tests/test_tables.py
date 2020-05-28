@@ -14,9 +14,13 @@ def test_table():
 | Example 1b || Example 2b || Example 3b
 |}"""
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == """<table><tr><th> Header 1 </th><th> Header 2 </th><th> Header 3
-</th></tr><tr><td> Example 1a </td><td> Example 2a </td><td> Example 3a
-</td></tr><tr><td> Example 1b </td><td> Example 2b </td><td> Example 3b
+    assert compose(wikicode) == """<table>
+<tr>
+<th> Header 1 </th><th> Header 2 </th><th> Header 3
+</th></tr><tr>
+<td> Example 1a </td><td> Example 2a </td><td> Example 3a
+</td></tr><tr>
+<td> Example 1b </td><td> Example 2b </td><td> Example 3b
 </td></tr></table>"""
 
 
@@ -29,8 +33,11 @@ def test_table_class():
 | Example 1 || Example 2
 |}"""
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == """<table class="wikitable"><tr><th> Header 1 </th><th> Header 2
-</th></tr><tr><td> Example 1 </td><td> Example 2
+    assert compose(wikicode) == """<table class="wikitable">
+<tr>
+<th> Header 1 </th><th> Header 2
+</th></tr><tr>
+<td> Example 1 </td><td> Example 2
 </td></tr></table>"""
 
 
@@ -40,5 +47,5 @@ def test_bad_syntax():
 |x
 |}"""
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == """<table><tr><td>x
+    assert compose(wikicode) == """<table>\n<tr>\n<td>x
 </td></tr></table>"""
