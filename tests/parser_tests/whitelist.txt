@@ -81,7 +81,9 @@ T6781, T7267: %25 in URL
 T6781, T7267: %28, %29 in URL
 Use url link syntax for links where the content is equal the link target
 Quotes
+Accept empty attributes in td/th cells (td/th cells starting with leading ||)
 Element attributes with double ! should not be broken up by <th>
+Table cell with a single comment
 Plain link, capitalized
 Plain link, uncapitalized
 Piped link
@@ -203,10 +205,14 @@ Tables: 1a. Simple example
 Tables: 1b. No escaping needed
 Tables: 1c. No escaping needed
 Tables: 1d. No escaping needed
+Tables: 2b. Nested in td
 Tables: 2c. Nested in td -- no escaping needed
 Tables: 3a. Nested in th
+Tables: 3b. Nested in th
+Tables: 3c. Nested in th
 Tables: 4a. Escape -
 Tables: 4b. Escape +
+Tables: 4d. No escaping needed
 Links 2. WikiLinks: Escapes needed
 Links 3. WikiLinks: No escapes needed
 Links 7b. Don't add spurious <nowiki/>s between text-nodes and url-links (T66300)

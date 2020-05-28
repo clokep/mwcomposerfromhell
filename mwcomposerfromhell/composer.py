@@ -27,6 +27,10 @@ INLINE_TAGS = {"''", "'''"}
 # Tags that represent a list or list items.
 LIST_TAGS = {'ul', 'ol', 'li', 'dl', 'dt', 'dd'}
 
+# Table markup.
+TABLE_ROWS = {'!-', '|-'}
+TABLE_CELLS = {'!', '|'}
+
 # One or more new-line.
 LINE_BREAK_PATTERN = re.compile(r'(\n+)')
 # Patterns used to strip comments.
@@ -164,6 +168,19 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         return result
 
+    def _get_last_table(self) -> int:
+        """Return the index in the stack of the most recently opened table."""
+        # Find the part of the stack since the last table was opened.
+        last_table = -1
+        for it, stack_tag in enumerate(self._stack):
+            if stack_tag == 'table':
+                last_table = it
+
+        # A table should always be found.
+        assert last_table != -1
+
+        return last_table
+
     def _fix_nodes(self, nodes_iterator):
         """
         Iterate through nodes making some fixes:
@@ -184,7 +201,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             if isinstance(node, nodes.Wikilink):
                 node = Wikilink(node.title, node.text)
 
-            # Two (now adjacent) text nodes are combined.
+            # Two adjacent (after removing comment nodes) text nodes are combined.
             if isinstance(prev_node, nodes.Text) and isinstance(node, nodes.Text):
                 # A removed comment strips any spaces on the line it was on,
                 # plus a single newline. In order to get all whitespace, look at
@@ -195,6 +212,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 prev_node = nodes.Text(value=prev + current)
                 continue
 
+            # The start of the text from a text node can be added to a link
+            # occuring before it.
             elif isinstance(prev_node, Wikilink) and isinstance(node, nodes.Text):
                 # Try to find a link trail and apply it to the previous link.
                 # TODO This should NOT apply if the previous link was to an image.
@@ -204,6 +223,12 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                     prev_node = Wikilink(prev_node.title, prev_node.text, match[1])
                     # The text gets the link trailed removed from it.
                     node = nodes.Text(value=node.value[len(match[1]):])
+
+            # Adjacent table header or data nodes have a blank line between them.
+            elif isinstance(prev_node, nodes.Tag) and isinstance(node, nodes.Tag):
+                if prev_node.wiki_markup in TABLE_CELLS and node.wiki_markup in TABLE_CELLS:
+                    yield prev_node
+                    prev_node = nodes.Text(value='\n')
 
             # Otherwise, yield the previous node and store the current one.
             if prev_node:
@@ -275,19 +300,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
             # If we're opening a table header or data element, ensure that a row
             # is already open.
-            if node.wiki_markup in {'!', '|'}:
-                # Find the part of the stack since the last table was opened.
-                last_table = -1
-                for it, stack_tag in enumerate(self._stack):
-                    if stack_tag == 'table':
-                        last_table = it
-
-                # A table should always be found.
-                assert last_table != -1
-
+            if node.wiki_markup in TABLE_CELLS:
                 # Open a new row if not currently in a row.
                 try:
-                    self._stack.index('tr', last_table)
+                    self._stack.index('tr', self._get_last_table())
                 except ValueError:
                     self._stack.append('tr')
                     result += '<tr>\n'
@@ -295,19 +311,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # Because we sometimes open a new row without the contents directly
             # tied to it (see above), we need to ensure that old rows are closed
             # before opening a new one.
-            elif node.wiki_markup in {'!-', '|-'}:
-                # Find the part of the stack since the last table was opened.
-                last_table = -1
-                for it, stack_tag in enumerate(self._stack):
-                    if stack_tag == 'table':
-                        last_table = it
-
-                # A table should always be found.
-                assert last_table != -1
-
+            elif node.wiki_markup in TABLE_ROWS:
                 # If a row is currently open, close it.
                 try:
-                    self._stack.index('tr', last_table)
+                    self._stack.index('tr', self._get_last_table())
                     result += self._close_stack('tr') + '\n'
                 except ValueError:
                     pass
@@ -322,7 +329,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
             # The documentation says padding is BEFORE the final >, but for
             # table nodes it seems to be the padding after it
-            if node.wiki_markup in {'{|', '!-', '|-'}:
+            if node.wiki_markup in {'{|'} | TABLE_ROWS:
                 result += node.padding
 
             # If this is not a self-closing tag, add it to the stack.
