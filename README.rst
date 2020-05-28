@@ -26,3 +26,10 @@ a ``str`` of HTML. It involves two steps:
     >>> import mwcomposerfromhell
     >>> wikicode = mwparserfromhell.parse(text)  # Step 1
     >>> html = mwcomposerfromhell.compose(wikicode)  # Step 2
+
+You can also use it from the command line if you already have your wikicode in
+a file. The convert HTML is output on standard out.
+
+.. code-block:: sh
+
+    python -m mwcomposerfromhell path/to/my/wikicode

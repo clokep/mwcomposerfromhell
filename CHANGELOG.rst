@@ -19,6 +19,7 @@ next
 * Partially support rendering of edit links.
 * Properly handle ``nowiki``, ``includeonly``, and `noinclude`` tags.
 * Support link trails (e.g. ``[[Foo]]bar``).
+* The ``mwcomposerfromhell`` module can now be called to convert a file.
 
 0.3 (May 21, 2020)
 ==================
