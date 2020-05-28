@@ -191,6 +191,10 @@ ISBN with multiple spaces, no number
 Unclosed language converter markup "-{"
 Id starting with underscore
 new support for bdi element (T33817)
+Lists: 7. Escape bullets in a multi-line context
+Tables: 1b. No escaping needed
+Tables: 1c. No escaping needed
+Tables: 1d. No escaping needed
 Tables: 2c. Nested in td -- no escaping needed
 Tables: 3a. Nested in th
 Tables: 4a. Escape -
@@ -199,6 +203,12 @@ Links 2. WikiLinks: Escapes needed
 Links 3. WikiLinks: No escapes needed
 Links 7b. Don't add spurious <nowiki/>s between text-nodes and url-links (T66300)
 Links 14. Protect link-like plain text. (Parsoid bug T78425)
+4. No escaping needed
+1. No unnecessary escapes
+Escaping nowikis
 Tag-like HTML structures are passed through as text
+Support <object> element with .data attribute
 Serialize wikitext list items as HTML list items when embedded in a HTML list
+2. Headings: don't suppress empty headings if scrubWikitext is false
+5b. font tags should not be dropped without scrubWikitext being enabled
 Do not trim whitespace in links and quotes
