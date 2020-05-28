@@ -12,6 +12,7 @@ Italics and bold: 3-quote opening sequence: (3,2)
 Italics and bold: 3-quote opening sequence: (3,3)
 Italics and bold: 3-quote opening sequence: (3,4)
 Italics and bold: 4-quote opening sequence: (4,2)
+Italics and bold: 4-quote opening sequence: (4,2) w/ nowiki
 Italics and bold: 4-quote opening sequence: (4,3)
 Italics and bold: 4-quote opening sequence: (4,4)
 Italics and bold: 4-quote opening sequence: (4,4) w/ nowiki
@@ -29,6 +30,9 @@ Italics and bold: other quote tests: (3,(2,2),3)
 Italicized possessive
 Bare pipe character (T54363)
 Bare pipe character from a template (T54363)
+<nowiki> unordered list
+Don't parse <nowiki><span class="error"></nowiki> (T149622)
+Entities inside <nowiki>
 Comment test 2a
 Comment test 2b
 Comment test 3
@@ -45,6 +49,7 @@ T17491: <ins>/<del> in blockquote (2)
 <pre> with attributes (T5202)
 <pre> with width attribute (T5202)
 Entities inside <pre>
+</pre> inside nowiki
 Parsoid: handle pre with space after attribute
 Templates: Don't recognize targets split by newlines
 Indent-Pre: Newlines in comments shouldn't affect sol state
@@ -153,6 +158,7 @@ Preprocessor precedence 19: break syntax
 Table wikitext syntax outside wiki-tables
 Templates: Links: 2. Generation of link href
 subst: does not work during normal parse
+Parsoid: Recognize nowiki with trailing space in tags
 Broken image caption with link
 T3186 news: in the middle of text
 div with no attributes
@@ -191,7 +197,9 @@ ISBN with multiple spaces, no number
 Unclosed language converter markup "-{"
 Id starting with underscore
 new support for bdi element (T33817)
+Headings: 4c. Short headings (1)
 Lists: 7. Escape bullets in a multi-line context
+Tables: 1a. Simple example
 Tables: 1b. No escaping needed
 Tables: 1c. No escaping needed
 Tables: 1d. No escaping needed
@@ -205,6 +213,9 @@ Links 7b. Don't add spurious <nowiki/>s between text-nodes and url-links (T66300
 Links 14. Protect link-like plain text. (Parsoid bug T78425)
 4. No escaping needed
 1. No unnecessary escapes
+1. Leading whitespace in SOL context should be escaped
+3. multi-line html tag
+4. extension tags
 Escaping nowikis
 Tag-like HTML structures are passed through as text
 Support <object> element with .data attribute
