@@ -53,6 +53,7 @@ Entities inside <pre>
 Parsoid: handle pre with space after attribute
 Templates: Don't recognize targets split by newlines
 Indent-Pre: Newlines in comments shouldn't affect sol state
+HTML-pre: big spaces
 HTML-pre: 2: indented text
 HTML-pre: 3: other wikitext
 T13748: Literal closing tags

@@ -96,6 +96,17 @@ def test_nowiki():
     assert compose(wikicode) == "<p><i>'''Foo'''bar</i></p>"
 
 
+def test_pre():
+    """pre is similar to nowiki"""
+    content = """<pre><!--Comment-->
+
+[[wiki]] markup &amp;</pre>"""
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == """<pre>&lt;!--Comment--&gt;
+
+[[wiki]] markup &amp;</pre>"""
+
+
 def test_invalid_resolver():
     """An unknown resolver type should raise an error."""
     with pytest.raises(ValueError):

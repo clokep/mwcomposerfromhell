@@ -56,7 +56,7 @@ class HtmlComposingError(Exception):
 
 
 class WikiNodeVisitor:
-    def visit(self, node, in_root: bool = False) -> str:
+    def visit(self, node, in_root: bool = False, in_pre: bool = False) -> str:
         method_name = 'visit_' + node.__class__.__name__
 
         try:
@@ -64,7 +64,7 @@ class WikiNodeVisitor:
         except AttributeError:
             raise UnknownNode('Unknown node type: {}'.format(node.__class__.__name__))
 
-        return method(node, in_root)
+        return method(node, in_root, in_pre)
 
 
 class WikicodeToHtmlComposer(WikiNodeVisitor):
@@ -245,10 +245,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         title = canonical_title.full_title + ' (page does not exist)'
         return '<a href="{}" class="new" title="{}">'.format(url, title) + text + '</a>'
 
-    def visit_Wikicode(self, node, in_root: bool = False) -> str:
-        return ''.join(map(lambda n: self.visit(n, in_root), self._fix_nodes(node.nodes)))
+    def visit_Wikicode(self, node, in_root: bool = False, in_pre: bool = False) -> str:
+        return ''.join(map(lambda n: self.visit(n, in_root, in_pre), self._fix_nodes(node.nodes)))
 
-    def visit_Tag(self, node, in_root: bool = False) -> str:
+    def visit_Tag(self, node, in_root: bool = False, in_pre: bool = False) -> str:
         result = ''
 
         # List tags require a parent tag to be opened first, but get grouped
@@ -338,7 +338,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         # Handle anything inside of the tag.
         if node.contents:
-            result += self.visit(node.contents)
+            result += self.visit(node.contents, in_pre=tag == 'pre')
 
         # If this is not self-closing, close this tag and any other open tags
         # after it.
@@ -348,15 +348,15 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         return result
 
-    def visit_Attribute(self, node, in_root: bool = False) -> str:
+    def visit_Attribute(self, node, in_root: bool = False, in_pre: bool = False) -> str:
         # Just use the string version of the attribute, it does all the parsing
         # that we want.
         return str(node)
 
-    def visit_Heading(self, node, in_root: bool = False) -> str:
+    def visit_Heading(self, node, in_root: bool = False, in_pre: bool = False) -> str:
         return '<h{}>'.format(node.level) + self.visit(node.title) + '</h{}>'.format(node.level)
 
-    def visit_Wikilink(self, node, in_root: bool = False) -> str:
+    def visit_Wikilink(self, node, in_root: bool = False, in_pre: bool = False) -> str:
         result = self._maybe_open_tag(in_root)
 
         # Get the rendered title.
@@ -385,7 +385,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         else:
             return result + self._get_edit_link(canonical_title, text)
 
-    def visit_ExternalLink(self, node, in_root: bool = False) -> str:
+    def visit_ExternalLink(self, node, in_root: bool = False, in_pre: bool = False) -> str:
         """
         Generate the HTML for an external link.
 
@@ -407,16 +407,23 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         return result + '<a ' + extra + 'href="' + self.visit(node.url) + '">' + text + '</a>'
 
-    def visit_Comment(self, node, in_root: bool = False) -> str:
+    def visit_Comment(self, node, in_root: bool = False, in_pre: bool = False) -> str:
         """HTML comments just get ignored."""
         return ''
 
-    def visit_Text(self, node, in_root: bool = False) -> str:
+    def visit_Text(self, node, in_root: bool = False, in_pre: bool = False) -> str:
         # Write a text element.
-        result = ''
 
         # Render the text.
         text_result = html.escape(node.value, quote=False)
+
+        # pre tags are similar to nowiki, the contents should be unparsd,
+        # except for HTML entities. We don't want to run visit() here since
+        # Text nodes have a bunch of special sparsing around new-lines, etc.
+        if in_pre:
+            return text_result
+
+        result = ''
 
         # Handle newlines, which modify paragraphs and how elements get closed.
         # Filter out blank strings after splitting on newlines.
@@ -460,7 +467,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         return result
 
-    def visit_Template(self, node, in_root: bool = False) -> str:
+    def visit_Template(self, node, in_root: bool = False, in_pre: bool = False) -> str:
         # Render the key into a string. This handles weird nested cases, e.g.
         # {{f{{text|oo}}bar}}.
         template_name = self.visit(node.name).strip()
@@ -554,7 +561,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
                 return result
 
-    def visit_Argument(self, node, in_root: bool = False) -> str:
+    def visit_Argument(self, node, in_root: bool = False, in_pre: bool = False) -> str:
         # There's no provided values, so just render the string.
         # Templates have special handling for Arguments.
         param_name = self.visit(node.name).strip()
@@ -575,7 +582,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             else:
                 return str(node)
 
-    def visit_HTMLEntity(self, node, in_root: bool = False) -> str:
+    def visit_HTMLEntity(self, node, in_root: bool = False, in_pre: bool = False) -> str:
         # Write the original HTML entity.
         return self._maybe_open_tag(in_root) + str(node)
 
