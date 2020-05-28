@@ -269,10 +269,29 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                     return self.visit(node.contents)
                 return ''
 
-            # Maybe wrap the tag in a paragraph, notably this gets ignored for
-            # tables and some other tags.
+            # Maybe wrap the tag in a paragraph. This only applies to inline
+            # tags, such as bold and italics..
             if node.wiki_markup in INLINE_TAGS:
                 result += self._maybe_open_tag(in_root)
+
+            # If we're opening a table header or data element, ensure that a row
+            # is already open.
+            if node.wiki_markup in {'!', '|'}:
+                # Find the part of the stack since the last table was opened.
+                last_table = -1
+                for it, stack_tag in enumerate(self._stack):
+                    if stack_tag == 'table':
+                        last_table = it
+
+                # A table should always be found.
+                assert last_table != -1
+
+                # Open a new row if not currently in a row.
+                try:
+                    self._stack.index('tr', last_table)
+                except ValueError:
+                    self._stack.append('tr')
+                    result += '<tr>'
 
             # Create an HTML tag.
             result += '<' + tag

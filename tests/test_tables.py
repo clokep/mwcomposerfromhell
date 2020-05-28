@@ -32,3 +32,13 @@ def test_table_class():
     assert compose(wikicode) == """<table class="wikitable"><tr><th> Header 1 </th><th> Header 2
 </th></tr><tr><td> Example 1 </td><td> Example 2
 </td></tr></table>"""
+
+
+def test_bad_syntax():
+    """Some bad syntax (missing row) should still make a proper HTML table."""
+    content = """{|
+|x
+|}"""
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == """<table><tr><td>x
+</td></tr></table>"""
