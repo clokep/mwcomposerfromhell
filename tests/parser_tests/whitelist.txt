@@ -226,6 +226,7 @@ Links 14. Protect link-like plain text. (Parsoid bug T78425)
 4. No escaping needed
 1. No unnecessary escapes
 1. Leading whitespace in SOL context should be escaped
+1. a tags
 3. multi-line html tag
 4. extension tags
 Escaping nowikis

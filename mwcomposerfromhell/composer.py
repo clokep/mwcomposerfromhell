@@ -327,13 +327,19 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 except ValueError:
                     pass
 
+            # Certain tags are blacklisted from being parsed and get escaped instead.
+            valid_tag = tag not in {'a'}
+
             # Create an HTML tag.
-            result += '<' + tag
+            stack_open = '<' + tag
             for attr in node.attributes:
-                result += self.visit(attr)
+                stack_open += self.visit(attr)
             if node.self_closing:
-                result += ' /'
-            result += '>'
+                stack_open += ' /'
+            stack_open += '>'
+            if not valid_tag:
+                stack_open = html.escape(stack_open)
+            result += stack_open
 
             # The documentation says padding is BEFORE the final >, but for
             # table nodes it seems to be the padding after it
@@ -355,7 +361,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # after it.
         # TODO This only happens to work because lists are not self-closing.
         if not node.self_closing:
-            result += self._close_stack(tag)
+            stack_end = self._close_stack(tag)
+            if not valid_tag:
+                stack_end = html.escape(stack_end)
+            result += stack_end
 
         return result
 

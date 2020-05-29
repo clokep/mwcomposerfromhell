@@ -103,9 +103,16 @@ def test_unknown_node():
 
 def test_html():
     """Test a couple of HTML aspects."""
-    content = "<hr></hr><hr/><hr /><a ></a >"
+    content = "<hr></hr><hr/><hr /><i ></i >"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == "<hr /><hr /><hr /><hr /><a></a>"
+    assert compose(wikicode) == "<hr /><hr /><hr /><hr /><i></i>"
+
+
+def test_html_a():
+    """Anchor tags are not alloewd."""
+    content = '<a href="foo">&bar&amp;</a>'
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == '&lt;a href=&quot;foo&quot;&gt;&amp;bar&amp;&lt;/a&gt;'
 
 
 def test_nowiki():

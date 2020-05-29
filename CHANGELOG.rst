@@ -22,6 +22,7 @@ next
 * More accurate table rendering.
 * Support for handling preformatted text (in the body or in a ``pre`` tag).
 * The ``mwcomposerfromhell`` module can now run as a module to convert a file.
+* Do not render raw ``a`` tags.
 
 0.3 (May 21, 2020)
 ==================
