@@ -11,7 +11,7 @@ from tests.parser_tests import MediaWikiParserTestCasesParser
 
 # Only a subset of tests pass right now.
 with open(Path(__file__).parent / 'whitelist.txt') as f:
-    WHITELIST = set([l.strip() for l in f])
+    WHITELIST = set([line.strip() for line in f])
 
 # Whether to only run the tests above or to run them all and skip failing tests.
 ONLY_RUN_WHITELIST = False

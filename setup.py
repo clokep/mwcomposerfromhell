@@ -37,8 +37,8 @@ setup(
             "pytest==4.4.1",
             "pytest-cov==2.7.1",
             # Style checking.
-            "flake8==3.7.7",
-            "flake8-builtins==1.4.1",  # For disallowing shadowing of Python built-ins.
+            "flake8==3.8.2",
+            "flake8-builtins==1.5.3",  # For disallowing shadowing of Python built-ins.
             "flake8-import-order==0.18.1",
             # Typing related.
             "mypy",
