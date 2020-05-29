@@ -13,4 +13,4 @@ before_script:
   - mypy
 
 script:
-  - pytest --cov=mwcomposerfromhell
+  - coverage run -m pytest

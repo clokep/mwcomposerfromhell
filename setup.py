@@ -34,8 +34,8 @@ setup(
     extras_require={
         "dev": [
             # For running tests.
-            "pytest==4.4.1",
-            "pytest-cov==2.7.1",
+            "pytest==5.4.2",
+            'coverage',
             # Style checking.
             "flake8==3.8.2",
             "flake8-builtins==1.5.3",  # For disallowing shadowing of Python built-ins.
