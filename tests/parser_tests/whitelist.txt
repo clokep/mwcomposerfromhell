@@ -46,13 +46,17 @@ Comment semantics: nesting
 Comment semantics: normalize comments to play nice with XML and browsers
 Comment in template title
 No block tags
+Regression with preformatted in <center>
 T17491: <ins>/<del> in blockquote (2)
 <pre> with attributes (T5202)
 <pre> with width attribute (T5202)
 Entities inside <pre>
 </pre> inside nowiki
+HTML pre followed by indent-pre
 Parsoid: handle pre with space after attribute
 Templates: Don't recognize targets split by newlines
+2e. Indent-Pre and table-line syntax
+5b. White-space in indent-pre
 Indent-Pre: Newlines in comments shouldn't affect sol state
 HTML-pre: big spaces
 HTML-pre: 2: indented text

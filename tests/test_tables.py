@@ -49,3 +49,19 @@ def test_bad_syntax():
     wikicode = mwparserfromhell.parse(content)
     assert compose(wikicode) == """<table>\n<tr>\n<td>x
 </td></tr></table>"""
+
+
+def test_preformatted_table():
+    """Preformatted text inside a table should work properly."""
+    content = """{|
+|-
+| Foo
+ Bar
+|}"""
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == """<table>
+<tr>
+<td> Foo
+<pre>Bar
+</pre>
+</td></tr></table>"""

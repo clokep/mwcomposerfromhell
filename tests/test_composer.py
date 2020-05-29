@@ -68,12 +68,31 @@ def test_entity_in_text():
     assert compose(wikicode) == '<p>&lt;test&gt; &amp;</p>'
 
 
-@pytest.mark.skip('Not currently supported')
 def test_preformatted():
     """Preformatted text should work properly."""
     content = " foo"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<pre>foo</pre>'
+    assert compose(wikicode) == '<pre>foo</pre>\n'
+
+
+def test_preformatted_complicated():
+    """"""
+    # Note the lines with just spaces on them.
+    content = "foo\n \n \n \n  bar\n\n baz\n"
+    wikicode = mwparserfromhell.parse(content)
+    print(repr(compose(wikicode)))
+    assert compose(wikicode) == "<p>foo\n</p><p><br />\n</p><pre> bar\n</pre>\n<pre>baz\n</pre>\n"
+
+
+def test_pre():
+    """pre is similar to nowiki"""
+    content = """<pre><!--Comment-->
+
+[[wiki]] markup &amp;</pre>"""
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == """<pre>&lt;!--Comment--&gt;
+
+[[wiki]] markup &amp;</pre>"""
 
 
 def test_unknown_node():
@@ -94,17 +113,6 @@ def test_nowiki():
     content = "''<nowiki>'''Foo'''</nowiki>bar''"
     wikicode = mwparserfromhell.parse(content)
     assert compose(wikicode) == "<p><i>'''Foo'''bar</i></p>"
-
-
-def test_pre():
-    """pre is similar to nowiki"""
-    content = """<pre><!--Comment-->
-
-[[wiki]] markup &amp;</pre>"""
-    wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == """<pre>&lt;!--Comment--&gt;
-
-[[wiki]] markup &amp;</pre>"""
 
 
 def test_invalid_resolver():

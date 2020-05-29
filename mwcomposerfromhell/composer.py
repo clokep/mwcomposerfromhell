@@ -56,7 +56,15 @@ class HtmlComposingError(Exception):
 
 
 class WikiNodeVisitor:
-    def visit(self, node, in_root: bool = False, in_pre: bool = False) -> str:
+    def visit(self, node, in_root: bool = False, ignore_whitespace: bool = False) -> str:
+        """
+        Calculate the method to call to handle this node, passing along inputs to it.
+
+        :param node: The node to handle.
+        :param in_root: Whether this node is a direct descendant of the root Wikicode object.
+        :param ignore_whitespace: Whether to skip special whitespace handling.
+        :return: The result of handling this node (recursively).
+        """
         method_name = 'visit_' + node.__class__.__name__
 
         try:
@@ -64,7 +72,7 @@ class WikiNodeVisitor:
         except AttributeError:
             raise UnknownNode('Unknown node type: {}'.format(node.__class__.__name__))
 
-        return method(node, in_root, in_pre)
+        return method(node, in_root, ignore_whitespace)
 
 
 class WikicodeToHtmlComposer(WikiNodeVisitor):
@@ -245,10 +253,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         title = canonical_title.full_title + ' (page does not exist)'
         return '<a href="{}" class="new" title="{}">'.format(url, title) + text + '</a>'
 
-    def visit_Wikicode(self, node, in_root: bool = False, in_pre: bool = False) -> str:
-        return ''.join(map(lambda n: self.visit(n, in_root, in_pre), self._fix_nodes(node.nodes)))
+    def visit_Wikicode(self, node, in_root: bool = False, ignore_whitespace: bool = False) -> str:
+        return ''.join(map(lambda n: self.visit(n, in_root, ignore_whitespace), self._fix_nodes(node.nodes)))
 
-    def visit_Tag(self, node, in_root: bool = False, in_pre: bool = False) -> str:
+    def visit_Tag(self, node, in_root: bool = False, ignore_whitespace: bool = False) -> str:
         result = ''
 
         # List tags require a parent tag to be opened first, but get grouped
@@ -338,7 +346,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         # Handle anything inside of the tag.
         if node.contents:
-            result += self.visit(node.contents, in_pre=tag == 'pre')
+            # Ignore whitespace if it is already being ignored or this is a
+            # <pre> tag.
+            ignore_whitespace = ignore_whitespace or tag == 'pre'
+            result += self.visit(node.contents, ignore_whitespace=ignore_whitespace)
 
         # If this is not self-closing, close this tag and any other open tags
         # after it.
@@ -348,15 +359,15 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         return result
 
-    def visit_Attribute(self, node, in_root: bool = False, in_pre: bool = False) -> str:
+    def visit_Attribute(self, node, in_root: bool = False, ignore_whitespace: bool = False) -> str:
         # Just use the string version of the attribute, it does all the parsing
         # that we want.
         return str(node)
 
-    def visit_Heading(self, node, in_root: bool = False, in_pre: bool = False) -> str:
+    def visit_Heading(self, node, in_root: bool = False, ignore_whitespace: bool = False) -> str:
         return '<h{}>'.format(node.level) + self.visit(node.title) + '</h{}>'.format(node.level)
 
-    def visit_Wikilink(self, node, in_root: bool = False, in_pre: bool = False) -> str:
+    def visit_Wikilink(self, node, in_root: bool = False, ignore_whitespace: bool = False) -> str:
         result = self._maybe_open_tag(in_root)
 
         # Get the rendered title.
@@ -385,7 +396,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         else:
             return result + self._get_edit_link(canonical_title, text)
 
-    def visit_ExternalLink(self, node, in_root: bool = False, in_pre: bool = False) -> str:
+    def visit_ExternalLink(self, node, in_root: bool = False, ignore_whitespace: bool = False) -> str:
         """
         Generate the HTML for an external link.
 
@@ -407,22 +418,79 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         return result + '<a ' + extra + 'href="' + self.visit(node.url) + '">' + text + '</a>'
 
-    def visit_Comment(self, node, in_root: bool = False, in_pre: bool = False) -> str:
+    def visit_Comment(self, node, in_root: bool = False, ignore_whitespace: bool = False) -> str:
         """HTML comments just get ignored."""
         return ''
 
-    def visit_Text(self, node, in_root: bool = False, in_pre: bool = False) -> str:
-        # Write a text element.
+    def visit_Text(self, node, in_root: bool = False, ignore_whitespace: bool = False) -> str:
+        """
+        Handle a text element, including HTML escaping contents.
 
-        # Render the text.
+        This has some special logic in it to deal with spacing, this includes:
+        * Handling of preformatted text.
+        * Paragraphs.
+
+        """
+        # Escape HTML entities in the text.
         text_result = html.escape(node.value, quote=False)
 
-        # pre tags are similar to nowiki, the contents should be unparsd,
-        # except for HTML entities. We don't want to run visit() here since
-        # Text nodes have a bunch of special sparsing around new-lines, etc.
-        if in_pre:
+        # Certain tags avoid any special whitespace handling, e.g. <pre> tags
+        # and template keys. Just return the contents after escaping HTML
+        # entities.
+        if ignore_whitespace:
             return text_result
 
+        result = ''
+
+        # Each line of content is handled separately.
+        lines = list(filter(None, text_result.splitlines(keepends=True)))  # type: List[str]
+
+        # This needs to be a new-line and start with a space.
+        start = 0
+        in_section_pre = False
+        for it, line in enumerate(lines):
+            # The first line can only be preformatted if:
+            # * It is in the root Wikicode object.
+            # * The stack is empty.
+            # * There are not any pending lists.
+            if it == 0 and (not in_root or self._stack or self._pending_lists):
+                continue
+
+            # If the line is purely whitespace (+ a new-line) then it is part
+            # of whatever the current section is.
+            if len(line) > 1 and not line.strip():
+                continue
+
+            # Calculate when text changes to/from normal text to preformatted
+            # text.
+            #
+            # The first clause describes what is necessary for preformatted
+            # text, a line starting with a space, some text content (followed by
+            # a new-line).
+            #
+            # Note that lines that are purely whitespace are caught above.
+            if (len(line) > 2 and line[0] == ' ') != in_section_pre:
+                # If this is the start of a new section, add the previous one.
+                if in_section_pre:
+                    # The first space at the start of each line gets removed.
+                    result += '<pre>' + ''.join(map(lambda l: l[1:], lines[start:it])) + '</pre>'
+                else:
+                    result += self._handle_text(''.join(lines[start:it]), in_root)
+
+                start = it
+                in_section_pre = not in_section_pre
+
+        # Need to handle the final section.
+        if in_section_pre:
+            # The first space at the start of each line gets removed.
+            result += '<pre>' + ''.join(map(lambda l: l[1:], lines[start:])) + '</pre>\n'
+        else:
+            result += self._handle_text(''.join(lines[start:]), in_root)
+
+        return result
+
+    def _handle_text(self, text_result, in_root):
+        """The raw text node handler, this has the logic for opening paragraphs."""
         result = ''
 
         # Handle newlines, which modify paragraphs and how elements get closed.
@@ -468,7 +536,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         return result
 
-    def visit_Template(self, node, in_root: bool = False, in_pre: bool = False) -> str:
+    def visit_Template(self, node, in_root: bool = False, ignore_whitespace: bool = False) -> str:
         # Render the key into a string. This handles weird nested cases, e.g.
         # {{f{{text|oo}}bar}}.
         template_name = self.visit(node.name).strip()
@@ -479,7 +547,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         for param in node.params:
             # See https://meta.wikimedia.org/wiki/Help:Template#Parameters
             # for information about stripping whitespace around parameters.
-            param_name = self.visit(param.name).strip()
+            param_name = self.visit(param.name, ignore_whitespace=True).strip()
             param_value = self.visit(param.value)
 
             # Only named parameters strip whitespace around the value.
@@ -562,7 +630,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
                 return result
 
-    def visit_Argument(self, node, in_root: bool = False, in_pre: bool = False) -> str:
+    def visit_Argument(self, node, in_root: bool = False, ignore_whitespace: bool = False) -> str:
         # There's no provided values, so just render the string.
         # Templates have special handling for Arguments.
         param_name = self.visit(node.name).strip()
@@ -583,7 +651,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             else:
                 return str(node)
 
-    def visit_HTMLEntity(self, node, in_root: bool = False, in_pre: bool = False) -> str:
+    def visit_HTMLEntity(self, node, in_root: bool = False, ignore_whitespace: bool = False) -> str:
         # Write the original HTML entity.
         return self._maybe_open_tag(in_root) + str(node)
 
