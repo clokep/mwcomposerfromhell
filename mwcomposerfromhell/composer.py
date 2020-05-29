@@ -31,8 +31,8 @@ LIST_TAGS = {'ul', 'ol', 'li', 'dl', 'dt', 'dd'}
 TABLE_ROWS = {'!-', '|-'}
 TABLE_CELLS = {'!', '|'}
 
-# One or more new-line.
-LINE_BREAK_PATTERN = re.compile(r'(\n+)')
+# One or more line-breaks, including any spaces at the start of lines.
+LINE_BREAK_PATTERN = re.compile(r'(\n(?: *\n)*)')
 # Patterns used to strip comments.
 LINE_BREAK_SPACES_PATTERN = re.compile(r'\n *')
 SPACES_LINE_BREAK_PATTERN = re.compile(r' *\n')
@@ -432,7 +432,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         for it, chunk in enumerate(chunks):
             # Each chunk will either be all newlines, or just content.
             if '\n' in chunk:
-                line_breaks = len(chunk)
+                # Lines which only consist of whitespace get normalized to empty.
+                line_breaks = len(chunk.replace(' ', ''))
 
                 if it > 0 or line_breaks == 1 or line_breaks == 2:
                     result += '\n'
