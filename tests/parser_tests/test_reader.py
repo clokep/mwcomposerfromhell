@@ -1,6 +1,6 @@
 from io import StringIO
 
-from . import MediaWikiParserTestCasesParser
+from . import _parse_options, MediaWikiParserTestCasesParser
 
 
 def test_article():
@@ -74,7 +74,7 @@ Blank input
     }]
 
 
-def test_options():
+def test_parser_options():
     """An options section can exist."""
     parser = MediaWikiParserTestCasesParser(StringIO("""!! test
 Options
@@ -95,44 +95,87 @@ pst
     }]
 
 
+def test_options():
+    """An options section can exist."""
+    result = _parse_options("""
+pst
+""")
+    assert result == {'pst': True}
+
+
 def test_options_with_value():
     """An options section can exist."""
-    parser = MediaWikiParserTestCasesParser(StringIO("""!! test
-Options with value
-!! wikitext
-!! options
+    result = _parse_options("""
 thumbsize=0
 language=en
-!! html
-!! end
-"""))
-    parser.parse()
+""")
+    assert result == {'thumbsize': ['0'], 'language': ['en']}
 
-    assert parser.articles == {}
-    assert parser.test_cases == [{
-        'test': 'Options with value\n',
-        'wikitext': '',
-        'options': {'thumbsize': '0', 'language': 'en'},
-        'html': '',
-    }]
+
+def test_options_with_quoted_value():
+    """Option values can be quoted to contain spaces."""
+    result = _parse_options("""
+test="foo bar"
+""")
+    assert result == {'test': ['foo bar']}
+
+
+def test_options_with_multiple_values():
+    """Each option can have multiple values (and they can have spaces around them)."""
+    result = _parse_options("""
+test=foo,bar
+""")
+    assert result == {'test': ['foo', 'bar']}
 
 
 def test_options_with_title():
     """An options section can exist."""
-    parser = MediaWikiParserTestCasesParser(StringIO("""!! test
-Options with title
-!! wikitext
-!! options
+    result = _parse_options("""
 title=[[Foo bar]]
-!! html
-!! end
-"""))
-    parser.parse()
+""")
+    assert result == {'title': ['Foo bar']}
 
-    assert parser.articles == {}
-    assert parser.test_cases == [{
-        'test': 'Options with title\n',
-        'wikitext': '',
-        'options': {'title': 'Foo bar'},
-        'html': '',
-    }]
+
+def test_options_json():
+    """Parsoid options can be JSON."""
+    result = _parse_options("""
+parsoid={ "modes": ["wt2html","wt2wt"], "normalizePhp": true }
+""")
+    assert result == {
+        'parsoid': [{
+            'modes': ['wt2html', 'wt2wt'],
+            'normalizePhp': True,
+        }],
+    }
+
+
+def test_options_nested_json():
+    result = _parse_options("""
+parsoid={
+  "modes": ["wt2wt", "selser"],
+  "changes": [
+    ["a", "contents", "text", "\\"-{"],
+    ["td > span", "attr", "data-mw-variant", "{\\"disabled\\":{\\"t\\":\\"edited\\"}}"]
+  ]
+}
+""")
+    assert result == {
+        'parsoid': [{
+            'modes': ['wt2wt', 'selser'],
+            'changes': [
+                ['a', 'contents', 'text', '"-{'],
+                ['td > span', 'attr', 'data-mw-variant', '{"disabled":{"t":"edited"}}']
+            ],
+        }],
+    }
+
+
+def test_option_spacing():
+    """An options section can exist."""
+    result = _parse_options("""
+pst foo = bar, baz
+""")
+    assert result == {
+        'pst': True,
+        'foo': ['bar', 'baz'],
+    }
