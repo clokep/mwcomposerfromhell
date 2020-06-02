@@ -80,7 +80,6 @@ def test_preformatted_complicated():
     # Note the lines with just spaces on them.
     content = "foo\n \n \n \n  bar\n\n baz\n"
     wikicode = mwparserfromhell.parse(content)
-    print(repr(compose(wikicode)))
     assert compose(wikicode) == "<p>foo\n</p><p><br />\n</p><pre> bar\n</pre>\n<pre>baz\n</pre>\n"
 
 
