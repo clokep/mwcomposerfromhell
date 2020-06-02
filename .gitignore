@@ -5,6 +5,8 @@
 
 # Testing related.
 .pytest_cache
+.coverage
+htmlcov
 
 # Packaging related.
 mwcomposerfromhell.egg-info
