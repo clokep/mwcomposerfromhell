@@ -197,17 +197,17 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         return last_table
 
     def _fix_nodes(
-            self,
-            nodes_iterator: Iterator[StringMixIn],
+        self,
+        nodes_iterator: Iterator[StringMixIn],
     ) -> Generator[StringMixIn, None, None]:
         """
         Iterate through nodes making some fixes:
 
         * Skip comment nodes.
-        * Combine adjecent text nodes.
+        * Combine adjacent text nodes.
         * Handle link trails.
+        * Add proper spacing between table nodes.
 
-        Transforms [Text, Comment, Text] -> [Text]
         """
         prev_node = None
         for node in nodes_iterator:
@@ -231,7 +231,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 continue
 
             # The start of the text from a text node can be added to a link
-            # occuring before it.
+            # occurring before it.
             elif isinstance(prev_node, Wikilink) and isinstance(node, nodes.Text):
                 # Try to find a link trail and apply it to the previous link.
                 # TODO This should NOT apply if the previous link was to an image.
@@ -264,10 +264,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         return '<a href="{}" class="new" title="{}">'.format(url, title) + text + '</a>'
 
     def visit_Wikicode(
-            self,
-            node: wikicode.Wikicode,
-            in_root: bool = False,
-            ignore_whitespace: bool = False,
+        self,
+        node: wikicode.Wikicode,
+        in_root: bool = False,
+        ignore_whitespace: bool = False,
     ) -> str:
         return ''.join(
             map(
@@ -277,10 +277,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         )
 
     def visit_Tag(
-            self,
-            node: nodes.Tag,
-            in_root: bool = False,
-            ignore_whitespace: bool = False,
+        self,
+        node: nodes.Tag,
+        in_root: bool = False,
+        ignore_whitespace: bool = False,
     ) -> str:
         result = ''
 
@@ -394,20 +394,20 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         return result
 
     def visit_Attribute(
-            self,
-            node: extras.Attribute,
-            in_root: bool = False,
-            ignore_whitespace: bool = False,
+        self,
+        node: extras.Attribute,
+        in_root: bool = False,
+        ignore_whitespace: bool = False,
     ) -> str:
         # Just use the string version of the attribute, it does all the parsing
         # that we want.
         return str(node)
 
     def visit_Heading(
-            self,
-            node: nodes.Heading,
-            in_root: bool = False,
-            ignore_whitespace: bool = False,
+        self,
+        node: nodes.Heading,
+        in_root: bool = False,
+        ignore_whitespace: bool = False,
     ) -> str:
         return '<h{}>'.format(node.level) + self.visit(node.title) + '</h{}>'.format(node.level)
 
@@ -446,10 +446,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             return result + self._get_edit_link(canonical_title, text)
 
     def visit_ExternalLink(
-            self,
-            node: nodes.ExternalLink,
-            in_root: bool = False,
-            ignore_whitespace: bool = False,
+        self,
+        node: nodes.ExternalLink,
+        in_root: bool = False,
+        ignore_whitespace: bool = False,
     ) -> str:
         """
         Generate the HTML for an external link.
@@ -473,19 +473,19 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         return result + '<a ' + extra + 'href="' + self.visit(node.url) + '">' + text + '</a>'
 
     def visit_Comment(
-            self,
-            node: nodes.Comment,
-            in_root: bool = False,
-            ignore_whitespace: bool = False,
+        self,
+        node: nodes.Comment,
+        in_root: bool = False,
+        ignore_whitespace: bool = False,
     ) -> str:
         """HTML comments just get ignored."""
         return ''
 
     def visit_Text(
-            self,
-            node: nodes.Text,
-            in_root: bool = False,
-            ignore_whitespace: bool = False,
+        self,
+        node: nodes.Text,
+        in_root: bool = False,
+        ignore_whitespace: bool = False,
     ) -> str:
         """
         Handle a text element, including HTML escaping contents.
@@ -601,10 +601,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         return result
 
     def visit_Template(
-            self,
-            node: nodes.Template,
-            in_root: bool = False,
-            ignore_whitespace: bool = False,
+        self,
+        node: nodes.Template,
+        in_root: bool = False,
+        ignore_whitespace: bool = False,
     ) -> str:
         # Render the key into a string. This handles weird nested cases, e.g.
         # {{f{{text|oo}}bar}}.
@@ -700,9 +700,9 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 return result
 
     def visit_Argument(
-            self, node: nodes.Argument,
-            in_root: bool = False,
-            ignore_whitespace: bool = False,
+        self, node: nodes.Argument,
+        in_root: bool = False,
+        ignore_whitespace: bool = False,
     ) -> str:
         # There's no provided values, so just render the string.
         # Templates have special handling for Arguments.
@@ -725,10 +725,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 return str(node)
 
     def visit_HTMLEntity(
-            self,
-            node: nodes.HTMLEntity,
-            in_root: bool = False,
-            ignore_whitespace: bool = False,
+        self,
+        node: nodes.HTMLEntity,
+        in_root: bool = False,
+        ignore_whitespace: bool = False,
     ) -> str:
         # Write the original HTML entity.
         return self._maybe_open_tag(in_root) + str(node)
