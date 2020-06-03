@@ -636,7 +636,6 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         # This represents a script, see https://www.mediawiki.org/wiki/Extension:Scribunto
         elif magic_word == '#invoke':
-
             try:
                 # Get the function names from the parameters.
                 _, function_name = context.popitem(last=False)

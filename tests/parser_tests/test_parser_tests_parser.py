@@ -1,11 +1,14 @@
 from io import StringIO
 
-from . import _parse_options, MediaWikiParserTestCasesParser
+from mwcomposerfromhell.parser_tests_parser import (
+    _parse_options,
+    MediaWikiParserTestsParser,
+)
 
 
 def test_article():
     """Test parsing an article."""
-    parser = MediaWikiParserTestCasesParser(StringIO("""!! article
+    parser = MediaWikiParserTestsParser(StringIO("""!! article
 Main Page
 !! text
 blah blah
@@ -19,7 +22,7 @@ blah blah
 
 def test_comments():
     """Comments and blank lines outside of sections should be ignored."""
-    parser = MediaWikiParserTestCasesParser(StringIO("""# This should be ignored.
+    parser = MediaWikiParserTestsParser(StringIO("""# This should be ignored.
 
 !! article
 Main Page
@@ -35,7 +38,7 @@ blah blah
 
 def test_test_case():
     """Comments and blank lines outside of sections should be ignored."""
-    parser = MediaWikiParserTestCasesParser(StringIO("""!! test
+    parser = MediaWikiParserTestsParser(StringIO("""!! test
 Simple paragraph
 !! wikitext
 This is a simple paragraph.
@@ -57,7 +60,7 @@ This is a simple paragraph.
 
 def test_blank_test_case():
     """Comments and blank lines outside of sections should be ignored."""
-    parser = MediaWikiParserTestCasesParser(StringIO("""!! test
+    parser = MediaWikiParserTestsParser(StringIO("""!! test
 Blank input
 !! wikitext
 !! html
@@ -76,7 +79,7 @@ Blank input
 
 def test_parser_options():
     """An options section can exist."""
-    parser = MediaWikiParserTestCasesParser(StringIO("""!! test
+    parser = MediaWikiParserTestsParser(StringIO("""!! test
 Options
 !! wikitext
 !! options

@@ -6,8 +6,8 @@ import mwparserfromhell
 import pytest
 
 from mwcomposerfromhell import ArticleResolver, Namespace, WikicodeToHtmlComposer
+from mwcomposerfromhell.parser_tests_parser import MediaWikiParserTestsParser
 from tests import patch_datetime
-from tests.parser_tests import MediaWikiParserTestCasesParser
 
 # Only a subset of tests pass right now.
 with open(Path(__file__).parent / 'whitelist.txt') as f:
@@ -30,9 +30,10 @@ patch_datetime_fixture = patch_datetime(datetime(1970, 1, 1, 0, 2, 3))
 def pytest_generate_tests(metafunc):
     """Auto-generate test cases from parserTests.txt."""
     with open(Path(__file__).parent.joinpath('parserTests.txt')) as f:
-        parser = MediaWikiParserTestCasesParser(f)
+        parser = MediaWikiParserTestsParser(f)
         parser.parse()
 
+    # The arguments that will be passed into each test case.
     argnames = ('wikitext', 'html', 'resolver', 'skip', 'expected_pass')
 
     # Namespace -> {Article name -> contents}
