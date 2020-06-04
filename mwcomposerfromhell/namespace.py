@@ -6,11 +6,17 @@ from urllib.parse import quote, unquote, urlencode
 
 from mwparserfromhell.wikicode import Wikicode
 
+from mwcomposerfromhell.magic_words import MAGIC_WORDS, MagicWord
+
 MULTIPLE_SPACES = re.compile(r' +')
 
 
 class ArticleNotFound(Exception):
     """The article was not found."""
+
+
+class MagicWordNotFound(Exception):
+    """The magic word does not exist."""
 
 
 class CanonicalTitle(namedtuple('CanonicalTitle', ('namespace', 'title', 'interwiki'))):
@@ -79,13 +85,21 @@ class Namespace:
 
 
 class ArticleResolver:
+    """
+    Holds the configuration of things that can be referenced from articles.
+    """
     def __init__(self, base_url: str = '/wiki/', edit_url: str = '/index.php'):
         # The base URL should be the root that articles sit in.
         self._base_url = base_url.rstrip('/')
         self._edit_url = edit_url
+
+        # A map of namespace names to Namespace objects. Used to find articles.
         self._namespaces = {}  # type: Dict[str, Namespace]
         # A map of the "canonical" namespace to the "human" capitalization.
         self._canonical_namespaces = {}  # type: Dict[str, str]
+
+        # A map of magic words to callables.
+        self._magic_words = MAGIC_WORDS  # type: Dict[str, MagicWord]
 
     def add_namespace(self, name: str, namespace: Namespace) -> None:
         self._namespaces[_normalize_namespace(name)] = namespace
@@ -195,3 +209,10 @@ class ArticleResolver:
             canonical_namespace = namespace
 
         return CanonicalTitle(canonical_namespace, _normalize_title(title), interwiki)
+
+    def get_magic_word(self, magic_word: str) -> MagicWord:
+        """Given a magic word, return the callable for it."""
+        try:
+            return self._magic_words[magic_word]
+        except KeyError:
+            raise MagicWordNotFound(magic_word)

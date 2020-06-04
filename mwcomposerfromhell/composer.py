@@ -1,15 +1,18 @@
 from collections import OrderedDict
 import html
 import re
-from typing import Dict, Generator, Iterator, List, Optional, Set, Tuple, Union
+from typing import Dict, Generator, Iterator, List, Optional, Set
 
 from mwparserfromhell import nodes, wikicode
 from mwparserfromhell.nodes import extras
 from mwparserfromhell.string_mixin import StringMixIn
 
-from mwcomposerfromhell.magic_words import MAGIC_WORDS
-from mwcomposerfromhell.modules import ModuleStore, UnknownModule
-from mwcomposerfromhell.namespace import ArticleNotFound, ArticleResolver, CanonicalTitle
+from mwcomposerfromhell.namespace import (
+    ArticleNotFound,
+    ArticleResolver,
+    CanonicalTitle,
+    MagicWordNotFound,
+)
 from mwcomposerfromhell.nodes import Wikilink
 
 # The markup for different lists mapped to the list tag and list item tag.
@@ -114,9 +117,6 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         elif not isinstance(resolver, ArticleResolver):
             raise ValueError('resolver must be an instance of ArticleResolver')
         self._resolver = resolver
-
-        # A place to lookup modules.
-        self._module_store = ModuleStore()
 
     def _maybe_open_tag(self, in_root: bool) -> str:
         """
@@ -631,72 +631,49 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # "magic word" or a namespace, followed by a single parameter.
         magic_word, _, param = template_name.partition(':')
 
-        if magic_word in MAGIC_WORDS:
-            return self._maybe_open_tag(in_root) + MAGIC_WORDS[magic_word]()
-
-        # This represents a script, see https://www.mediawiki.org/wiki/Extension:Scribunto
-        elif magic_word == '#invoke':
-            try:
-                # Get the function names from the parameters.
-                _, function_name = context.popitem(last=False)
-
-                # Get the actual function.
-                function = self._module_store.get_function(param, function_name)
-            except UnknownModule:
-                # TODO
-                return str(node)
-            else:
-                # Call the script with the provided context. Note that we
-                # can't do anything fancy with the parameters because
-                # MediaWiki lets you have non-named parameters after named
-                # parameters. We do need to re-number them, however, so that
-                # they begin at '1' and not '2'.
-                function_context = OrderedDict()  # OrderedDict[str, str]
-                for key, value in context.items():  # type: Tuple[Union[str, int], str]
-                    try:
-                        key = int(key) - 1
-                    except ValueError:
-                        pass
-                    function_context[str(key)] = value
-
-                return function(function_context)
+        try:
+            function = self._resolver.get_magic_word(magic_word)
+        except MagicWordNotFound:
+            pass
+        else:
+            return self._maybe_open_tag(in_root) + function()
 
         # Otherwise, this is a normal template.
-        else:
-            # Ensure that we don't end up in an infinite loop of templates.
-            if template_name in self._open_templates:
-                raise TemplateLoop(template_name)
-            self._open_templates.add(template_name)
 
-            try:
-                template = self._resolver.get_article(template_name, 'Template')
-            except ArticleNotFound:
-                # Template was not found.
-                result = self._maybe_open_tag(in_root)
+        # Ensure that we don't end up in an infinite loop of templates.
+        if template_name in self._open_templates:
+            raise TemplateLoop(template_name)
+        self._open_templates.add(template_name)
 
-                # When transcluding a non-template
-                if self._red_links:
-                    # Render an edit link.
-                    canonical_title = self._resolver.resolve_article(template_name, 'Template')
-                    return result + self._get_edit_link(canonical_title, template_name)
-                else:
-                    # Otherwise, simply output the template call.
-                    return result + self._maybe_open_tag(in_root) + str(node)
+        try:
+            template = self._resolver.get_article(template_name, 'Template')
+        except ArticleNotFound:
+            # Template was not found.
+            result = self._maybe_open_tag(in_root)
+
+            # When transcluding a non-template
+            if self._red_links:
+                # Render an edit link.
+                canonical_title = self._resolver.resolve_article(template_name, 'Template')
+                return result + self._get_edit_link(canonical_title, template_name)
             else:
-                # Render the template in only the context of its parameters.
-                composer = WikicodeToHtmlComposer(
-                    resolver=self._resolver,
-                    context=context,
-                    open_templates=self._open_templates)
-                result = composer.visit(template, in_root)
-                # Ensure the stack is closed at the end.
-                for current_tag in reversed(composer._stack):
-                    result += '</{}>'.format(current_tag)
+                # Otherwise, simply output the template call.
+                return result + self._maybe_open_tag(in_root) + str(node)
+        else:
+            # Render the template in only the context of its parameters.
+            composer = WikicodeToHtmlComposer(
+                resolver=self._resolver,
+                context=context,
+                open_templates=self._open_templates)
+            result = composer.visit(template, in_root)
+            # Ensure the stack is closed at the end.
+            for current_tag in reversed(composer._stack):
+                result += '</{}>'.format(current_tag)
 
-                # Remove it from the open templates.
-                self._open_templates.remove(template_name)
+            # Remove it from the open templates.
+            self._open_templates.remove(template_name)
 
-                return result
+            return result
 
     def visit_Argument(
         self, node: nodes.Argument,
