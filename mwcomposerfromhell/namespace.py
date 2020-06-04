@@ -1,9 +1,10 @@
 from collections import namedtuple
 import html
 import re
-from typing import Any, Dict
+from typing import Dict
 from urllib.parse import quote, unquote, urlencode
 
+from mwparserfromhell.wikicode import Wikicode
 
 MULTIPLE_SPACES = re.compile(r' +')
 
@@ -60,7 +61,7 @@ class Namespace:
     Note that each article is expected to already have the namespace name removed.
     """
 
-    def __init__(self, articles: Dict[str, Any] = None):
+    def __init__(self, articles: Dict[str, Wikicode] = None):
         if articles is None:
             self._articles = {}
         else:
@@ -69,10 +70,10 @@ class Namespace:
                 _normalize_title(name): article for name, article in articles.items()
             }
 
-    def __getitem__(self, key: str) -> Any:
+    def __getitem__(self, key: str) -> Wikicode:
         return self._articles[_normalize_title(key)]
 
-    def __setitem__(self, key: str, value: Any) -> Any:
+    def __setitem__(self, key: str, value: Wikicode) -> Wikicode:
         self._articles[_normalize_title(key)] = value
         return value
 
@@ -115,7 +116,7 @@ class ArticleResolver:
         """
         return self.canonicalize_title(name, default_namespace)
 
-    def get_article(self, name: str, default_namespace: str = ''):
+    def get_article(self, name: str, default_namespace: str = '') -> Wikicode:
         """
         Get an article's content (as ``mwparserfromhell.wikicode.Wikicode``) from a name.
 
