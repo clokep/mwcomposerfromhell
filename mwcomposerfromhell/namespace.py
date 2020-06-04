@@ -99,7 +99,7 @@ class ArticleResolver:
         self._canonical_namespaces = {}  # type: Dict[str, str]
 
         # A map of magic words to callables.
-        self._magic_words = MAGIC_WORDS  # type: Dict[str, MagicWord]
+        self._magic_words = MAGIC_WORDS.copy()  # type: Dict[str, MagicWord]
 
     def add_namespace(self, name: str, namespace: Namespace) -> None:
         self._namespaces[_normalize_namespace(name)] = namespace
@@ -216,3 +216,7 @@ class ArticleResolver:
             return self._magic_words[magic_word]
         except KeyError:
             raise MagicWordNotFound(magic_word)
+
+    def add_magic_word(self, magic_word: str, function: MagicWord) -> None:
+        """Add an additional magic word."""
+        self._magic_words[magic_word] = function

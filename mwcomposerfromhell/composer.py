@@ -636,7 +636,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         except MagicWordNotFound:
             pass
         else:
-            return self._maybe_open_tag(in_root) + function()
+            return self._maybe_open_tag(in_root) + function(param, context)
 
         # Otherwise, this is a normal template.
 

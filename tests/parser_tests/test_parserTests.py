@@ -22,7 +22,6 @@ PREFERRED_HTML = ('html', 'html/*', 'html/php', 'html/php+tidy', 'html/parsoid')
 # A known object.
 _SENTINEL = object()
 
-
 # Set the current time to a particular date.
 patch_datetime_fixture = patch_datetime(datetime(1970, 1, 1, 0, 2, 3))
 
