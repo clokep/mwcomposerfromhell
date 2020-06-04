@@ -1,10 +1,14 @@
 from datetime import datetime
 from typing import Callable, Dict, Union
 
-Format = Union[str, Callable[[datetime], str]]
+# A magic word is a callable which takes no parameters and returns a string.
+MagicWord = Callable[[], str]
+
+# The parameter for the formatting function generator.
+_Format = Union[str, Callable[[datetime], str]]
 
 
-def _datetime_field(fmt: Format, utc: bool) -> Callable[[], str]:
+def _datetime_field(fmt: _Format, utc: bool) -> MagicWord:
     """
     Generate a function which formats a datetime to a string.
 
@@ -44,7 +48,7 @@ _FORMATTERS = {
     # datetime doesn't have a week parameter, and we need to start with 1, not 0.
     'WEEK': lambda d: str(int(d.strftime("%W")) + 1),  # Week (number)
     'TIMESTAMP': '%Y%m%d%H%M%S',  # YYYYMMDDHHmmss timestamp
-}  # type: Dict[str, Format]
+}  # type: Dict[str, _Format]
 
 for param, fmt in _FORMATTERS.items():
     MAGIC_WORDS['CURRENT' + param] = _datetime_field(fmt, True)
