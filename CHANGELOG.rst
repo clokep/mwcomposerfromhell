@@ -1,6 +1,14 @@
 Changelog
 #########
 
+next
+====
+
+* Reimplement the "module" infrastructure as true parser functions.
+* Basic support for ``subst`` and ``safesubst``.
+* Add a ``mwcomposerfromhell.parser_tests_parser`` module to read MediaWiki
+  parser tests files.
+
 0.4 (May 29, 2020)
 ==================
 
