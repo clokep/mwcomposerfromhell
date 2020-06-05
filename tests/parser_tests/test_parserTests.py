@@ -33,7 +33,7 @@ def pytest_generate_tests(metafunc):
         parser.parse()
 
     # The arguments that will be passed into each test case.
-    argnames = ('wikitext', 'html', 'resolver', 'skip', 'expected_pass')
+    argnames = ('wikitext', 'html', 'resolver', 'options', 'expected_pass')
 
     # Namespace -> {Article name -> contents}
     namespaces = defaultdict(Namespace)
@@ -81,21 +81,20 @@ def pytest_generate_tests(metafunc):
 
         test_ids.append(test_id)
 
-        # Skip some tests based on their options.
+        # Some tests don't have options.
         options = test_case.get('options', {})
-        skip = 'pst' in options or 'msg' in options or 'disabled' in options
 
         # Add the current test arguments to the list of values.
         argvalues.append(
-            (test_case['wikitext'], html, resolver, skip, expected_pass)
+            (test_case['wikitext'], html, resolver, options, expected_pass)
         )
 
     metafunc.parametrize(argnames, argvalues, ids=test_ids)
 
 
-def test_parser_tests(wikitext, html, resolver, skip, expected_pass):
+def test_parser_tests(wikitext, html, resolver, options, expected_pass):
     """Handle an individual parser test from parserTests.txt."""
-    if skip:
+    if 'disable' in options:
         pytest.skip('Skipping test')
 
     # Parse the incoming article.
@@ -105,6 +104,7 @@ def test_parser_tests(wikitext, html, resolver, skip, expected_pass):
     composer = WikicodeToHtmlComposer(
         resolver=resolver,
         red_links=True,
+        expand_templates='pst' not in options,
     )
     # Convert the wikicode to HTML.
     result = composer.compose(wikicode)

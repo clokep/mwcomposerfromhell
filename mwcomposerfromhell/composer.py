@@ -96,10 +96,13 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
     def __init__(self,
                  resolver: Optional[ArticleResolver] = None,
                  red_links: bool = False,
+                 expand_templates: bool = True,
                  context: Optional[TemplateContext] = None,
                  open_templates: Optional[Set[str]] = None):
         # Whether to render links to unknown articles as red links or normal links.
         self._red_links = red_links
+        # Whether to expand transcluded templates.
+        self._expand_templates = expand_templates
 
         self._pending_lists = []  # type: List[str]
 
@@ -636,10 +639,12 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             context.append((param_name, param_value, param.showkey))
 
         # Handle subst / safesubst.
-        # TODO Currently this always expands the template.
         start, _, more = template_name.partition(':')
+        # TODO This is a bit hacked together right now.
         if start.strip() in ('subst', 'safesubst'):
             template_name = more
+            if self._expand_templates:
+                return str(node)
 
         # Check if a variable is being used.
         #
@@ -692,9 +697,11 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
             composer = WikicodeToHtmlComposer(
                 resolver=self._resolver,
+                red_links=self._red_links,
+                expand_templates=self._expand_templates,
                 context=template_context,
                 open_templates=self._open_templates)
-            result = composer.visit(template, in_root)
+            result = composer.visit(template, in_root and self._expand_templates)
             # Ensure the stack is closed at the end.
             for current_tag in reversed(composer._stack):
                 result += '</{}>'.format(current_tag)

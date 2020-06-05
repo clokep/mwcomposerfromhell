@@ -165,6 +165,9 @@ Preprocessor precedence 18: another rightmost wins scenario
 Preprocessor precedence 19: break syntax
 Table wikitext syntax outside wiki-tables
 Templates: Links: 2. Generation of link href
+pre-save transform: subst:
+pre-save transform: subst: templates with parameters
+pre-save transform: <noinclude> in subst (T5298)
 subst: does not work during normal parse
 Parsoid: Recognize nowiki with trailing space in tags
 Broken image caption with link
