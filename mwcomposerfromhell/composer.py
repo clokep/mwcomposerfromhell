@@ -647,14 +647,14 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         try:
             template = self._resolver.get_article(template_name, 'Template')
-        except ArticleNotFound:
+        except ArticleNotFound as e:
             # Template was not found.
             result = self._maybe_open_tag(in_root)
 
             # When transcluding a non-template
             if self._red_links:
                 # Render an edit link.
-                canonical_title = self._resolver.resolve_article(template_name, 'Template')
+                canonical_title = e.args[0]
                 return result + self._get_edit_link(canonical_title, template_name)
             else:
                 # Otherwise, simply output the template call.
