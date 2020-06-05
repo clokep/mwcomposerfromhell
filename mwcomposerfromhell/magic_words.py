@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import Callable, Dict, Union
+from typing import Callable, Dict, List, Tuple, Union
 
 # A magic word is a callable which takes two parameters (param and context) and
 # returns a string.
-MagicWord = Callable[[str, Dict[str, str]], str]
+MagicWord = Callable[[str, List[Tuple[str, str, bool]]], str]
 
 # The parameter for the formatting function generator.
 _Format = Union[str, Callable[[datetime], str]]

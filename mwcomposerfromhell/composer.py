@@ -1,7 +1,6 @@
-from collections import OrderedDict
 import html
 import re
-from typing import Dict, Generator, Iterator, List, Optional, Set
+from typing import Dict, Generator, Iterator, List, Optional, Set, Tuple
 
 from mwparserfromhell import nodes, wikicode
 from mwparserfromhell.nodes import extras
@@ -612,7 +611,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         # Because each parameter's name and value might include other templates,
         # etc. these need to be rendered in the context of the template call.
-        context = OrderedDict()  # type: OrderedDict[str, str]
+        context = []  # type: List[Tuple[str, str, bool]]
         for param in node.params:
             # See https://meta.wikimedia.org/wiki/Help:Template#Parameters
             # for information about stripping whitespace around parameters.
@@ -623,7 +622,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             if param.showkey:
                 param_value = param_value.strip()
 
-            context[param_name] = param_value
+            # Append them to a list so the order is kept the same.
+            context.append((param_name, param_value, param.showkey))
 
         # Handle magic words: https://www.mediawiki.org/wiki/Help:Magic_words
         #
@@ -660,10 +660,13 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 # Otherwise, simply output the template call.
                 return result + self._maybe_open_tag(in_root) + str(node)
         else:
-            # Render the template in only the context of its parameters.
+            # Render the template in only the context of its parameters. Note
+            # that parameters might shadow each other, but that's OK.
+            template_context = {c[0]: c[1] for c in context}
+
             composer = WikicodeToHtmlComposer(
                 resolver=self._resolver,
-                context=context,
+                context=template_context,
                 open_templates=self._open_templates)
             result = composer.visit(template, in_root)
             # Ensure the stack is closed at the end.
