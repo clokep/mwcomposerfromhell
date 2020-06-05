@@ -32,16 +32,16 @@ setup(
         'mwparserfromhell>=0.5',
     ],
     extras_require={
-        "dev": [
+        'dev': [
             # For running tests.
-            "pytest==5.4.2",
+            'pytest==5.4.2',
             'coverage',
             # Style checking.
-            "flake8==3.8.2",
-            "flake8-builtins==1.5.3",  # For disallowing shadowing of Python built-ins.
-            "flake8-import-order==0.18.1",
+            'flake8==3.8.2',
+            'flake8-builtins==1.5.3',  # For disallowing shadowing of Python built-ins.
+            'flake8-import-order==0.18.1',
             # Typing related.
-            "mypy",
+            'mypy',
         ],
     },
 )
