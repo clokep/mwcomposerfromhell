@@ -11,6 +11,7 @@ from mwcomposerfromhell.namespace import (
     ArticleResolver,
     CanonicalTitle,
     MagicWordNotFound,
+    ParserFunctionNotFound,
 )
 from mwcomposerfromhell.nodes import Wikilink
 
@@ -605,6 +606,15 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         in_root: bool = False,
         ignore_whitespace: bool = False,
     ) -> str:
+        """
+        Handle a transclusion. This can be one of several things (in order):
+
+        1. A substitution.
+        2. A variable.
+        3. A call to a parser function.
+        4. A template transclusion.
+
+        """
         # Render the key into a string. This handles weird nested cases, e.g.
         # {{f{{text|oo}}bar}}.
         template_name = self.visit(node.name).strip()
@@ -625,22 +635,38 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # Append them to a list so the order is kept the same.
             context.append((param_name, param_value, param.showkey))
 
-        # Handle magic words: https://www.mediawiki.org/wiki/Help:Magic_words
-        #
-        # The template name might have a colon in it, if so there's a
-        # "magic word" or a namespace, followed by a single parameter.
-        magic_word, _, param = template_name.partition(':')
+        # Handle subst / safesubst.
+        # TODO Currently this always expands the template.
+        start, _, more = template_name.partition(':')
+        if start.strip() in ('subst', 'safesubst'):
+            template_name = more
 
+        # Check if a variable is being used.
+        #
+        # https://www.mediawiki.org/wiki/Help:Magic_words#Variables
         try:
-            function = self._resolver.get_magic_word(magic_word)
+            function = self._resolver.get_magic_word(template_name)
         except MagicWordNotFound:
             pass
         else:
-            return self._maybe_open_tag(in_root) + function(param, context)
+            return self._maybe_open_tag(in_root) + function()
+
+        # if the name starts with a # it is a parser function.
+        if template_name and template_name[0] == '#':
+            function_name, _, param = template_name.partition(':')
+            try:
+                parser_function = self._resolver.get_parser_function(function_name)
+            except ParserFunctionNotFound:
+                # If the parser function isn't found for whatever reason the
+                # raw text gets substitude back.
+                return str(node)
+            else:
+                return self._maybe_open_tag(in_root) + parser_function(param, context)
 
         # Otherwise, this is a normal template.
 
         # Ensure that we don't end up in an infinite loop of templates.
+        # TODO This should check the canonical template name.
         if template_name in self._open_templates:
             raise TemplateLoop(template_name)
         self._open_templates.add(template_name)

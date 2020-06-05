@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import Callable, Dict, List, Tuple, Union
+from typing import Callable, Dict, Union
 
 # A magic word is a callable which takes two parameters (param and context) and
 # returns a string.
-MagicWord = Callable[[str, List[Tuple[str, str, bool]]], str]
+MagicWord = Callable[[], str]
 
 # The parameter for the formatting function generator.
 _Format = Union[str, Callable[[datetime], str]]
@@ -17,7 +17,7 @@ def _datetime_field(fmt: _Format, utc: bool) -> MagicWord:
         ``datetime``) and returns a string.
     :param utc: Whether to return the date in UTC or local time.
     """
-    def func(param, context):
+    def func():
         if utc:
             d = datetime.utcnow()
         else:

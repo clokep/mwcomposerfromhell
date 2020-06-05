@@ -1,12 +1,17 @@
 from collections import namedtuple
 import html
 import re
-from typing import Dict
+from typing import Callable, Dict, List, Tuple
 from urllib.parse import quote, unquote, urlencode
 
 from mwparserfromhell.wikicode import Wikicode
 
 from mwcomposerfromhell.magic_words import MAGIC_WORDS, MagicWord
+
+
+# A parser function is a callable which takes two parameters (param and context)
+# and returns a string to replace itself with.
+ParserFunction = Callable[[str, List[Tuple[str, str, bool]]], str]
 
 MULTIPLE_SPACES = re.compile(r' +')
 
@@ -17,6 +22,10 @@ class ArticleNotFound(Exception):
 
 class MagicWordNotFound(Exception):
     """The magic word does not exist."""
+
+
+class ParserFunctionNotFound(Exception):
+    """The parser function does not exist."""
 
 
 class CanonicalTitle(namedtuple('CanonicalTitle', ('namespace', 'title', 'interwiki'))):
@@ -100,6 +109,9 @@ class ArticleResolver:
 
         # A map of magic words to callables.
         self._magic_words = MAGIC_WORDS.copy()  # type: Dict[str, MagicWord]
+
+        # A map of parser functions to callable.
+        self._parser_functions = {}  # type: Dict[str, ParserFunction]
 
     def add_namespace(self, name: str, namespace: Namespace) -> None:
         self._namespaces[_normalize_namespace(name)] = namespace
@@ -220,3 +232,13 @@ class ArticleResolver:
     def add_magic_word(self, magic_word: str, function: MagicWord) -> None:
         """Add an additional magic word."""
         self._magic_words[magic_word] = function
+
+    def get_parser_function(self, parser_function: str) -> ParserFunction:
+        try:
+            return self._parser_functions[parser_function]
+        except KeyError:
+            raise ParserFunctionNotFound(parser_function)
+
+    def add_parser_function(self, parser_function: str, function: ParserFunction) -> None:
+        """Add an additional magic word."""
+        self._parser_functions[parser_function] = function
