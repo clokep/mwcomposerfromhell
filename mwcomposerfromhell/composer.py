@@ -1,6 +1,6 @@
 import html
 import re
-from typing import Dict, Generator, Iterator, List, Optional, Set, Tuple
+from typing import Generator, Iterator, List, Optional, Set, Tuple
 
 from mwparserfromhell import nodes, wikicode
 from mwparserfromhell.nodes import extras
@@ -11,6 +11,7 @@ from mwcomposerfromhell.namespace import (
     ArticleResolver,
     CanonicalTitle,
     MagicWordNotFound,
+    ParentContext,
     ParserFunctionNotFound,
 )
 from mwcomposerfromhell.nodes import Wikilink
@@ -43,9 +44,6 @@ LINE_BREAK_SPACES_PATTERN = re.compile(r'\n *')
 SPACES_LINE_BREAK_PATTERN = re.compile(r' *\n')
 # Link trails are any words followed by a space or new-line.
 LINK_TRAIL_PATTERN = re.compile(r'^([a-zA-Z]+)\b')
-
-# The type for a Template Context.
-TemplateContext = Dict[str, str]
 
 
 class UnknownNode(Exception):
@@ -97,7 +95,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                  resolver: Optional[ArticleResolver] = None,
                  red_links: bool = False,
                  expand_templates: bool = True,
-                 context: Optional[TemplateContext] = None,
+                 context: Optional[ParentContext] = None,
                  open_templates: Optional[Set[str]] = None):
         # Whether to render links to unknown articles as red links or normal links.
         self._red_links = red_links
@@ -663,10 +661,12 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 parser_function = self._resolver.get_parser_function(function_name)
             except ParserFunctionNotFound:
                 # If the parser function isn't found for whatever reason the
-                # raw text gets substitude back.
+                # raw text gets used.
                 return str(node)
             else:
-                return self._maybe_open_tag(in_root) + parser_function(param, context)
+                # Call the function with the current template call (and any
+                # parent template call information).
+                return self._maybe_open_tag(in_root) + parser_function(param, context, self._context)
 
         # Otherwise, this is a normal template.
 
@@ -703,8 +703,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 open_templates=self._open_templates)
             result = composer.visit(template, in_root and self._expand_templates)
             # Ensure the stack is closed at the end.
-            for current_tag in reversed(composer._stack):
-                result += '</{}>'.format(current_tag)
+            result += composer.close_all()
 
             # Remove it from the open templates.
             self._open_templates.remove(template_name)
@@ -748,11 +747,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
     def compose(self, node: StringMixIn) -> str:
         """Converts Wikicode or Node objects to HTML."""
         try:
-            result = self.visit(node, True)
-            # Ensure the stack is closed at the end.
-            for current_tag in reversed(self._stack):
-                result += '</{}>'.format(current_tag)
-            return result
+            return self.visit(node, True) + self.close_all()
         except TemplateLoop as e:
             # The template name is the first argument.
             template_name = e.args[0]
@@ -762,3 +757,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             return ('<p><span class="error">Template loop detected: ' +
                     '<a href="{url}" title="{template_name}">{template_name}</a>' +
                     '</span>\n</p>').format(url=url, template_name=canonical_title.full_title)
+
+    def close_all(self):
+        """Close all items on the stack."""
+        return ''.join(
+            '</{}>'.format(current_tag) for current_tag in reversed(self._stack))

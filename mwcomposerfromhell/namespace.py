@@ -11,7 +11,9 @@ from mwcomposerfromhell.magic_words import MAGIC_WORDS, MagicWord
 
 # A parser function is a callable which takes two parameters (param and context)
 # and returns a string to replace itself with.
-ParserFunction = Callable[[str, List[Tuple[str, str, bool]]], str]
+Context = List[Tuple[str, str, bool]]
+ParentContext = Dict[str, str]
+ParserFunction = Callable[[str, Context, ParentContext], str]
 
 MULTIPLE_SPACES = re.compile(r' +')
 
