@@ -4,10 +4,13 @@ Changelog
 next
 ====
 
-* Reimplement the "module" infrastructure as true parser functions.
+* Remove the "module" infrastructure and implement parser functions as a
+  replacement. This is not a 1-to-1 replacement, as ``#invoke`` is not
+  implemented, but the APIs not exist in a sane way to implement any parser
+  function.
 * Basic support for ``subst`` and ``safesubst``.
 * Add a ``mwcomposerfromhell.parser_tests_parser`` module to read MediaWiki
-  parser tests files.
+  parser test files.
 
 0.4 (May 29, 2020)
 ==================
