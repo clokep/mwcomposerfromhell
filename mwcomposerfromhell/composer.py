@@ -60,10 +60,10 @@ class HtmlComposingError(Exception):
 
 class WikiNodeVisitor:
     def visit(
-            self,
-            node: StringMixIn,
-            in_root: bool = False,
-            ignore_whitespace: bool = False,
+        self,
+        node: StringMixIn,
+        in_root: bool = False,
+        ignore_whitespace: bool = False,
     ) -> str:
         """
         Calculate the method to call to handle this node, passing along inputs to it.
@@ -91,12 +91,14 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
     See https://en.wikipedia.org/wiki/Help:Wikitext for a full definition.
     """
-    def __init__(self,
-                 resolver: Optional[ArticleResolver] = None,
-                 red_links: bool = False,
-                 expand_templates: bool = True,
-                 context: Optional[ParentContext] = None,
-                 open_templates: Optional[Set[str]] = None):
+    def __init__(
+        self,
+        resolver: Optional[ArticleResolver] = None,
+        red_links: bool = False,
+        expand_templates: bool = True,
+        context: Optional[ParentContext] = None,
+        open_templates: Optional[Set[str]] = None,
+    ):
         # Whether to render links to unknown articles as red links or normal links.
         self._red_links = red_links
         # Whether to expand transcluded templates.
@@ -413,10 +415,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         return '<h{}>'.format(node.level) + self.visit(node.title) + '</h{}>'.format(node.level)
 
     def visit_Wikilink(
-            self,
-            node: Wikilink,
-            in_root: bool = False,
-            ignore_whitespace: bool = False,
+        self,
+        node: Wikilink,
+        in_root: bool = False,
+        ignore_whitespace: bool = False,
     ) -> str:
         result = self._maybe_open_tag(in_root)
 
