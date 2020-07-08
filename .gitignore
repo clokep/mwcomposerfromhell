@@ -2,6 +2,7 @@
 .pytest_cache
 .mypy_cache
 *.pyc
+.python-version
 
 # Testing related.
 .pytest_cache
