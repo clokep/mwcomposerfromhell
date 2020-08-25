@@ -6,7 +6,7 @@ next
 
 * Remove the "module" infrastructure and implement parser functions as a
   replacement. This is not a 1-to-1 replacement, as ``#invoke`` is not
-  implemented, but the APIs not exist in a sane way to implement any parser
+  implemented, but the APIs now exist in a sane way to implement any parser
   function.
 * Basic support for ``subst`` and ``safesubst``.
 * Add a ``mwcomposerfromhell.parser_tests_parser`` module to read MediaWiki
