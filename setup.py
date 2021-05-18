@@ -29,7 +29,7 @@ setup(
         'License :: OSI Approved :: ISC License (ISCL)',
     ],
     install_requires=[
-        'mwparserfromhell>=0.5',
+        'mwparserfromhell>=0.6.2',
     ],
     extras_require={
         'dev': [

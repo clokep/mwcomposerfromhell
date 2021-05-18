@@ -81,6 +81,7 @@ External links: www.jpeg.org (T2554)
 T2361: URL within URL, not bracketed
 T2289: ">"-token in URL-tail
 T2289: literal ">"-token in URL-tail
+T2289: literal double quote at end of URL
 T2787: Links with one slash after the url protocol are invalid
 T6781: %26 in URL
 T6781, T7267: %25 in URL
@@ -208,6 +209,7 @@ ISBN with multiple spaces, no number
 Unclosed language converter markup "-{"
 Id starting with underscore
 new support for bdi element (T33817)
+T36939 - Case insensitive link parsing (HttP://)
 Headings: 4c. Short headings (1)
 Lists: 7. Escape bullets in a multi-line context
 Tables: 1a. Simple example
@@ -224,6 +226,7 @@ Tables: 4b. Escape +
 Tables: 4d. No escaping needed
 Links 2. WikiLinks: Escapes needed
 Links 3. WikiLinks: No escapes needed
+Links 7a. Don't add spurious <nowiki/>s between text-nodes and url-links (T66300)
 Links 7b. Don't add spurious <nowiki/>s between text-nodes and url-links (T66300)
 Links 14. Protect link-like plain text. (Parsoid bug T78425)
 4. No escaping needed
