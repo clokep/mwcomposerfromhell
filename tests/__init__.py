@@ -7,6 +7,7 @@ def patch_datetime(expected_datetime):
     @pytest.fixture(autouse=True)
     def patch(monkeypatch):
         """Give a stable date for the tests."""
+
         class MockDatetime:
             @classmethod
             def now(cls):
@@ -16,6 +17,6 @@ def patch_datetime(expected_datetime):
             def utcnow(cls):
                 return expected_datetime
 
-        monkeypatch.setattr(magic_words, 'datetime', MockDatetime)
+        monkeypatch.setattr(magic_words, "datetime", MockDatetime)
 
     return patch

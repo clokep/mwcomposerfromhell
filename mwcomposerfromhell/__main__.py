@@ -19,11 +19,15 @@ def convert_file(filename, wrap):
         print("</body>\n</html>\n")
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Convert wikicode to HTML.')
-    parser.add_argument('-w', '--wrap', action='store_true',
-                        help='Wrap the output in <html> and <body> tags.')
-    parser.add_argument('file', help='The file containing wikicode to convert.')
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Convert wikicode to HTML.")
+    parser.add_argument(
+        "-w",
+        "--wrap",
+        action="store_true",
+        help="Wrap the output in <html> and <body> tags.",
+    )
+    parser.add_argument("file", help="The file containing wikicode to convert.")
 
     # Parse the command line arguments.
     args = parser.parse_args(sys.argv[1:])

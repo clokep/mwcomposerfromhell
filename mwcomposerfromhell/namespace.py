@@ -15,7 +15,7 @@ Context = List[Tuple[str, str, bool]]
 ParentContext = Dict[str, str]
 ParserFunction = Callable[[str, Context, ParentContext], str]
 
-MULTIPLE_SPACES = re.compile(r' +')
+MULTIPLE_SPACES = re.compile(r" +")
 
 
 class ArticleNotFound(Exception):
@@ -30,34 +30,34 @@ class ParserFunctionNotFound(Exception):
     """The parser function does not exist."""
 
 
-class CanonicalTitle(namedtuple('CanonicalTitle', ('namespace', 'title', 'interwiki'))):
+class CanonicalTitle(namedtuple("CanonicalTitle", ("namespace", "title", "interwiki"))):
     @property
     def full_title(self):
         if self.namespace:
-            return self.namespace + ':' + self.title
+            return self.namespace + ":" + self.title
         else:
             return self.title
 
     @property
     def link(self):
         """Get a version of the canonical title appropriate for a URL."""
-        return self.full_title.replace(' ', '_')
+        return self.full_title.replace(" ", "_")
 
 
 def _normalize_spaces(key: str) -> str:
     """Spaces and turned to underscores, multiple get combined, and stripped from the beginning and end."""
     # Convert spaces to underscores.
-    key = key.replace('_', ' ')
+    key = key.replace("_", " ")
     # Replace strings of underscores with a single underscore.
-    key = MULTIPLE_SPACES.sub(' ', key)
+    key = MULTIPLE_SPACES.sub(" ", key)
     # Remove all underscores from the start and end.
-    return key.strip('_')
+    return key.strip("_")
 
 
 def _normalize_namespace(key: str) -> str:
     """MediaWiki treats the first character of namespaces as upper-case and the rest as lower-case."""
     if not key:
-        return ''
+        return ""
     key = _normalize_spaces(key)
     return key[0].upper() + key[1:].lower()
 
@@ -65,7 +65,7 @@ def _normalize_namespace(key: str) -> str:
 def _normalize_title(key: str) -> str:
     """MediaWiki treats the first character of article names as upper-case."""
     if not key:  # Empty string
-        return ''
+        return ""
     key = _normalize_spaces(key)
     return key[0].upper() + key[1:]
 
@@ -99,9 +99,10 @@ class ArticleResolver:
     """
     Holds the configuration of things that can be referenced from articles.
     """
-    def __init__(self, base_url: str = '/wiki/', edit_url: str = '/index.php'):
+
+    def __init__(self, base_url: str = "/wiki/", edit_url: str = "/index.php"):
         # The base URL should be the root that articles sit in.
-        self._base_url = base_url.rstrip('/')
+        self._base_url = base_url.rstrip("/")
         self._edit_url = edit_url
 
         # A map of namespace names to Namespace objects. Used to find articles.
@@ -122,18 +123,18 @@ class ArticleResolver:
     def get_article_url(self, canonical_title: CanonicalTitle) -> str:
         """Given a canonical title, return a URL suitable for linking."""
         # TODO Handle interwiki links.
-        title = quote(canonical_title.link, safe='/:~')
-        return '{}/{}'.format(self._base_url, title)
+        title = quote(canonical_title.link, safe="/:~")
+        return "{}/{}".format(self._base_url, title)
 
     def get_edit_url(self, canonical_title: CanonicalTitle) -> str:
         """Given a page title, return a URL suitable for editing that page."""
         params = (
-            ('title', canonical_title.link),
-            ('action', 'edit'),
-            ('redlink', '1'),
+            ("title", canonical_title.link),
+            ("action", "edit"),
+            ("redlink", "1"),
         )
         # MediaWiki generates an escaped URL.
-        return '{}?{}'.format(self._edit_url, html.escape(urlencode(params, safe=':')))
+        return "{}?{}".format(self._edit_url, html.escape(urlencode(params, safe=":")))
 
     def resolve_article(self, name: str, default_namespace: str) -> CanonicalTitle:
         """
@@ -144,7 +145,7 @@ class ArticleResolver:
         """
         return self.canonicalize_title(name, default_namespace)
 
-    def get_article(self, name: str, default_namespace: str = '') -> Wikicode:
+    def get_article(self, name: str, default_namespace: str = "") -> Wikicode:
         """
         Get an article's content (as ``mwparserfromhell.wikicode.Wikicode``) from a name.
 
@@ -158,7 +159,9 @@ class ArticleResolver:
         except KeyError:
             raise ArticleNotFound(canonical_title)
 
-    def canonicalize_title(self, title: str, default_namespace: str = '') -> CanonicalTitle:
+    def canonicalize_title(
+        self, title: str, default_namespace: str = ""
+    ) -> CanonicalTitle:
         """
         Generate the canonical form of a title.
 
@@ -171,15 +174,15 @@ class ArticleResolver:
         title = html.unescape(unquote(title))
 
         # Convert spaces to underscores.
-        title = title.replace('_', ' ')
+        title = title.replace("_", " ")
         # Replace strings of underscores with a single underscore.
-        title = MULTIPLE_SPACES.sub(' ', title)
+        title = MULTIPLE_SPACES.sub(" ", title)
         # Remove all underscores from the start and end.
         title = title.strip()
 
         # The parts are separate by colons.
-        parts = title.split(':')
-        has_interwiki = title and title[0] == ':'
+        parts = title.split(":")
+        has_interwiki = title and title[0] == ":"
 
         # Generally only 1 - 3 parts are expected (interwiki, namespace, and title).
         num_parts = len(parts)
@@ -188,24 +191,24 @@ class ArticleResolver:
                 interwiki = parts[1]
                 parts = parts[2:]
             else:
-                interwiki = ''
+                interwiki = ""
             namespace = parts[0]
-            title = ':'.join(parts[1:])
+            title = ":".join(parts[1:])
         elif num_parts == 3:
             if has_interwiki:
                 _, interwiki, title = parts
                 namespace = default_namespace
             else:
-                interwiki = ''
+                interwiki = ""
                 namespace = parts[0]
-                title = ':'.join(parts[1:])
+                title = ":".join(parts[1:])
         elif num_parts == 2:
             # In this case an interwiki link cannot be given.
-            interwiki = ''
+            interwiki = ""
             namespace, title = parts
         else:
             # No colons, it is just a page title.
-            interwiki = ''
+            interwiki = ""
             namespace = default_namespace
             title = parts[0]
 
@@ -218,7 +221,9 @@ class ArticleResolver:
         # upper-case, then all lower-case. This doesn't seem accurate (see how
         # it treats the "MediaWiki" namespace).
         try:
-            canonical_namespace = self._canonical_namespaces[_normalize_namespace(namespace)]
+            canonical_namespace = self._canonical_namespaces[
+                _normalize_namespace(namespace)
+            ]
         except KeyError:
             canonical_namespace = namespace
 
@@ -241,6 +246,8 @@ class ArticleResolver:
         except KeyError:
             raise ParserFunctionNotFound(parser_function)
 
-    def add_parser_function(self, parser_function: str, function: ParserFunction) -> None:
+    def add_parser_function(
+        self, parser_function: str, function: ParserFunction
+    ) -> None:
         """Add an additional magic word."""
         self._parser_functions[parser_function] = function

@@ -9,7 +9,7 @@ def test_formatting():
     """Test that simple formatting works."""
     content = "''foobar''"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<p><i>foobar</i></p>'
+    assert compose(wikicode) == "<p><i>foobar</i></p>"
 
 
 def test_formatting_link():
@@ -23,14 +23,18 @@ def test_internal_link():
     """Ensure an internal link is rendered properly."""
     content = "[[Foobar]]"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<p><a href="/wiki/Foobar" title="Foobar">Foobar</a></p>'
+    assert (
+        compose(wikicode) == '<p><a href="/wiki/Foobar" title="Foobar">Foobar</a></p>'
+    )
 
 
 def test_internal_link_text():
     """Ensure an internal link with text is rendered properly."""
     content = "[[Foobar|fuzzbar]]"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<p><a href="/wiki/Foobar" title="Foobar">fuzzbar</a></p>'
+    assert (
+        compose(wikicode) == '<p><a href="/wiki/Foobar" title="Foobar">fuzzbar</a></p>'
+    )
 
 
 def test_link_trail():
@@ -51,36 +55,39 @@ def test_heading():
     """Test a heading."""
     content = "=== Foobar ==="
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<h3> Foobar </h3>'
+    assert compose(wikicode) == "<h3> Foobar </h3>"
 
 
 def test_entity():
     """Test HTML entities."""
     content = "&Sigma; &#931; &#x3a3;"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<p>&Sigma; &#931; &#x3a3;</p>'
+    assert compose(wikicode) == "<p>&Sigma; &#931; &#x3a3;</p>"
 
 
 def test_entity_in_text():
     """Test entities appearing in text should be escaped."""
     content = "<test> &"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<p>&lt;test&gt; &amp;</p>'
+    assert compose(wikicode) == "<p>&lt;test&gt; &amp;</p>"
 
 
 def test_preformatted():
     """Preformatted text should work properly."""
     content = " foo"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<pre>foo</pre>\n'
+    assert compose(wikicode) == "<pre>foo</pre>\n"
 
 
 def test_preformatted_complicated():
-    """"""
+    """ """
     # Note the lines with just spaces on them.
     content = "foo\n \n \n \n  bar\n\n baz\n"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == "<p>foo\n</p><p><br />\n</p><pre> bar\n</pre>\n<pre>baz\n</pre>\n"
+    assert (
+        compose(wikicode)
+        == "<p>foo\n</p><p><br />\n</p><pre> bar\n</pre>\n<pre>baz\n</pre>\n"
+    )
 
 
 def test_pre():
@@ -89,15 +96,18 @@ def test_pre():
 
 [[wiki]] markup &amp;</pre>"""
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == """<pre>&lt;!--Comment--&gt;
+    assert (
+        compose(wikicode)
+        == """<pre>&lt;!--Comment--&gt;
 
 [[wiki]] markup &amp;</pre>"""
+    )
 
 
 def test_unknown_node():
     """An unknown node type should raise an error."""
     with pytest.raises(UnknownNode):
-        compose('')
+        compose("")
 
 
 def test_html():
@@ -111,7 +121,7 @@ def test_html_a():
     """Anchor tags are not alloewd."""
     content = '<a href="foo">&bar&amp;</a>'
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '&lt;a href=&quot;foo&quot;&gt;&amp;bar&amp;&lt;/a&gt;'
+    assert compose(wikicode) == "&lt;a href=&quot;foo&quot;&gt;&amp;bar&amp;&lt;/a&gt;"
 
 
 def test_nowiki():
@@ -124,4 +134,4 @@ def test_nowiki():
 def test_invalid_resolver():
     """An unknown resolver type should raise an error."""
     with pytest.raises(ValueError):
-        WikicodeToHtmlComposer(resolver='')
+        WikicodeToHtmlComposer(resolver="")

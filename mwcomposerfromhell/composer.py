@@ -19,31 +19,31 @@ from mwcomposerfromhell.nodes import Wikilink
 # The markup for different lists mapped to the list tag and list item tag.
 MARKUP_TO_LIST = {
     # Unordered list.
-    '*': ('ul', 'li'),
+    "*": ("ul", "li"),
     # Ordered list.
-    '#': ('ol', 'li'),
+    "#": ("ol", "li"),
     # Definition lists.
-    ';': ('dl', 'dt'),
-    ':': ('dl', 'dd'),
+    ";": ("dl", "dt"),
+    ":": ("dl", "dd"),
 }
 
 # The markup for tags which are inline, as opposed to block.
 INLINE_TAGS = {"''", "'''"}
 
 # Tags that represent a list or list items.
-LIST_TAGS = {'ul', 'ol', 'li', 'dl', 'dt', 'dd'}
+LIST_TAGS = {"ul", "ol", "li", "dl", "dt", "dd"}
 
 # Table markup.
-TABLE_ROWS = {'!-', '|-'}
-TABLE_CELLS = {'!', '|'}
+TABLE_ROWS = {"!-", "|-"}
+TABLE_CELLS = {"!", "|"}
 
 # One or more line-breaks, including any spaces at the start of lines.
-LINE_BREAK_PATTERN = re.compile(r'(\n(?: *\n)*)')
+LINE_BREAK_PATTERN = re.compile(r"(\n(?: *\n)*)")
 # Patterns used to strip comments.
-LINE_BREAK_SPACES_PATTERN = re.compile(r'\n *')
-SPACES_LINE_BREAK_PATTERN = re.compile(r' *\n')
+LINE_BREAK_SPACES_PATTERN = re.compile(r"\n *")
+SPACES_LINE_BREAK_PATTERN = re.compile(r" *\n")
 # Link trails are any words followed by a space or new-line.
-LINK_TRAIL_PATTERN = re.compile(r'^([a-zA-Z]+)\b')
+LINK_TRAIL_PATTERN = re.compile(r"^([a-zA-Z]+)\b")
 
 
 class UnknownNode(Exception):
@@ -73,12 +73,12 @@ class WikiNodeVisitor:
         :param ignore_whitespace: Whether to skip special whitespace handling.
         :return: The result of handling this node (recursively).
         """
-        method_name = 'visit_' + node.__class__.__name__
+        method_name = "visit_" + node.__class__.__name__
 
         try:
             method = getattr(self, method_name)
         except AttributeError:
-            raise UnknownNode('Unknown node type: {}'.format(node.__class__.__name__))
+            raise UnknownNode("Unknown node type: {}".format(node.__class__.__name__))
 
         return method(node, in_root, ignore_whitespace)
 
@@ -91,6 +91,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
     See https://en.wikipedia.org/wiki/Help:Wikitext for a full definition.
     """
+
     def __init__(
         self,
         resolver: Optional[ArticleResolver] = None,
@@ -118,7 +119,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         if resolver is None:
             resolver = ArticleResolver()
         elif not isinstance(resolver, ArticleResolver):
-            raise ValueError('resolver must be an instance of ArticleResolver')
+            raise ValueError("resolver must be an instance of ArticleResolver")
         self._resolver = resolver
 
     def _maybe_open_tag(self, in_root: bool) -> str:
@@ -127,7 +128,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         """
         # If the node is not currently in the "root" Wikicode, nothing is done.
         if not in_root:
-            return ''
+            return ""
 
         # Handle whether there's any lists to open.
         if self._pending_lists:
@@ -137,10 +138,12 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # 1. Calculate the portion of lists and list items that are identical.
             # 2. Close the end of what doesn't match.
             # 3. Open the new tags.
-            result = ''
+            result = ""
 
             # The currently open lists.
-            stack_lists = [list_tag for list_tag in self._stack if list_tag in LIST_TAGS]
+            stack_lists = [
+                list_tag for list_tag in self._stack if list_tag in LIST_TAGS
+            ]
 
             # Don't consider the latest list item to open in the comparison, it
             # always needs to be opened.
@@ -159,7 +162,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # Open any items that are left from the pending list.
             for tag in self._pending_lists[i:]:
                 self._stack.append(tag)
-                result += '<{}>'.format(tag)
+                result += "<{}>".format(tag)
 
             # Reset the pending list.
             self._pending_lists = []
@@ -167,19 +170,19 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         # Paragraphs do not go inside of other elements.
         if not self._stack:
-            self._stack.append('p')
-            return '<p>'
+            self._stack.append("p")
+            return "<p>"
 
         # Otherwise, do nothing.
-        return ''
+        return ""
 
     def _close_stack(self, tag: str) -> str:
         """Close tags that are on the stack. It closes all tags until ``tag`` is found."""
         # For the given tag, close all tags behind it (in reverse order).
-        result = ''
+        result = ""
         while len(self._stack):
             current_tag = self._stack.pop()
-            result += '</{}>'.format(current_tag)
+            result += "</{}>".format(current_tag)
 
             if current_tag == tag:
                 break
@@ -191,7 +194,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # Find the part of the stack since the last table was opened.
         last_table = -1
         for it, stack_tag in enumerate(self._stack):
-            if stack_tag == 'table':
+            if stack_tag == "table":
                 last_table = it
 
         # A table should always be found.
@@ -227,8 +230,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 # A removed comment strips any spaces on the line it was on,
                 # plus a single newline. In order to get all whitespace, look at
                 # both text nodes.
-                prev = LINE_BREAK_SPACES_PATTERN.sub('', prev_node.value, count=1)
-                current = SPACES_LINE_BREAK_PATTERN.sub('\n', node.value, count=1)
+                prev = LINE_BREAK_SPACES_PATTERN.sub("", prev_node.value, count=1)
+                current = SPACES_LINE_BREAK_PATTERN.sub("\n", node.value, count=1)
 
                 prev_node = nodes.Text(value=prev + current)
                 continue
@@ -243,13 +246,16 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                     # The link gets the link trail added to the text.
                     prev_node = Wikilink(prev_node.title, prev_node.text, match[1])
                     # The text gets the link trailed removed from it.
-                    node = nodes.Text(value=node.value[len(match[1]):])
+                    node = nodes.Text(value=node.value[len(match[1]) :])
 
             # Adjacent table header or data nodes have a blank line between them.
             elif isinstance(prev_node, nodes.Tag) and isinstance(node, nodes.Tag):
-                if prev_node.wiki_markup in TABLE_CELLS and node.wiki_markup in TABLE_CELLS:
+                if (
+                    prev_node.wiki_markup in TABLE_CELLS
+                    and node.wiki_markup in TABLE_CELLS
+                ):
                     yield prev_node
-                    prev_node = nodes.Text(value='\n')
+                    prev_node = nodes.Text(value="\n")
 
             # Otherwise, yield the previous node and store the current one.
             if prev_node:
@@ -263,8 +269,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
     def _get_edit_link(self, canonical_title: CanonicalTitle, text: str) -> str:
         """Generate a link to an article's edit page."""
         url = self._resolver.get_edit_url(canonical_title)
-        title = canonical_title.full_title + ' (page does not exist)'
-        return '<a href="{}" class="new" title="{}">'.format(url, title) + text + '</a>'
+        title = canonical_title.full_title + " (page does not exist)"
+        return '<a href="{}" class="new" title="{}">'.format(url, title) + text + "</a>"
 
     def visit_Wikicode(
         self,
@@ -272,10 +278,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         in_root: bool = False,
         ignore_whitespace: bool = False,
     ) -> str:
-        return ''.join(
+        return "".join(
             map(
                 lambda n: self.visit(n, in_root, ignore_whitespace),
-                self._fix_nodes(node.nodes)
+                self._fix_nodes(node.nodes),
             )
         )
 
@@ -285,7 +291,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         in_root: bool = False,
         ignore_whitespace: bool = False,
     ) -> str:
-        result = ''
+        result = ""
 
         # List tags require a parent tag to be opened first, but get grouped
         # together if one is already open.
@@ -296,38 +302,38 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
             # ul and ol cannot be inside of a dl and a dl cannot be in a ul or
             # ol.
-            if node.wiki_markup in ('*', '#'):
-                if 'dl' in self._stack:
-                    result += self._close_stack('dl')
+            if node.wiki_markup in ("*", "#"):
+                if "dl" in self._stack:
+                    result += self._close_stack("dl")
             else:
-                if 'ol' in self._stack:
-                    result += self._close_stack('ol')
-                if 'ul' in self._stack:
-                    result += self._close_stack('ul')
+                if "ol" in self._stack:
+                    result += self._close_stack("ol")
+                if "ul" in self._stack:
+                    result += self._close_stack("ul")
 
         else:
             tag = self.visit(node.tag)
 
             # nowiki tags do not end up in the resulting content, their contents
             # should appears as if this tag does not exist.
-            if tag == 'nowiki':
+            if tag == "nowiki":
                 if node.contents:
                     return self.visit(node.contents, in_root)
-                return ''
+                return ""
 
             # noinclude and includeonly tags do not end up in the resulting
             # content. Whether or not their contents should appear depends on
             # whether we are currently being being transcluded.
             #
             # See https://www.mediawiki.org/wiki/Transclusion
-            if tag == 'noinclude':
+            if tag == "noinclude":
                 if not self._open_templates and node.contents:
                     return self.visit(node.contents)
-                return ''
-            if tag == 'includeonly':
+                return ""
+            if tag == "includeonly":
                 if self._open_templates and node.contents:
                     return self.visit(node.contents)
-                return ''
+                return ""
 
             # Maybe wrap the tag in a paragraph. This only applies to inline
             # tags, such as bold and italics..
@@ -339,10 +345,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             if node.wiki_markup in TABLE_CELLS:
                 # Open a new row if not currently in a row.
                 try:
-                    self._stack.index('tr', self._get_last_table())
+                    self._stack.index("tr", self._get_last_table())
                 except ValueError:
-                    self._stack.append('tr')
-                    result += '<tr>\n'
+                    self._stack.append("tr")
+                    result += "<tr>\n"
 
             # Because we sometimes open a new row without the contents directly
             # tied to it (see above), we need to ensure that old rows are closed
@@ -350,28 +356,28 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             elif node.wiki_markup in TABLE_ROWS:
                 # If a row is currently open, close it.
                 try:
-                    self._stack.index('tr', self._get_last_table())
-                    result += self._close_stack('tr') + '\n'
+                    self._stack.index("tr", self._get_last_table())
+                    result += self._close_stack("tr") + "\n"
                 except ValueError:
                     pass
 
             # Certain tags are blacklisted from being parsed and get escaped instead.
-            valid_tag = tag not in {'a'}
+            valid_tag = tag not in {"a"}
 
             # Create an HTML tag.
-            stack_open = '<' + tag
+            stack_open = "<" + tag
             for attr in node.attributes:
                 stack_open += self.visit(attr)
             if node.self_closing:
-                stack_open += ' /'
-            stack_open += '>'
+                stack_open += " /"
+            stack_open += ">"
             if not valid_tag:
                 stack_open = html.escape(stack_open)
             result += stack_open
 
             # The documentation says padding is BEFORE the final >, but for
             # table nodes it seems to be the padding after it
-            if node.wiki_markup in {'{|'} | TABLE_ROWS:
+            if node.wiki_markup in {"{|"} | TABLE_ROWS:
                 result += node.padding
 
             # If this is not a self-closing tag, add it to the stack.
@@ -382,7 +388,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         if node.contents:
             # Ignore whitespace if it is already being ignored or this is a
             # <pre> tag.
-            ignore_whitespace = ignore_whitespace or tag == 'pre'
+            ignore_whitespace = ignore_whitespace or tag == "pre"
             result += self.visit(node.contents, ignore_whitespace=ignore_whitespace)
 
         # If this is not self-closing, close this tag and any other open tags
@@ -412,7 +418,11 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         in_root: bool = False,
         ignore_whitespace: bool = False,
     ) -> str:
-        return '<h{}>'.format(node.level) + self.visit(node.title) + '</h{}>'.format(node.level)
+        return (
+            "<h{}>".format(node.level)
+            + self.visit(node.title)
+            + "</h{}>".format(node.level)
+        )
 
     def visit_Wikilink(
         self,
@@ -424,27 +434,32 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         # Get the rendered title.
         title = self.visit(node.title)
-        canonical_title = self._resolver.resolve_article(title, default_namespace='')
+        canonical_title = self._resolver.resolve_article(title, default_namespace="")
         url = self._resolver.get_article_url(canonical_title)
         # The text is either what was provided or the non-canonicalized title.
         if node.text:
             text = self.visit(node.text)
         else:
             text = title
-        text += (node.trail or '')
+        text += node.trail or ""
 
         # Figure out whether the article exists or not.
         article_exists = True
         if self._red_links:
             try:
-                self._resolver.get_article(title, default_namespace='')
+                self._resolver.get_article(title, default_namespace="")
             except ArticleNotFound:
                 article_exists = False
 
         # Display text can be optionally specified. Fall back to the article
         # title if it is not given.
         if article_exists:
-            return result + '<a href="{}" title="{}">'.format(url, canonical_title.title) + text + '</a>'
+            return (
+                result
+                + '<a href="{}" title="{}">'.format(url, canonical_title.title)
+                + text
+                + "</a>"
+            )
         else:
             return result + self._get_edit_link(canonical_title, text)
 
@@ -469,11 +484,20 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # is not given.
         text = self.visit(node.title or node.url)
 
-        extra = ''
+        extra = ""
         if not node.brackets:
             extra = 'rel="nofollow" class="external free" '
 
-        return result + '<a ' + extra + 'href="' + self.visit(node.url) + '">' + text + '</a>'
+        return (
+            result
+            + "<a "
+            + extra
+            + 'href="'
+            + self.visit(node.url)
+            + '">'
+            + text
+            + "</a>"
+        )
 
     def visit_Comment(
         self,
@@ -482,7 +506,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         ignore_whitespace: bool = False,
     ) -> str:
         """HTML comments just get ignored."""
-        return ''
+        return ""
 
     def visit_Text(
         self,
@@ -507,10 +531,12 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         if ignore_whitespace:
             return text_result
 
-        result = ''
+        result = ""
 
         # Each line of content is handled separately.
-        lines = list(filter(None, text_result.splitlines(keepends=True)))  # type: List[str]
+        lines = list(
+            filter(None, text_result.splitlines(keepends=True))
+        )  # type: List[str]
 
         # This needs to be a new-line and start with a space.
         start = 0
@@ -536,13 +562,17 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # a new-line).
             #
             # Note that lines that are purely whitespace are caught above.
-            if (len(line) > 2 and line[0] == ' ') != in_section_pre:
+            if (len(line) > 2 and line[0] == " ") != in_section_pre:
                 # If this is the start of a new section, add the previous one.
                 if in_section_pre:
                     # The first space at the start of each line gets removed.
-                    result += '<pre>' + ''.join(map(lambda l: l[1:], lines[start:it])) + '</pre>'
+                    result += (
+                        "<pre>"
+                        + "".join(map(lambda l: l[1:], lines[start:it]))
+                        + "</pre>"
+                    )
                 else:
-                    result += self._handle_text(''.join(lines[start:it]), in_root)
+                    result += self._handle_text("".join(lines[start:it]), in_root)
 
                 start = it
                 in_section_pre = not in_section_pre
@@ -550,15 +580,17 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # Need to handle the final section.
         if in_section_pre:
             # The first space at the start of each line gets removed.
-            result += '<pre>' + ''.join(map(lambda l: l[1:], lines[start:])) + '</pre>\n'
+            result += (
+                "<pre>" + "".join(map(lambda l: l[1:], lines[start:])) + "</pre>\n"
+            )
         else:
-            result += self._handle_text(''.join(lines[start:]), in_root)
+            result += self._handle_text("".join(lines[start:]), in_root)
 
         return result
 
     def _handle_text(self, text_result: str, in_root: bool) -> str:
         """The raw text node handler, this has the logic for opening paragraphs."""
-        result = ''
+        result = ""
 
         # Handle newlines, which modify paragraphs and how elements get closed.
         # Filter out blank strings after splitting on newlines.
@@ -566,16 +598,16 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         for it, chunk in enumerate(chunks):
             # Each chunk will either be all newlines, or just content.
-            if '\n' in chunk:
+            if "\n" in chunk:
                 # Lines which only consist of whitespace get normalized to empty.
-                line_breaks = len(chunk.replace(' ', ''))
+                line_breaks = len(chunk.replace(" ", ""))
 
                 if it > 0 or line_breaks == 1 or line_breaks == 2:
-                    result += '\n'
+                    result += "\n"
 
                 # If more than two newlines exist, close previous paragraphs.
                 if line_breaks >= 2:
-                    result += self._close_stack('p')
+                    result += self._close_stack("p")
 
                 # If this node isn't nested inside of anything else it might be
                 # wrapped in a paragraph.
@@ -583,20 +615,20 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                     # A paragraph with a line break is added for every two
                     # additional newlines.
                     additional_p = max((line_breaks - 2) // 2, 0)
-                    result += additional_p * '<p><br />\n</p>'
+                    result += additional_p * "<p><br />\n</p>"
 
                     # If there is more content after this set of newlines, or
                     # this is the last chunk of content and there are 3 line
                     # breaks.
                     last_chunk = it == len(chunks) - 1
                     if not last_chunk or (last_chunk and line_breaks == 3):
-                        result += '<p>'
-                        self._stack.append('p')
+                        result += "<p>"
+                        self._stack.append("p")
 
                         # An odd number of newlines get a line break inside of
                         # the paragraph.
                         if line_breaks > 1 and line_breaks % 2 == 1:
-                            result += '<br />\n'
+                            result += "<br />\n"
             else:
                 result += self._maybe_open_tag(in_root)
                 result += chunk
@@ -639,9 +671,9 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             context.append((param_name, param_value, param.showkey))
 
         # Handle subst / safesubst.
-        start, _, more = template_name.partition(':')
+        start, _, more = template_name.partition(":")
         # TODO This is a bit hacked together right now.
-        if start.strip() in ('subst', 'safesubst'):
+        if start.strip() in ("subst", "safesubst"):
             template_name = more
             if self._expand_templates:
                 return str(node)
@@ -657,8 +689,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             return self._maybe_open_tag(in_root) + function()
 
         # if the name starts with a # it is a parser function.
-        if template_name and template_name[0] == '#':
-            function_name, _, param = template_name.partition(':')
+        if template_name and template_name[0] == "#":
+            function_name, _, param = template_name.partition(":")
             try:
                 parser_function = self._resolver.get_parser_function(function_name)
             except ParserFunctionNotFound:
@@ -668,7 +700,9 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             else:
                 # Call the function with the current template call (and any
                 # parent template call information).
-                return self._maybe_open_tag(in_root) + parser_function(param, context, self._context)
+                return self._maybe_open_tag(in_root) + parser_function(
+                    param, context, self._context
+                )
 
         # Otherwise, this is a normal template.
 
@@ -679,7 +713,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         self._open_templates.add(template_name)
 
         try:
-            template = self._resolver.get_article(template_name, 'Template')
+            template = self._resolver.get_article(template_name, "Template")
         except ArticleNotFound as e:
             # Template was not found.
             result = self._maybe_open_tag(in_root)
@@ -702,7 +736,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 red_links=self._red_links,
                 expand_templates=self._expand_templates,
                 context=template_context,
-                open_templates=self._open_templates)
+                open_templates=self._open_templates,
+            )
             result = composer.visit(template, in_root and self._expand_templates)
             # Ensure the stack is closed at the end.
             result += composer.close_all()
@@ -713,7 +748,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             return result
 
     def visit_Argument(
-        self, node: nodes.Argument,
+        self,
+        node: nodes.Argument,
         in_root: bool = False,
         ignore_whitespace: bool = False,
     ) -> str:
@@ -754,13 +790,16 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # The template name is the first argument.
             template_name = e.args[0]
             # TODO Should this create an ExternalLink and use that?
-            canonical_title = self._resolver.resolve_article(template_name, 'Template')
+            canonical_title = self._resolver.resolve_article(template_name, "Template")
             url = self._resolver.get_article_url(canonical_title)
-            return ('<p><span class="error">Template loop detected: ' +
-                    '<a href="{url}" title="{template_name}">{template_name}</a>' +
-                    '</span>\n</p>').format(url=url, template_name=canonical_title.full_title)
+            return (
+                '<p><span class="error">Template loop detected: '
+                + '<a href="{url}" title="{template_name}">{template_name}</a>'
+                + "</span>\n</p>"
+            ).format(url=url, template_name=canonical_title.full_title)
 
     def close_all(self):
         """Close all items on the stack."""
-        return ''.join(
-            '</{}>'.format(current_tag) for current_tag in reversed(self._stack))
+        return "".join(
+            "</{}>".format(current_tag) for current_tag in reversed(self._stack)
+        )
