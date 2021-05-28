@@ -7,21 +7,24 @@ def test_list():
     """Ensure a list is rendered properly."""
     content = "* Foobar"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<ul><li> Foobar</li></ul>'
+    assert compose(wikicode) == "<ul><li> Foobar</li></ul>"
 
 
 def test_subitem_list():
     """Ensure a list with another list inside of it is rendered properly."""
     content = "* Foobar\n** Subitem"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<ul><li> Foobar\n<ul><li> Subitem</li></ul></li></ul>'
+    assert compose(wikicode) == "<ul><li> Foobar\n<ul><li> Subitem</li></ul></li></ul>"
 
 
 def test_subitem_list_complex():
     """Ensure a list with another list inside of it is rendered properly."""
     content = "* Foobar\n** Subitem\n* Barfoo"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<ul><li> Foobar\n<ul><li> Subitem\n</li></ul></li><li> Barfoo</li></ul>'
+    assert (
+        compose(wikicode)
+        == "<ul><li> Foobar\n<ul><li> Subitem\n</li></ul></li><li> Barfoo</li></ul>"
+    )
 
 
 def test_abutting_lists():
@@ -33,21 +36,24 @@ def test_abutting_lists():
 * List 2
 """
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<ul><li> List 1\n</li><li> List 1\n</li></ul><ul><li> List 2\n</li><li> List 2\n</li></ul>'
+    assert (
+        compose(wikicode)
+        == "<ul><li> List 1\n</li><li> List 1\n</li></ul><ul><li> List 2\n</li><li> List 2\n</li></ul>"
+    )
 
 
 def test_definition_list():
     """A definition list with no items."""
     content = ";Foobar"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<dl><dt>Foobar</dt></dl>'
+    assert compose(wikicode) == "<dl><dt>Foobar</dt></dl>"
 
 
 def test_definition_list_single_item():
     """A definition list with a single item."""
     content = ";Foo : Bar"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<dl><dt>Foo </dt><dd> Bar</dd></dl>'
+    assert compose(wikicode) == "<dl><dt>Foo </dt><dd> Bar</dd></dl>"
 
 
 def test_definition_list_multiple_items():
@@ -57,7 +63,7 @@ def test_definition_list_multiple_items():
 : Baz
 """
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<dl><dt>Foo\n</dt><dd> Bar\n</dd><dd> Baz\n</dd></dl>'
+    assert compose(wikicode) == "<dl><dt>Foo\n</dt><dd> Bar\n</dd><dd> Baz\n</dd></dl>"
 
 
 def test_nested_list():
@@ -69,7 +75,10 @@ def test_nested_list():
 
 """
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<ul><li>Foo\n<ul><li>Bar\n</li></ul></li></ul><p><br />\n</p>'
+    assert (
+        compose(wikicode)
+        == "<ul><li>Foo\n<ul><li>Bar\n</li></ul></li></ul><p><br />\n</p>"
+    )
 
 
 def test_nested_list_types():
@@ -78,7 +87,7 @@ def test_nested_list_types():
 *Bar
 """
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<dl><dt>Foo\n</dt></dl><ul><li>Bar\n</li></ul>'
+    assert compose(wikicode) == "<dl><dt>Foo\n</dt></dl><ul><li>Bar\n</li></ul>"
 
 
 def test_nested_list_types2():
@@ -87,7 +96,7 @@ def test_nested_list_types2():
 ;Bar
 """
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '<ul><li>Foo\n</li></ul><dl><dt>Bar\n</dt></dl>'
+    assert compose(wikicode) == "<ul><li>Foo\n</li></ul><dl><dt>Bar\n</dt></dl>"
 
 
 def test_list_with_formatting():
@@ -96,9 +105,12 @@ def test_list_with_formatting():
 *''bar''
 """
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == '''<ul><li> <b>foo</b>
+    assert (
+        compose(wikicode)
+        == """<ul><li> <b>foo</b>
 </li><li><i>bar</i>
-</li></ul>'''
+</li></ul>"""
+    )
 
 
 def test_html():

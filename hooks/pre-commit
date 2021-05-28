@@ -19,3 +19,4 @@ git diff-index --check --cached $against --
 # Ensure files pass flake8 and mypy.
 flake8
 mypy --no-error-summary
+black . --check --quiet

@@ -6,3 +6,4 @@ exclude =
 max-line-length = 150
 application-import-names = mwcomposerfromhell, tests
 import-order-style = appnexus
+extend-ignore = E203

@@ -1,4 +1,7 @@
-from mwcomposerfromhell.composer import HtmlComposingError, WikicodeToHtmlComposer  # noqa: F401
+from mwcomposerfromhell.composer import (  # noqa: F401
+    HtmlComposingError,
+    WikicodeToHtmlComposer,
+)
 from mwcomposerfromhell.namespace import ArticleResolver, Namespace  # noqa: F401
 
 
