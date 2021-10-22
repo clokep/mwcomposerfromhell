@@ -122,6 +122,8 @@ Internal link with en linktrail: no apostrophes (T29473)
 Handle title parsing for subpages
 Parsoid T55221: Wikilinks should be properly entity-escaped
 <br> to <br />
+Incorrecly removing closing slashes from correctly formed XHTML
+Failing to transform badly formed HTML into correct XHTML
 Horizontal ruler -- 4+ dashes render hr
 Horizontal ruler -- eats additional dashes on the same line
 Horizontal ruler -- does not collapse dashes on consecutive lines

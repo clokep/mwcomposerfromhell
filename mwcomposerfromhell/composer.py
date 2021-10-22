@@ -28,7 +28,7 @@ MARKUP_TO_LIST = {
 }
 
 # The markup for tags which are inline, as opposed to block.
-INLINE_TAGS = {"''", "'''"}
+INLINE_WIKI_MARKUP = {"''", "'''"}
 
 # Tags that represent a list or list items.
 LIST_TAGS = {"ul", "ol", "li", "dl", "dt", "dd"}
@@ -335,9 +335,9 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                     return self.visit(node.contents)
                 return ""
 
-            # Maybe wrap the tag in a paragraph. This only applies to inline
-            # tags, such as bold and italics..
-            if node.wiki_markup in INLINE_TAGS:
+            # Maybe wrap the tag in a paragraph. This applies to inline tags,
+            # such as bold and italics, and line breaks.
+            if node.wiki_markup in INLINE_WIKI_MARKUP or tag == "br":
                 result += self._maybe_open_tag(in_root)
 
             # If we're opening a table header or data element, ensure that a row
