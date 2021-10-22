@@ -1,7 +1,6 @@
-from collections import namedtuple
 import html
 import re
-from typing import Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 from urllib.parse import quote, unquote, urlencode
 
 from mwparserfromhell.wikicode import Wikicode
@@ -30,7 +29,22 @@ class ParserFunctionNotFound(Exception):
     """The parser function does not exist."""
 
 
-class CanonicalTitle(namedtuple("CanonicalTitle", ("namespace", "title", "interwiki"))):
+class CanonicalTitle:
+    def __init__(self, namespace: str, title: str, interwiki: str):
+        self.namespace = namespace
+        self.title = title
+        self.interwiki = interwiki
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, CanonicalTitle):
+            return False
+
+        return (self.namespace, self.title, self.interwiki) == (
+            other.namespace,
+            other.title,
+            other.interwiki,
+        )
+
     @property
     def full_title(self) -> str:
         if self.namespace:
@@ -78,7 +92,7 @@ class Namespace:
     Note that each article is expected to already have the namespace name removed.
     """
 
-    def __init__(self, articles: Dict[str, Wikicode] = None):
+    def __init__(self, articles: Optional[Dict[str, Wikicode]] = None):
         if articles is None:
             self._articles = {}
         else:

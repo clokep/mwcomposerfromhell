@@ -1,9 +1,12 @@
+from typing import Union
+
 import mwparserfromhell
 import pytest
 
 from mwcomposerfromhell.namespace import (
     ArticleNotFound,
     ArticleResolver,
+    CanonicalTitle,
     Namespace,
 )
 
@@ -100,7 +103,7 @@ def test_case_sensitivity(resolver):
 )
 def test_canonicalize(target, resolver):
     """Test canonicalizing an article in the main namespace."""
-    assert resolver.canonicalize_title(target) == ("", "Main page", "")
+    assert resolver.canonicalize_title(target) == CanonicalTitle("", "Main page", "")
 
 
 @pytest.mark.parametrize(
@@ -120,14 +123,20 @@ def test_canonicalize(target, resolver):
 )
 def test_canonicalize_with_namespace(target, resolver):
     """Test canonicalizing an article in the template namespace."""
-    assert resolver.canonicalize_title(target) == ("Template", "Foo bar", "")
+    assert resolver.canonicalize_title(target) == CanonicalTitle(
+        "Template", "Foo bar", ""
+    )
 
 
 def test_canonicalize_with_odd_namespace(resolver):
     """Test canonicalizing an article in the main namespace."""
-    assert resolver.canonicalize_title("MediaWiki:Foo") == ("MediaWiki", "Foo", "")
+    assert resolver.canonicalize_title("MediaWiki:Foo") == CanonicalTitle(
+        "MediaWiki", "Foo", ""
+    )
     # An unknown namespace passes through without being modified.
-    assert resolver.canonicalize_title("UNknown:Foo") == ("UNknown", "Foo", "")
+    assert resolver.canonicalize_title("UNknown:Foo") == CanonicalTitle(
+        "UNknown", "Foo", ""
+    )
 
 
 @pytest.mark.parametrize(
@@ -145,7 +154,7 @@ def test_canonicalize_with_odd_namespace(resolver):
 )
 def test_canonicalize_with_interwiki(target, resolver):
     """Test canonicalizing an interwiki article in the main namespace."""
-    assert resolver.canonicalize_title(target) == ("", "Foo bar", "en")
+    assert resolver.canonicalize_title(target) == CanonicalTitle("", "Foo bar", "en")
 
 
 @pytest.mark.parametrize(
@@ -163,7 +172,9 @@ def test_canonicalize_with_interwiki(target, resolver):
 )
 def test_canonicalize_with_namespace_and_interwiki(target, resolver):
     """Test canonicalizing an interwiki article in the template namespace"""
-    assert resolver.canonicalize_title(target) == ("Template", "Foo bar", "en")
+    assert resolver.canonicalize_title(target) == CanonicalTitle(
+        "Template", "Foo bar", "en"
+    )
 
 
 @pytest.mark.parametrize(
@@ -176,13 +187,15 @@ def test_canonicalize_with_namespace_and_interwiki(target, resolver):
         # Percent and HTML encoded! (%26 = &)
         ("Foo%26amp;", "Foo&"),
         # Encoded colons get unescaped first.
-        ("%3Ade%3AFoo", ("", "Foo", "de")),
+        ("%3Ade%3AFoo", CanonicalTitle("", "Foo", "de")),
     ],
 )
-def test_canonicalize_escape(target, expected, resolver):
+def test_canonicalize_escape(
+    target: str, expected: Union[str, CanonicalTitle], resolver: ArticleResolver
+) -> None:
     """Test canonicalizing an article with oddly encoded characters."""
     if isinstance(expected, str):
-        expected = ("", expected, "")
+        expected = CanonicalTitle("", expected, "")
     assert resolver.canonicalize_title(target) == expected
 
 
@@ -223,7 +236,7 @@ def test_canonicalize_escape(target, expected, resolver):
 )
 def test_canonicalize_with_default_namespace(target, expected_interwiki, resolver):
     """Test canonicalizing an article with a default namespace."""
-    assert resolver.canonicalize_title(target, "Default") == (
+    assert resolver.canonicalize_title(target, "Default") == CanonicalTitle(
         "Default",
         "Main page",
         expected_interwiki,

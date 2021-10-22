@@ -1,6 +1,6 @@
 import json
 import re
-from typing import Any, Dict, List, TextIO, Union
+from typing import Any, Dict, List, Optional, TextIO, Union
 
 # The types of the option dict.
 JSON_VALUE = Dict[str, Any]
@@ -205,10 +205,10 @@ class MediaWikiParserTestsParser:
         self.test_cases.append(contents)
 
     def parse(self) -> None:
-        current_group = None
-        current_parameter = None
+        current_group: Optional[str] = None
+        current_parameter: Optional[str] = None
         contents = ""
-        group_end = None
+        group_end: Optional[str] = None
         parameters: Dict[str, str] = {}
 
         # Somewhat like TestFileReader.execute().
@@ -236,6 +236,7 @@ class MediaWikiParserTestsParser:
 
                 # If already in a group, this starts a new parameter.
                 else:
+                    assert current_parameter is not None
                     parameters[current_parameter] = contents
 
                     if current_section == group_end:

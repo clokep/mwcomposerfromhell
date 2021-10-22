@@ -80,7 +80,7 @@ class WikiNodeVisitor:
         except AttributeError:
             raise UnknownNode("Unknown node type: {}".format(node.__class__.__name__))
 
-        return method(node, in_root, ignore_whitespace)
+        return method(node, in_root, ignore_whitespace)  # type: ignore[no-any-return]
 
 
 class WikicodeToHtmlComposer(WikiNodeVisitor):
@@ -523,7 +523,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         """
         # Escape HTML entities in the text.
-        text_result = html.escape(node.value, quote=False)
+        text_result: str = html.escape(node.value, quote=False)
 
         # Certain tags avoid any special whitespace handling, e.g. <pre> tags
         # and template keys. Just return the contents after escaping HTML
