@@ -78,7 +78,7 @@ class WikiNodeVisitor:
         try:
             method = getattr(self, method_name)
         except AttributeError:
-            raise UnknownNode("Unknown node type: {}".format(node.__class__.__name__))
+            raise UnknownNode(f"Unknown node type: {node.__class__.__name__}")
 
         return method(node, in_root, ignore_whitespace)  # type: ignore[no-any-return]
 
@@ -162,7 +162,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # Open any items that are left from the pending list.
             for tag in self._pending_lists[i:]:
                 self._stack.append(tag)
-                result += "<{}>".format(tag)
+                result += f"<{tag}>"
 
             # Reset the pending list.
             self._pending_lists = []
@@ -182,7 +182,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         result = ""
         while len(self._stack):
             current_tag = self._stack.pop()
-            result += "</{}>".format(current_tag)
+            result += f"</{current_tag}>"
 
             if current_tag == tag:
                 break
@@ -270,7 +270,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         """Generate a link to an article's edit page."""
         url = self._resolver.get_edit_url(canonical_title)
         title = canonical_title.full_title + " (page does not exist)"
-        return '<a href="{}" class="new" title="{}">'.format(url, title) + text + "</a>"
+        return f'<a href="{url}" class="new" title="{title}">' + text + "</a>"
 
     def visit_Wikicode(
         self,
@@ -418,11 +418,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         in_root: bool = False,
         ignore_whitespace: bool = False,
     ) -> str:
-        return (
-            "<h{}>".format(node.level)
-            + self.visit(node.title)
-            + "</h{}>".format(node.level)
-        )
+        return f"<h{node.level}>" + self.visit(node.title) + f"</h{node.level}>"
 
     def visit_Wikilink(
         self,
@@ -456,7 +452,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         if article_exists:
             return (
                 result
-                + '<a href="{}" title="{}">'.format(url, canonical_title.title)
+                + f'<a href="{url}" title="{canonical_title.title}">'
                 + text
                 + "</a>"
             )
@@ -800,6 +796,4 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
     def close_all(self) -> str:
         """Close all items on the stack."""
-        return "".join(
-            "</{}>".format(current_tag) for current_tag in reversed(self._stack)
-        )
+        return "".join(f"</{current_tag}>" for current_tag in reversed(self._stack))

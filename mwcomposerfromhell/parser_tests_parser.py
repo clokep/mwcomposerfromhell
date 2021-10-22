@@ -150,7 +150,7 @@ class MediaWikiParserTestsParser:
         try:
             method = getattr(self, method_name)
         except AttributeError:
-            raise RuntimeError("Unknown section type: {}".format(section))
+            raise RuntimeError(f"Unknown section type: {section}")
 
         method(contents)
 
@@ -221,9 +221,7 @@ class MediaWikiParserTestsParser:
                 # If not already in a group, this is the start of a new group.
                 if not current_group:
                     if current_section not in ("article", "test"):
-                        raise ValueError(
-                            "Unexpected section: '{}'".format(current_section)
-                        )
+                        raise ValueError(f"Unexpected section: '{current_section}'")
 
                     current_group = current_section
                     current_parameter = current_section

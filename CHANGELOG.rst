@@ -11,6 +11,7 @@ next
 * Basic support for ``subst`` and ``safesubst``.
 * Add a ``mwcomposerfromhell.parser_tests_parser`` module to read MediaWiki
   parser test files.
+* Various internal improvements, including type hints and f-strings.
 * Changed packaging to use setuptools declarative config in `setup.cfg`.
 
 0.4 (May 29, 2020)

@@ -37,7 +37,7 @@ def test_magic_words(magic_word, output):
     """Test that simple formatting works."""
     content = "{{%s}}" % magic_word
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == "<p>%s</p>" % output
+    assert compose(wikicode) == f"<p>{output}</p>"
 
 
 def test_case_sensitivty():
