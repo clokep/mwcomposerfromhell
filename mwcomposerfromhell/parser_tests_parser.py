@@ -1,6 +1,6 @@
 import json
 import re
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, TextIO, Union
 
 # The types of the option dict.
 JSON_VALUE = Dict[str, Any]
@@ -139,12 +139,12 @@ class MediaWikiParserTestsParser:
 
     """
 
-    def __init__(self, file):
+    def __init__(self, file: TextIO):
         self._file = file
-        self.articles = {}
-        self.test_cases = []
+        self.articles: Dict[str, str] = {}
+        self.test_cases: List[Dict[str, Any]] = []
 
-    def visit(self, section, contents):
+    def visit(self, section: str, contents: Dict[str, str]) -> None:
         method_name = "visit_" + section
 
         try:
@@ -154,7 +154,7 @@ class MediaWikiParserTestsParser:
 
         method(contents)
 
-    def visit_article(self, contents):
+    def visit_article(self, contents: Dict[str, str]) -> None:
         """
         An article must have the following fields:
 
@@ -177,7 +177,7 @@ class MediaWikiParserTestsParser:
 
         self.articles[article_name] = contents["text"]
 
-    def visit_test(self, contents):
+    def visit_test(self, contents: Dict[str, Any]) -> None:
         """
         A test must have the following fields:
 
@@ -204,12 +204,12 @@ class MediaWikiParserTestsParser:
 
         self.test_cases.append(contents)
 
-    def parse(self):
+    def parse(self) -> None:
         current_group = None
         current_parameter = None
         contents = ""
         group_end = None
-        parameters = {}
+        parameters: Dict[str, str] = {}
 
         # Somewhat like TestFileReader.execute().
         for line in self._file.readlines():

@@ -6,7 +6,7 @@ import mwparserfromhell
 import mwcomposerfromhell
 
 
-def convert_file(filename, wrap):
+def convert_file(filename: str, wrap: bool) -> None:
     with open(filename) as f:
         text = f.read()
 

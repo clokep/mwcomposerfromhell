@@ -18,7 +18,7 @@ def _datetime_field(fmt: _Format, utc: bool) -> MagicWord:
     :param utc: Whether to return the date in UTC or local time.
     """
 
-    def func():
+    def func() -> str:
         if utc:
             d = datetime.utcnow()
         else:

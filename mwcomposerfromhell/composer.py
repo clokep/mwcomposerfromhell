@@ -798,7 +798,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 + "</span>\n</p>"
             ).format(url=url, template_name=canonical_title.full_title)
 
-    def close_all(self):
+    def close_all(self) -> str:
         """Close all items on the stack."""
         return "".join(
             "</{}>".format(current_tag) for current_tag in reversed(self._stack)

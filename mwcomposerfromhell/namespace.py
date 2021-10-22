@@ -32,14 +32,14 @@ class ParserFunctionNotFound(Exception):
 
 class CanonicalTitle(namedtuple("CanonicalTitle", ("namespace", "title", "interwiki"))):
     @property
-    def full_title(self):
+    def full_title(self) -> str:
         if self.namespace:
             return self.namespace + ":" + self.title
         else:
             return self.title
 
     @property
-    def link(self):
+    def link(self) -> str:
         """Get a version of the canonical title appropriate for a URL."""
         return self.full_title.replace(" ", "_")
 
