@@ -367,6 +367,21 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # Create an HTML tag.
             stack_open = "<" + tag
             for attr in node.attributes:
+                # Extensions attributes should not be expanded. Replace the
+                # value with a Text node (instead of Wikicode).
+                #
+                # TODO It would be better to handle this in visit_Attribute, but
+                # that doens't have enough context to do so currently.
+                if tag == "pre":
+                    attr = extras.Attribute(
+                        name=attr.name,
+                        value=nodes.Text(value=str(attr.value)),
+                        quotes=attr.quotes,
+                        pad_first=attr.pad_first,
+                        pad_before_eq=attr.pad_before_eq,
+                        pad_after_eq=attr.pad_after_eq,
+                    )
+
                 stack_open += self.visit(attr)
             if node.self_closing:
                 stack_open += " /"
@@ -408,9 +423,35 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         in_root: bool = False,
         ignore_whitespace: bool = False,
     ) -> str:
-        # Just use the string version of the attribute, it does all the parsing
-        # that we want.
-        return str(node)
+        # Render the name of the attribute.
+        name = self.visit(node.name)
+
+        if node.value is not None:
+            # Render the value, and then sanitize it a bit:
+            # * Remove white space prefix / suffix.
+            # * Replace new lines with spaces.
+            # * Undo the HTML entity conversion for ampersands.
+            value = self.visit(node.value)
+            value = value.strip().replace("\n", " ").replace("&amp;", "&")
+
+            pad_before_eq = node.pad_before_eq
+            pad_after_eq = node.pad_after_eq
+        else:
+            # The value defaults to a blank string, if not provided.
+            value = ""
+
+            # If there's a trailing / on the tag, it is really a self-closing tag.
+            if name[-1] == "/":
+                name = name[:-1]
+
+            # There should be no padding.
+            pad_before_eq = pad_after_eq = ""
+
+        # Default to double quotes.
+        quotes = node.quotes or '"'
+
+        # Return the attribute.
+        return f"{node.pad_first}{name}{pad_before_eq}={pad_after_eq}{quotes}{value}{quotes}"
 
     def visit_Heading(
         self,

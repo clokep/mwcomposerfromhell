@@ -53,6 +53,7 @@ T17491: <ins>/<del> in blockquote (2)
 Entities inside <pre>
 </pre> inside nowiki
 HTML pre followed by indent-pre
+Pres with newline attributes
 Parsoid: handle pre with space after attribute
 Templates: Don't recognize targets split by newlines
 2e. Indent-Pre and table-line syntax
@@ -90,6 +91,7 @@ Use url link syntax for links where the content is equal the link target
 Quotes
 Accept empty attributes in td/th cells (td/th cells starting with leading ||)
 Element attributes with double ! should not be broken up by <th>
+Table attributes with empty value
 Table cell with a single comment
 Plain link, capitalized
 Plain link, uncapitalized
@@ -124,6 +126,7 @@ Parsoid T55221: Wikilinks should be properly entity-escaped
 <br> to <br />
 Incorrecly removing closing slashes from correctly formed XHTML
 Failing to transform badly formed HTML into correct XHTML
+Handling html with a br self-closing tag
 Horizontal ruler -- 4+ dashes render hr
 Horizontal ruler -- eats additional dashes on the same line
 Horizontal ruler -- does not collapse dashes on consecutive lines
@@ -168,6 +171,7 @@ Preprocessor precedence 18: another rightmost wins scenario
 Preprocessor precedence 19: break syntax
 Table wikitext syntax outside wiki-tables
 Templates: Links: 2. Generation of link href
+Templates: HTML Tag: 6. Generation of end piece of HTML attr value
 pre-save transform: subst:
 pre-save transform: subst: templates with parameters
 pre-save transform: <noinclude> in subst (T5298)
@@ -177,6 +181,8 @@ Broken image caption with link
 T3186 news: in the middle of text
 div with no attributes
 div with double-quoted attribute
+div with unquoted attribute
+div with empty attribute value, no space before equals
 Non-ASCII pseudo-tags are rendered as text
 Pseudo-tag with URL 'name' renders as url link
 text with amp in the middle of nowhere
@@ -186,6 +192,11 @@ HTML tag with leading space is parsed as text
 Character reference normalization in link text (T3938)
 T4095: link with three closing brackets
 T4095: link with pipe and three closing brackets
+T4304: HTML attribute safety (safe template; regression T4309)
+T4304: HTML attribute safety (safe parameter; 2309)
+T5244: HTML attribute safety (extension; safe)
+Expansion of multi-line templates in attribute values (T8255)
+Expansion of multi-line templates in attribute values (T8255 sanity check)
 Expansion of multi-line templates in attribute values (T8255 sanity check 2)
 Parser hook: Don't allow unclosed extension tags
 Nested template calls
@@ -198,6 +209,7 @@ HTML ordered list item with parameters oddity
 Fuzz testing: URL adjacent extension (with space, clean)
 Fuzz testing: URL adjacent extension (no space, dirty; nowiki)
 Fuzz testing: encoded newline in generated HTML replacements (T8577)
+Fuzz testing: encoded newline in generated HTML replacements, html2wt (T8577)
 Templates in extension attributes are not expanded
 Correct handling of <td>, <tr> (T8171)
 Parsing crashing regression (fr:JavaScript)
