@@ -59,7 +59,7 @@ class CanonicalTitle:
 
 
 def _normalize_spaces(key: str) -> str:
-    """Spaces and turned to underscores, multiple get combined, and stripped from the beginning and end."""
+    """Spaces are turned to underscores, multiple get combined, and stripped from the beginning and end."""
     # Convert spaces to underscores.
     key = key.replace("_", " ")
     # Replace strings of underscores with a single underscore.
