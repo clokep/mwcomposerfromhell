@@ -312,7 +312,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                     result += self._close_stack("ul")
 
         else:
-            tag = self.visit(node.tag)
+            tag = self.visit(node.tag).lower()
 
             # nowiki tags do not end up in the resulting content, their contents
             # should appears as if this tag does not exist.
@@ -424,7 +424,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         ignore_whitespace: bool = False,
     ) -> str:
         # Render the name of the attribute.
-        name = self.visit(node.name)
+        name = self.visit(node.name).lower()
 
         if node.value is not None:
             # Render the value, and then sanitize it a bit:

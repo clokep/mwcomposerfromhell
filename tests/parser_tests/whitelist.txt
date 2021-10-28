@@ -177,12 +177,14 @@ pre-save transform: subst: templates with parameters
 pre-save transform: <noinclude> in subst (T5298)
 subst: does not work during normal parse
 Parsoid: Recognize nowiki with trailing space in tags
+Parsoid: Recognize nowiki with odd capitalization
 Broken image caption with link
 T3186 news: in the middle of text
 div with no attributes
 div with double-quoted attribute
 div with unquoted attribute
 div with empty attribute value, no space before equals
+DIV IN UPPERCASE
 Non-ASCII pseudo-tags are rendered as text
 Pseudo-tag with URL 'name' renders as url link
 text with amp in the middle of nowhere
