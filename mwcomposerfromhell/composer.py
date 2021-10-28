@@ -434,8 +434,6 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             value = self.visit(node.value)
             value = value.strip().replace("\n", " ").replace("&amp;", "&")
 
-            pad_before_eq = node.pad_before_eq
-            pad_after_eq = node.pad_after_eq
         else:
             # The value defaults to a blank string, if not provided.
             value = ""
@@ -444,14 +442,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             if name[-1] == "/":
                 name = name[:-1]
 
-            # There should be no padding.
-            pad_before_eq = pad_after_eq = ""
-
-        # Default to double quotes.
-        quotes = node.quotes or '"'
-
         # Return the attribute.
-        return f"{node.pad_first}{name}{pad_before_eq}={pad_after_eq}{quotes}{value}{quotes}"
+        return f'{node.pad_first}{name}="{value}"'
 
     def visit_Heading(
         self,

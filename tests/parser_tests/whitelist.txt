@@ -182,7 +182,11 @@ Broken image caption with link
 T3186 news: in the middle of text
 div with no attributes
 div with double-quoted attribute
+div with single-quoted attribute
 div with unquoted attribute
+div with empty attribute value, space before equals
+div with multiple empty attribute values
+table with multiple empty attribute values
 div with empty attribute value, no space before equals
 DIV IN UPPERCASE
 Non-ASCII pseudo-tags are rendered as text
