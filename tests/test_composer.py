@@ -114,14 +114,17 @@ def test_html():
     """Test a couple of HTML aspects."""
     content = "<hr></hr><hr/><hr /><i ></i >"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == "<hr /><hr /><hr /><hr /><i></i>"
+    assert compose(wikicode) == "<hr /><hr /><hr /><hr /><p><i></i></p>"
 
 
 def test_html_a():
     """Anchor tags are not alloewd."""
     content = '<a href="foo">&bar&amp;</a>'
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == "&lt;a href=&quot;foo&quot;&gt;&amp;bar&amp;&lt;/a&gt;"
+    assert (
+        compose(wikicode)
+        == "<p>&lt;a href=&quot;foo&quot;&gt;&amp;bar&amp;&lt;/a&gt;</p>"
+    )
 
 
 def test_nowiki():

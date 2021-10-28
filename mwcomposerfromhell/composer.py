@@ -27,8 +27,48 @@ MARKUP_TO_LIST = {
     ":": ("dl", "dd"),
 }
 
-# The markup for tags which are inline, as opposed to block.
-INLINE_WIKI_MARKUP = {"''", "'''"}
+# Tags which should not automatically be wrapped into a paragraph.
+_NO_P_TAGS = {
+    # All block-level elements,
+    # see https://developer.mozilla.org/en-US/docs/Web/HTML/Block-level_elements
+    "address",
+    "article",
+    "aside",
+    "blockquote",
+    "details",
+    "dialog",
+    "dd",
+    "div",
+    "dl",
+    "dt",
+    "fieldset",
+    "figcaption",
+    "figure",
+    "footer",
+    "form",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "header",
+    "hgroup",
+    "hr",
+    "li",
+    "main",
+    "nav",
+    "ol",
+    "p",
+    "pre",
+    "section",
+    "table",
+    "ul",
+    # Others from trial and error.
+    "center",
+    "font",
+    "object",
+}
 
 # Tags that represent a list or list items.
 LIST_TAGS = {"ul", "ol", "li", "dl", "dt", "dd"}
@@ -337,7 +377,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
             # Maybe wrap the tag in a paragraph. This applies to inline tags,
             # such as bold and italics, and line breaks.
-            if node.wiki_markup in INLINE_WIKI_MARKUP or tag == "br":
+            if tag not in _NO_P_TAGS:
                 result += self._maybe_open_tag(in_root)
 
             # If we're opening a table header or data element, ensure that a row
@@ -439,7 +479,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             value = ""
 
             # If there's a trailing / on the tag, it is really a self-closing tag.
-            if name[-1] == "/":
+            if name and name[-1] == "/":
                 name = name[:-1]
 
         # Return the attribute.

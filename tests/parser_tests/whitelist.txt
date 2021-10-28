@@ -29,6 +29,10 @@ Italics and bold: other quote tests: (2,(3,3),2)
 Italics and bold: other quote tests: (3,2,3+2+2,2)
 Italics and bold: other quote tests: (3,(2,2),3)
 Italicized possessive
+Non-html5 tags should be accepted
+<wbr> is valid wikitext (T54468)
+<s> or <strike> for strikethrough
+Text-level semantic html elements in wikitext
 Bare pipe character (T54363)
 Bare pipe character from a template (T54363)
 <nowiki> unordered list
@@ -165,6 +169,8 @@ Template infinite loop
 Template from main namespace
 <includeonly> and <noinclude> being included
 <includeonly> and <noinclude> on a page
+1. includeonly in html attr key
+3. includeonly in part of an attr value
 Preprocessor precedence 4: left-most angle bracket
 Preprocessor precedence 8: broken language converter is rightmost opening
 Preprocessor precedence 18: another rightmost wins scenario
@@ -194,7 +200,11 @@ Pseudo-tag with URL 'name' renders as url link
 text with amp in the middle of nowhere
 text with entity-escaped character entity-like string: eacute
 text with undefined character entity: xacute
+HTML5 tags
 HTML tag with leading space is parsed as text
+Ensure that HTML adoption agency algorithm is properly implemented.
+Nesting of <ruby>
+Nesting of <bdo>
 Character reference normalization in link text (T3938)
 T4095: link with three closing brackets
 T4095: link with pipe and three closing brackets
@@ -252,11 +262,12 @@ Links 14. Protect link-like plain text. (Parsoid bug T78425)
 4. No escaping needed
 1. No unnecessary escapes
 1. Leading whitespace in SOL context should be escaped
-1. a tags
 3. multi-line html tag
 4. extension tags
 Escaping nowikis
 Tag-like HTML structures are passed through as text
+HTML tag with necessary entities in attributes
+HTML tag with 'unnecessary' entity encoding in attributes
 Support <object> element with .data attribute
 Serialize wikitext list items as HTML list items when embedded in a HTML list
 2. Headings: don't suppress empty headings if scrubWikitext is false
