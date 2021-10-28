@@ -203,6 +203,10 @@ text with undefined character entity: xacute
 HTML5 tags
 HTML tag with leading space is parsed as text
 Ensure that HTML adoption agency algorithm is properly implemented.
+Nesting of <kbd>
+Nesting of <em>
+Nesting of <strong>
+Nesting of <q>
 Nesting of <ruby>
 Nesting of <bdo>
 Character reference normalization in link text (T3938)
