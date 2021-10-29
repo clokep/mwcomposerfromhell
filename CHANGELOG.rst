@@ -14,6 +14,7 @@ next
 * Fix a bug ("Template loop detected") if the same unknown template appeared
   multiple times when decoding wikicode.
 * Various internal improvements, including type hints and f-strings.
+* Many minor bugs fixed and additional compatibility with MediaWiki.
 * Changed packaging to use setuptools declarative config in `setup.cfg`.
 
 0.4 (May 29, 2020)
