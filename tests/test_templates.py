@@ -243,3 +243,12 @@ def test_unknown():
 
     # Render the result.
     assert compose(wikicode) == "<p>" + content + "</p>"
+
+
+def test_unknown_duplicate():
+    """An unknown template gets rendered as is."""
+    content = "{{temp}}{{temp}}"
+    wikicode = mwparserfromhell.parse(content)
+
+    # Render the result.
+    assert compose(wikicode) == "<p>" + content + "</p>"

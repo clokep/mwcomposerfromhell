@@ -791,8 +791,15 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             if self._red_links:
                 # Render an edit link.
                 canonical_title = e.args[0]
+
+                # Remove it from the open templates.
+                self._open_templates.remove(template_name)
+
                 return result + self._get_edit_link(canonical_title, template_name)
             else:
+                # Remove it from the open templates.
+                self._open_templates.remove(template_name)
+
                 # Otherwise, simply output the template call.
                 return result + self._maybe_open_tag(in_root) + str(node)
         else:

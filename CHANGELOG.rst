@@ -11,6 +11,8 @@ next
 * Basic support for ``subst`` and ``safesubst``.
 * Add a ``mwcomposerfromhell.parser_tests_parser`` module to read MediaWiki
   parser test files.
+* Fix a bug ("Template loop detected") if the same unknown template appeared
+  multiple times when decoding wikicode.
 * Various internal improvements, including type hints and f-strings.
 * Changed packaging to use setuptools declarative config in `setup.cfg`.
 
