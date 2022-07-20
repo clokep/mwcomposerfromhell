@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
+from os import environ
 from pathlib import Path
 
 import mwparserfromhell
@@ -14,7 +15,7 @@ with open(Path(__file__).parent / "whitelist.txt") as f:
     WHITELIST = {line.strip() for line in f}
 
 # Whether to only run the tests above or to run them all and skip failing tests.
-ONLY_RUN_WHITELIST = False
+ONLY_RUN_WHITELIST = environ.get("ONLY_RUN_WHITELIST") is not None
 
 # Some tests have a standard HTML output, while others differ based on the
 # parser. Prefer the standard output, then the PHP parser's.
