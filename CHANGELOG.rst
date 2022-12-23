@@ -1,8 +1,8 @@
 Changelog
 #########
 
-next
-====
+0.5 (Dec 23, 2022)
+==================
 
 * Remove the "module" infrastructure and implement parser functions as a
   replacement. This is not a 1-to-1 replacement, as ``#invoke`` is not
@@ -15,7 +15,7 @@ next
   multiple times when decoding wikicode.
 * Various internal improvements, including type hints and f-strings.
 * Many minor bugs fixed and additional compatibility with MediaWiki.
-* Changed packaging to use setuptools declarative config in `setup.cfg`.
+* Changed packaging to use setuptools declarative config in ``setup.cfg``.
 
 0.4 (May 29, 2020)
 ==================
@@ -33,7 +33,7 @@ next
 * Handling of article content outside of the ``Template`` namespace is supported.
 * Ensure there isn't an infinite loop in template transclusion.
 * Partially support rendering of edit links.
-* Properly handle ``nowiki``, ``includeonly``, and `noinclude`` tags.
+* Properly handle ``nowiki``, ``includeonly``, and ``noinclude``` tags.
 * Support link trails (e.g. ``[[Foo]]bar``).
 * More accurate table rendering.
 * Support for handling preformatted text (in the body or in a ``pre`` tag).
