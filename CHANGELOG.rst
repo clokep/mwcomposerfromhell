@@ -16,6 +16,7 @@ Changelog
 * Various internal improvements, including type hints and f-strings.
 * Many minor bugs fixed and additional compatibility with MediaWiki.
 * Changed packaging to use setuptools declarative config in ``setup.cfg``.
+* Support Python 3.10 and 3.11, drop support for Python 3.6.
 
 0.4 (May 29, 2020)
 ==================
