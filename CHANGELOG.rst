@@ -34,7 +34,7 @@ Changelog
 * Handling of article content outside of the ``Template`` namespace is supported.
 * Ensure there isn't an infinite loop in template transclusion.
 * Partially support rendering of edit links.
-* Properly handle ``nowiki``, ``includeonly``, and ``noinclude``` tags.
+* Properly handle ``nowiki``, ``includeonly``, and ``noinclude`` tags.
 * Support link trails (e.g. ``[[Foo]]bar``).
 * More accurate table rendering.
 * Support for handling preformatted text (in the body or in a ``pre`` tag).
