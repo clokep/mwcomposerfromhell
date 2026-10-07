@@ -8,16 +8,12 @@ from mwcomposerfromhell.parser_tests_parser import (
 
 def test_article():
     """Test parsing an article."""
-    parser = MediaWikiParserTestsParser(
-        StringIO(
-            """!! article
+    parser = MediaWikiParserTestsParser(StringIO("""!! article
 Main Page
 !! text
 blah blah
 !! endarticle
-"""
-        )
-    )
+"""))
     parser.parse()
 
     assert parser.articles == {"Main Page": "blah blah\n"}
@@ -26,18 +22,14 @@ blah blah
 
 def test_comments():
     """Comments and blank lines outside of sections should be ignored."""
-    parser = MediaWikiParserTestsParser(
-        StringIO(
-            """# This should be ignored.
+    parser = MediaWikiParserTestsParser(StringIO("""# This should be ignored.
 
 !! article
 Main Page
 !! text
 blah blah
 !! endarticle
-"""
-        )
-    )
+"""))
     parser.parse()
 
     assert parser.articles == {"Main Page": "blah blah\n"}
@@ -46,9 +38,7 @@ blah blah
 
 def test_test_case():
     """Comments and blank lines outside of sections should be ignored."""
-    parser = MediaWikiParserTestsParser(
-        StringIO(
-            """!! test
+    parser = MediaWikiParserTestsParser(StringIO("""!! test
 Simple paragraph
 !! wikitext
 This is a simple paragraph.
@@ -56,9 +46,7 @@ This is a simple paragraph.
 <p>This is a simple paragraph.
 </p>
 !! end
-"""
-        )
-    )
+"""))
     parser.parse()
 
     assert parser.articles == {}
@@ -74,16 +62,12 @@ This is a simple paragraph.
 
 def test_blank_test_case():
     """Comments and blank lines outside of sections should be ignored."""
-    parser = MediaWikiParserTestsParser(
-        StringIO(
-            """!! test
+    parser = MediaWikiParserTestsParser(StringIO("""!! test
 Blank input
 !! wikitext
 !! html
 !! end
-"""
-        )
-    )
+"""))
     parser.parse()
 
     assert parser.articles == {}
@@ -99,18 +83,14 @@ Blank input
 
 def test_parser_options():
     """An options section can exist."""
-    parser = MediaWikiParserTestsParser(
-        StringIO(
-            """!! test
+    parser = MediaWikiParserTestsParser(StringIO("""!! test
 Options
 !! wikitext
 !! options
 pst
 !! html
 !! end
-"""
-        )
-    )
+"""))
     parser.parse()
 
     assert parser.articles == {}
@@ -126,62 +106,50 @@ pst
 
 def test_options():
     """An options section can exist."""
-    result = _parse_options(
-        """
+    result = _parse_options("""
 pst
-"""
-    )
+""")
     assert result == {"pst": True}
 
 
 def test_options_with_value():
     """An options section can exist."""
-    result = _parse_options(
-        """
+    result = _parse_options("""
 thumbsize=0
 language=en
-"""
-    )
+""")
     assert result == {"thumbsize": ["0"], "language": ["en"]}
 
 
 def test_options_with_quoted_value():
     """Option values can be quoted to contain spaces."""
-    result = _parse_options(
-        """
+    result = _parse_options("""
 test="foo bar"
-"""
-    )
+""")
     assert result == {"test": ["foo bar"]}
 
 
 def test_options_with_multiple_values():
     """Each option can have multiple values (and they can have spaces around them)."""
-    result = _parse_options(
-        """
+    result = _parse_options("""
 test=foo,bar
-"""
-    )
+""")
     assert result == {"test": ["foo", "bar"]}
 
 
 def test_options_with_title():
     """An options section can exist."""
-    result = _parse_options(
-        """
+    result = _parse_options("""
 title=[[Foo bar]]
-"""
-    )
+""")
     assert result == {"title": ["Foo bar"]}
 
 
 def test_options_json():
     """Parsoid options can be JSON."""
-    result = _parse_options(
-        """
+    result = _parse_options("""
 parsoid={ "modes": ["wt2html","wt2wt"], "normalizePhp": true }
-"""
-    )
+""")
     assert result == {
         "parsoid": [
             {
@@ -193,8 +161,7 @@ parsoid={ "modes": ["wt2html","wt2wt"], "normalizePhp": true }
 
 
 def test_options_nested_json():
-    result = _parse_options(
-        """
+    result = _parse_options("""
 parsoid={
   "modes": ["wt2wt", "selser"],
   "changes": [
@@ -202,8 +169,7 @@ parsoid={
     ["td > span", "attr", "data-mw-variant", "{\\"disabled\\":{\\"t\\":\\"edited\\"}}"]
   ]
 }
-"""
-    )
+""")
     assert result == {
         "parsoid": [
             {
@@ -224,11 +190,9 @@ parsoid={
 
 def test_option_spacing():
     """An options section can exist."""
-    result = _parse_options(
-        """
+    result = _parse_options("""
 pst foo = bar, baz
-"""
-    )
+""")
     assert result == {
         "pst": True,
         "foo": ["bar", "baz"],

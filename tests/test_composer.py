@@ -96,12 +96,9 @@ def test_pre():
 
 [[wiki]] markup &amp;</pre>"""
     wikicode = mwparserfromhell.parse(content)
-    assert (
-        compose(wikicode)
-        == """<pre>&lt;!--Comment--&gt;
+    assert compose(wikicode) == """<pre>&lt;!--Comment--&gt;
 
 [[wiki]] markup &amp;</pre>"""
-    )
 
 
 def test_unknown_node():

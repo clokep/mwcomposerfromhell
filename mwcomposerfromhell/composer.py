@@ -1,6 +1,6 @@
 import html
 import re
-from typing import Generator, Iterator, List, Optional, Set, Tuple
+from typing import Generator, Iterator, Optional, Set
 
 from mwparserfromhell import nodes, wikicode
 from mwparserfromhell.nodes import extras
@@ -145,10 +145,10 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # Whether to expand transcluded templates.
         self._expand_templates = expand_templates
 
-        self._pending_lists = []  # type: List[str]
+        self._pending_lists: list[str] = []
 
         # Track the currently open tags.
-        self._stack = []  # type: List[str]
+        self._stack: list[str] = []
 
         # Track current templates to avoid a loop.
         self._open_templates = open_templates or set()
@@ -244,7 +244,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
     def _fix_nodes(
         self,
-        nodes_iterator: Iterator[StringMixIn],
+        nodes_iterator: Iterator[StringMixIn] | list[StringMixIn],
     ) -> Generator[StringMixIn, None, None]:
         """
         Iterate through nodes making some fixes:
@@ -263,7 +263,9 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
             # Convert Wikilinks to the mwcomposerfromhell subclass.
             if isinstance(node, nodes.Wikilink):
-                node = Wikilink(node.title, node.text)
+                node = Wikilink(
+                    str(node.title), str(node.text) if node.text is not None else None
+                )
 
             # Two adjacent (after removing comment nodes) text nodes are combined.
             if isinstance(prev_node, nodes.Text) and isinstance(node, nodes.Text):
@@ -284,7 +286,11 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 match = LINK_TRAIL_PATTERN.match(node.value)
                 if match:
                     # The link gets the link trail added to the text.
-                    prev_node = Wikilink(prev_node.title, prev_node.text, match[1])
+                    prev_node = Wikilink(
+                        str(prev_node.title),
+                        str(prev_node.text) if prev_node.text is not None else None,
+                        match[1],
+                    )
                     # The text gets the link trailed removed from it.
                     node = nodes.Text(value=node.value[len(match[1]) :])
 
@@ -321,7 +327,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         return "".join(
             map(
                 lambda n: self.visit(n, in_root, ignore_whitespace),
-                self._fix_nodes(node.nodes),
+                self._fix_nodes(iter(node.nodes)),
             )
         )
 
@@ -603,9 +609,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         result = ""
 
         # Each line of content is handled separately.
-        lines = list(
-            filter(None, text_result.splitlines(keepends=True))
-        )  # type: List[str]
+        lines: list[str] = list(filter(None, text_result.splitlines(keepends=True)))
 
         # This needs to be a new-line and start with a space.
         start = 0
@@ -637,7 +641,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                     # The first space at the start of each line gets removed.
                     result += (
                         "<pre>"
-                        + "".join(map(lambda l: l[1:], lines[start:it]))
+                        + "".join(map(lambda line: line[1:], lines[start:it]))
                         + "</pre>"
                     )
                 else:
@@ -650,7 +654,9 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         if in_section_pre:
             # The first space at the start of each line gets removed.
             result += (
-                "<pre>" + "".join(map(lambda l: l[1:], lines[start:])) + "</pre>\n"
+                "<pre>"
+                + "".join(map(lambda line: line[1:], lines[start:]))
+                + "</pre>\n"
             )
         else:
             result += self._handle_text("".join(lines[start:]), in_root)
@@ -725,7 +731,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         # Because each parameter's name and value might include other templates,
         # etc. these need to be rendered in the context of the template call.
-        context = []  # type: List[Tuple[str, str, bool]]
+        context: list[tuple[str, str, bool]] = []
         for param in node.params:
             # See https://meta.wikimedia.org/wiki/Help:Template#Parameters
             # for information about stripping whitespace around parameters.
@@ -759,7 +765,9 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         # if the name starts with a # it is a parser function.
         if template_name and template_name[0] == "#":
-            function_name, _, param = template_name.partition(":")
+            parts = template_name.partition(":")
+            function_name: str = parts[0]
+            template_param: str = parts[2]
             try:
                 parser_function = self._resolver.get_parser_function(function_name)
             except ParserFunctionNotFound:
@@ -770,7 +778,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 # Call the function with the current template call (and any
                 # parent template call information).
                 return self._maybe_open_tag(in_root) + parser_function(
-                    param, context, self._context
+                    template_param, context, self._context
                 )
 
         # Otherwise, this is a normal template.

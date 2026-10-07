@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Callable, Dict, Union
+from typing import Callable, Union
 
 # A magic word is a callable which takes two parameters (param and context) and
 # returns a string.
@@ -51,7 +51,7 @@ _FORMATTERS = {
     # datetime doesn't have a week parameter, and we need to start with 1, not 0.
     "WEEK": lambda d: str(int(d.strftime("%W")) + 1),  # Week (number)
     "TIMESTAMP": "%Y%m%d%H%M%S",  # YYYYMMDDHHmmss timestamp
-}  # type: Dict[str, _Format]
+}  # type: dict[str, _Format]
 
 for param, fmt in _FORMATTERS.items():
     MAGIC_WORDS["CURRENT" + param] = _datetime_field(fmt, True)

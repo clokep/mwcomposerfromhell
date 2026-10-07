@@ -7,7 +7,6 @@ from mwparserfromhell.wikicode import Wikicode
 
 from mwcomposerfromhell.magic_words import MAGIC_WORDS, MagicWord
 
-
 # A parser function is a callable which takes two parameters (param and context)
 # and returns a string to replace itself with.
 Context = List[Tuple[str, str, bool]]

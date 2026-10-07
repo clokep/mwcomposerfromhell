@@ -14,9 +14,7 @@ def test_table():
 | Example 1b || Example 2b || Example 3b
 |}"""
     wikicode = mwparserfromhell.parse(content)
-    assert (
-        compose(wikicode)
-        == """<table>
+    assert compose(wikicode) == """<table>
 <tr>
 <th> Header 1 </th><th> Header 2 </th><th> Header 3
 </th></tr><tr>
@@ -24,7 +22,6 @@ def test_table():
 </td></tr><tr>
 <td> Example 1b </td><td> Example 2b </td><td> Example 3b
 </td></tr></table>"""
-    )
 
 
 def test_table_class():
@@ -36,15 +33,12 @@ def test_table_class():
 | Example 1 || Example 2
 |}"""
     wikicode = mwparserfromhell.parse(content)
-    assert (
-        compose(wikicode)
-        == """<table class="wikitable">
+    assert compose(wikicode) == """<table class="wikitable">
 <tr>
 <th> Header 1 </th><th> Header 2
 </th></tr><tr>
 <td> Example 1 </td><td> Example 2
 </td></tr></table>"""
-    )
 
 
 def test_bad_syntax():
@@ -53,11 +47,8 @@ def test_bad_syntax():
 |x
 |}"""
     wikicode = mwparserfromhell.parse(content)
-    assert (
-        compose(wikicode)
-        == """<table>\n<tr>\n<td>x
+    assert compose(wikicode) == """<table>\n<tr>\n<td>x
 </td></tr></table>"""
-    )
 
 
 def test_preformatted_table():
@@ -68,12 +59,9 @@ def test_preformatted_table():
  Bar
 |}"""
     wikicode = mwparserfromhell.parse(content)
-    assert (
-        compose(wikicode)
-        == """<table>
+    assert compose(wikicode) == """<table>
 <tr>
 <td> Foo
 <pre>Bar
 </pre>
 </td></tr></table>"""
-    )
