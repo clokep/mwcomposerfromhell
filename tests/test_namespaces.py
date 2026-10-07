@@ -1,5 +1,3 @@
-from typing import Union
-
 import mwparserfromhell
 import pytest
 
@@ -191,7 +189,7 @@ def test_canonicalize_with_namespace_and_interwiki(target, resolver):
     ],
 )
 def test_canonicalize_escape(
-    target: str, expected: Union[str, CanonicalTitle], resolver: ArticleResolver
+    target: str, expected: str | CanonicalTitle, resolver: ArticleResolver
 ) -> None:
     """Test canonicalizing an article with oddly encoded characters."""
     if isinstance(expected, str):

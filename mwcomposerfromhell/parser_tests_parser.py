@@ -1,10 +1,10 @@
 import json
 import re
-from typing import Any, Dict, List, Optional, TextIO, Union
+from typing import Any, TextIO
 
 # The types of the option dict.
-JSON_VALUE = Dict[str, Any]
-OPTION_VALUE = Union[bool, List[str], List[JSON_VALUE]]
+JSON_VALUE = dict[str, Any]
+OPTION_VALUE = bool | list[str] | list[JSON_VALUE]
 
 # Patterns for parsing options.
 UNQUOTED_PATTERN = re.compile(r"\s*([\w-]+)\s*")
@@ -14,7 +14,7 @@ QUOTED_PATTERN = re.compile(r'\s*"([^"]*)"\s*')
 LINK_PATTERN = re.compile(r"\s*\[\[([^\]]*)\]\]\s*")
 
 
-def _parse_options(options_str: str) -> Dict[str, OPTION_VALUE]:
+def _parse_options(options_str: str) -> dict[str, OPTION_VALUE]:
     """
     Options take one of the following forms:
 
@@ -29,7 +29,7 @@ def _parse_options(options_str: str) -> Dict[str, OPTION_VALUE]:
     is either a boolean (if there was no value), a list of strings, or a JSON
     object.
     """
-    result = {}  # type: Dict[str, OPTION_VALUE]
+    result: dict[str, OPTION_VALUE] = {}
     pos = 0
     options_len = len(options_str)
 
@@ -141,20 +141,20 @@ class MediaWikiParserTestsParser:
 
     def __init__(self, file: TextIO):
         self._file = file
-        self.articles: Dict[str, str] = {}
-        self.test_cases: List[Dict[str, Any]] = []
+        self.articles: dict[str, str] = {}
+        self.test_cases: list[dict[str, Any]] = []
 
-    def visit(self, section: str, contents: Dict[str, str]) -> None:
+    def visit(self, section: str, contents: dict[str, str]) -> None:
         method_name = "visit_" + section
 
         try:
             method = getattr(self, method_name)
         except AttributeError:
-            raise RuntimeError(f"Unknown section type: {section}")
+            raise RuntimeError(f"Unknown section type: {section}") from None
 
         method(contents)
 
-    def visit_article(self, contents: Dict[str, str]) -> None:
+    def visit_article(self, contents: dict[str, str]) -> None:
         """
         An article must have the following fields:
 
@@ -166,18 +166,16 @@ class MediaWikiParserTestsParser:
         # Ensure articles don't have other info we're missing.
         unknown_params = set(contents.keys()) - {"article", "text"}
         if unknown_params:
-            raise ValueError(
-                "Unknown parameters: %s" % " ".join(sorted(unknown_params))
-            )
+            raise ValueError("Unknown parameters: " + " ".join(sorted(unknown_params)))
 
         # Articles should be unique.
         article_name = contents["article"].strip()
         if article_name in self.articles:
-            raise ValueError("Cannot overwrite an article: %s" % article_name)
+            raise ValueError(f"Cannot overwrite an article: {article_name}")
 
         self.articles[article_name] = contents["text"]
 
-    def visit_test(self, contents: Dict[str, Any]) -> None:
+    def visit_test(self, contents: dict[str, Any]) -> None:
         """
         A test must have the following fields:
 
@@ -205,11 +203,11 @@ class MediaWikiParserTestsParser:
         self.test_cases.append(contents)
 
     def parse(self) -> None:
-        current_group: Optional[str] = None
-        current_parameter: Optional[str] = None
+        current_group: str | None = None
+        current_parameter: str | None = None
         contents = ""
-        group_end: Optional[str] = None
-        parameters: Dict[str, str] = {}
+        group_end: str | None = None
+        parameters: dict[str, str] = {}
 
         # Somewhat like TestFileReader.execute().
         for line in self._file.readlines():

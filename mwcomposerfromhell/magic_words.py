@@ -1,12 +1,12 @@
+from collections.abc import Callable
 from datetime import datetime
-from typing import Callable, Union
 
 # A magic word is a callable which takes two parameters (param and context) and
 # returns a string.
 MagicWord = Callable[[], str]
 
 # The parameter for the formatting function generator.
-_Format = Union[str, Callable[[datetime], str]]
+_Format = str | Callable[[datetime], str]
 
 
 def _datetime_field(fmt: _Format, utc: bool) -> MagicWord:

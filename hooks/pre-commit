@@ -16,7 +16,7 @@ exec 1>&2
 # If there are whitespace errors, print the offending file names and fail.
 git diff-index --check --cached $against --
 
-# Ensure files pass flake8 and mypy.
-flake8
+# Ensure files pass ruff and mypy.
+ruff check .
+ruff format --check .
 mypy --no-error-summary
-black . --check --quiet

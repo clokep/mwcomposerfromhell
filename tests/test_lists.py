@@ -105,9 +105,12 @@ def test_list_with_formatting():
 *''bar''
 """
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == """<ul><li> <b>foo</b>
+    assert (
+        compose(wikicode)
+        == """<ul><li> <b>foo</b>
 </li><li><i>bar</i>
 </li></ul>"""
+    )
 
 
 def test_html():

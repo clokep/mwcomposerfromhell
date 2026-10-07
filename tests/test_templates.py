@@ -2,9 +2,9 @@ import mwparserfromhell
 
 from mwcomposerfromhell import (
     ArticleResolver,
-    compose,
     Namespace,
     WikicodeToHtmlComposer,
+    compose,
 )
 
 

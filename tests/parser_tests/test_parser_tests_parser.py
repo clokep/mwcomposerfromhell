@@ -1,19 +1,21 @@
 from io import StringIO
 
 from mwcomposerfromhell.parser_tests_parser import (
-    _parse_options,
     MediaWikiParserTestsParser,
+    _parse_options,
 )
 
 
 def test_article():
     """Test parsing an article."""
-    parser = MediaWikiParserTestsParser(StringIO("""!! article
+    parser = MediaWikiParserTestsParser(
+        StringIO("""!! article
 Main Page
 !! text
 blah blah
 !! endarticle
-"""))
+""")
+    )
     parser.parse()
 
     assert parser.articles == {"Main Page": "blah blah\n"}
@@ -22,14 +24,16 @@ blah blah
 
 def test_comments():
     """Comments and blank lines outside of sections should be ignored."""
-    parser = MediaWikiParserTestsParser(StringIO("""# This should be ignored.
+    parser = MediaWikiParserTestsParser(
+        StringIO("""# This should be ignored.
 
 !! article
 Main Page
 !! text
 blah blah
 !! endarticle
-"""))
+""")
+    )
     parser.parse()
 
     assert parser.articles == {"Main Page": "blah blah\n"}
@@ -38,7 +42,8 @@ blah blah
 
 def test_test_case():
     """Comments and blank lines outside of sections should be ignored."""
-    parser = MediaWikiParserTestsParser(StringIO("""!! test
+    parser = MediaWikiParserTestsParser(
+        StringIO("""!! test
 Simple paragraph
 !! wikitext
 This is a simple paragraph.
@@ -46,7 +51,8 @@ This is a simple paragraph.
 <p>This is a simple paragraph.
 </p>
 !! end
-"""))
+""")
+    )
     parser.parse()
 
     assert parser.articles == {}
@@ -62,12 +68,14 @@ This is a simple paragraph.
 
 def test_blank_test_case():
     """Comments and blank lines outside of sections should be ignored."""
-    parser = MediaWikiParserTestsParser(StringIO("""!! test
+    parser = MediaWikiParserTestsParser(
+        StringIO("""!! test
 Blank input
 !! wikitext
 !! html
 !! end
-"""))
+""")
+    )
     parser.parse()
 
     assert parser.articles == {}
@@ -83,14 +91,16 @@ Blank input
 
 def test_parser_options():
     """An options section can exist."""
-    parser = MediaWikiParserTestsParser(StringIO("""!! test
+    parser = MediaWikiParserTestsParser(
+        StringIO("""!! test
 Options
 !! wikitext
 !! options
 pst
 !! html
 !! end
-"""))
+""")
+    )
     parser.parse()
 
     assert parser.articles == {}

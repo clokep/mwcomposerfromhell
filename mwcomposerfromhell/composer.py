@@ -1,6 +1,6 @@
 import html
 import re
-from typing import Generator, Iterator, Optional, Set
+from collections.abc import Generator, Iterator
 
 from mwparserfromhell import nodes, wikicode
 from mwparserfromhell.nodes import extras
@@ -118,7 +118,7 @@ class WikiNodeVisitor:
         try:
             method = getattr(self, method_name)
         except AttributeError:
-            raise UnknownNode(f"Unknown node type: {node.__class__.__name__}")
+            raise UnknownNode(f"Unknown node type: {node.__class__.__name__}") from None
 
         return method(node, in_root, ignore_whitespace)  # type: ignore[no-any-return]
 
@@ -134,11 +134,11 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
     def __init__(
         self,
-        resolver: Optional[ArticleResolver] = None,
+        resolver: ArticleResolver | None = None,
         red_links: bool = False,
         expand_templates: bool = True,
-        context: Optional[ParentContext] = None,
-        open_templates: Optional[Set[str]] = None,
+        context: ParentContext | None = None,
+        open_templates: set[str] | None = None,
     ):
         # Whether to render links to unknown articles as red links or normal links.
         self._red_links = red_links

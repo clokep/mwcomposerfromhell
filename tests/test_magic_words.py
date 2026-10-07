@@ -35,7 +35,7 @@ _argvalues = [
 )
 def test_magic_words(magic_word, output):
     """Test that simple formatting works."""
-    content = "{{%s}}" % magic_word
+    content = f"{{{{{magic_word}}}}}"
     wikicode = mwparserfromhell.parse(content)
     assert compose(wikicode) == f"<p>{output}</p>"
 

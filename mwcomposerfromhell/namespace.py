@@ -1,6 +1,7 @@
 import html
 import re
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from collections.abc import Callable
+from typing import Any
 from urllib.parse import quote, unquote, urlencode
 
 from mwparserfromhell.wikicode import Wikicode
@@ -9,8 +10,8 @@ from mwcomposerfromhell.magic_words import MAGIC_WORDS, MagicWord
 
 # A parser function is a callable which takes two parameters (param and context)
 # and returns a string to replace itself with.
-Context = List[Tuple[str, str, bool]]
-ParentContext = Dict[str, str]
+Context = list[tuple[str, str, bool]]
+ParentContext = dict[str, str]
 ParserFunction = Callable[[str, Context, ParentContext], str]
 
 MULTIPLE_SPACES = re.compile(r" +")
@@ -91,7 +92,7 @@ class Namespace:
     Note that each article is expected to already have the namespace name removed.
     """
 
-    def __init__(self, articles: Optional[Dict[str, Wikicode]] = None):
+    def __init__(self, articles: dict[str, Wikicode] | None = None):
         if articles is None:
             self._articles = {}
         else:
@@ -119,15 +120,15 @@ class ArticleResolver:
         self._edit_url = edit_url
 
         # A map of namespace names to Namespace objects. Used to find articles.
-        self._namespaces = {}  # type: Dict[str, Namespace]
+        self._namespaces: dict[str, Namespace] = {}
         # A map of the "canonical" namespace to the "human" capitalization.
-        self._canonical_namespaces = {}  # type: Dict[str, str]
+        self._canonical_namespaces: dict[str, str] = {}
 
         # A map of magic words to callables.
-        self._magic_words = MAGIC_WORDS.copy()  # type: Dict[str, MagicWord]
+        self._magic_words: dict[str, MagicWord] = MAGIC_WORDS.copy()
 
         # A map of parser functions to callable.
-        self._parser_functions = {}  # type: Dict[str, ParserFunction]
+        self._parser_functions: dict[str, ParserFunction] = {}
 
     def add_namespace(self, name: str, namespace: Namespace) -> None:
         self._namespaces[_normalize_namespace(name)] = namespace
@@ -170,7 +171,7 @@ class ArticleResolver:
         try:
             return self._namespaces[canonical_title.namespace][canonical_title.title]
         except KeyError:
-            raise ArticleNotFound(canonical_title)
+            raise ArticleNotFound(canonical_title) from None
 
     def canonicalize_title(
         self, title: str, default_namespace: str = ""
@@ -247,7 +248,7 @@ class ArticleResolver:
         try:
             return self._magic_words[magic_word]
         except KeyError:
-            raise MagicWordNotFound(magic_word)
+            raise MagicWordNotFound(magic_word) from None
 
     def add_magic_word(self, magic_word: str, function: MagicWord) -> None:
         """Add an additional magic word."""
@@ -257,7 +258,7 @@ class ArticleResolver:
         try:
             return self._parser_functions[parser_function]
         except KeyError:
-            raise ParserFunctionNotFound(parser_function)
+            raise ParserFunctionNotFound(parser_function) from None
 
     def add_parser_function(
         self, parser_function: str, function: ParserFunction
