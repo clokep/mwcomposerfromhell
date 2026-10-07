@@ -21,10 +21,8 @@ ONLY_RUN_WHITELIST = environ.get("ONLY_RUN_WHITELIST") is not None
 # parser. Prefer the standard output, then the PHP parser's.
 PREFERRED_HTML = (
     "html",
-    "html+tidy",
     "html/*",
     "html/php",
-    "html/php+tidy",
     "html/parsoid",
 )
 # A known object.

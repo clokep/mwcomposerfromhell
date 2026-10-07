@@ -143,6 +143,8 @@ class MediaWikiParserTestsParser:
         self._file = file
         self.articles: dict[str, str] = {}
         self.test_cases: list[dict[str, Any]] = []
+        # Track if we've seen options in the current test.
+        self._test_has_options: bool = False
 
     def visit(self, section: str, contents: dict[str, str]) -> None:
         method_name = "visit_" + section
@@ -194,11 +196,12 @@ class MediaWikiParserTestsParser:
         # * abc=JSON object
 
         # Options are separated by whitespace, kind of. Some also have values.
-        options_str = contents.get("options")
-        options = {}
-        if options_str:
-            options = _parse_options(options_str)
-        contents["options"] = options
+        # Config is already merged into options by the parse() method.
+        options = contents.get("options")
+        if isinstance(options, str):
+            options = _parse_options(options)
+
+        contents["options"] = options if options is not None else {}
 
         self.test_cases.append(contents)
 
@@ -207,7 +210,7 @@ class MediaWikiParserTestsParser:
         current_parameter: str | None = None
         contents = ""
         group_end: str | None = None
-        parameters: dict[str, str] = {}
+        parameters: dict[str, Any] = {}
 
         # Somewhat like TestFileReader.execute().
         for line in self._file.readlines():
@@ -218,24 +221,33 @@ class MediaWikiParserTestsParser:
 
                 # If not already in a group, this is the start of a new group.
                 if not current_group:
-                    if current_section not in ("article", "test"):
+                    if current_section not in ("article", "test", "version 2"):
                         raise ValueError(f"Unexpected section: '{current_section}'")
 
-                    current_group = current_section
-                    current_parameter = current_section
-
-                    # Calculate the section type which ends this grouping.
-                    if current_section == "article":
-                        group_end = "endarticle"
+                    # "version 2" is a marker section that doesn't start a new group.
+                    if current_section == "version 2":
+                        current_group = None
                     else:
-                        group_end = "end"
+                        current_group = current_section
+                        current_parameter = current_section
+
+                        # Calculate the section type which ends this grouping.
+                        if current_section == "article":
+                            group_end = "endarticle"
+                        else:
+                            group_end = "end"
 
                 # If already in a group, this starts a new parameter.
                 else:
-                    assert current_parameter is not None
-                    parameters[current_parameter] = contents
+                    # Flush accumulated contents to the current parameter.
+                    if current_parameter is not None:
+                        existing = parameters.get(current_parameter, "")
+                        if isinstance(existing, str):
+                            parameters[current_parameter] = existing + contents
+                        # If it's a dict (parsed options), don't append string content.
 
                     if current_section == group_end:
+                        # We've completed the group, visit it.
                         self.visit(current_group, parameters)
                         current_group = None
                         current_parameter = None
@@ -243,9 +255,64 @@ class MediaWikiParserTestsParser:
                         group_end = None
                         parameters = {}
 
-                    else:
-                        # Reset.
+                    elif current_section == "options":
+                        # "!! options" - test name is complete, options start fresh.
+                        current_parameter = "options"
+                        parameters["options"] = ""
+                        contents = ""
+
+                    elif current_section == "config":
+                        # "!! config" - if options is a string, parse it; otherwise
+                        # accumulate config content.
+                        options = parameters.get("options")
+                        if options is not None and isinstance(options, str):
+                            # Parse the accumulated options content.
+                            if options.strip():
+                                parameters["options"] = _parse_options(options.strip())
+                        # Start accumulating config content.
+                        parameters["config"] = ""
+                        current_parameter = "config"
+                        contents = ""
+
+                    elif current_section in ("wikitext", "html"):
+                        # "!! wikitext" or "!! html" - merge config into options, start accumulating.
+                        options = parameters.get("options")
+                        config = parameters.get("config", "")
+
+                        # Ensure options is a dict.
+                        if options is None:
+                            options_dict: dict[str, OPTION_VALUE] = {}
+                        elif isinstance(options, str):
+                            options_dict = (
+                                _parse_options(options.strip())
+                                if options.strip()
+                                else {}
+                            )
+                        else:
+                            options_dict = options
+
+                        # Merge config content into options.
+                        if config and isinstance(config, str):
+                            for config_line in config.strip().split("\n"):
+                                config_line = config_line.strip()
+                                if not config_line or config_line.startswith("!!"):
+                                    break
+                                try:
+                                    params = _parse_options(config_line)
+                                    options_dict.update(params)
+                                except ValueError:
+                                    # Skip invalid config lines.
+                                    pass
+
+                        parameters["options"] = options_dict
                         current_parameter = current_section
+                        parameters[current_section] = ""
+                        contents = ""
+
+                    else:
+                        # Unknown section - reset.
+                        current_parameter = current_section
+                        parameters[current_section] = ""
                         contents = ""
 
             # If in a group, concatent lines in each section.
