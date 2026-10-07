@@ -86,6 +86,15 @@ SPACES_LINE_BREAK_PATTERN = re.compile(r" *\n")
 LINK_TRAIL_PATTERN = re.compile(r"^([a-zA-Z]+)\b")
 
 
+def _escape_section_id(value: str) -> str:
+    """
+    Generate a section ID for a heading (the "html5" fragment mode).
+
+    Whitespace is replaced with an underscore. Case is preserved.
+    """
+    return re.sub(r"\s", "_", value)
+
+
 class UnknownNode(Exception):
     pass
 
@@ -513,7 +522,12 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         in_root: bool = False,
         ignore_whitespace: bool = False,
     ) -> str:
-        return f"<h{node.level}>" + self.visit(node.title) + f"</h{node.level}>"
+        title = self.visit(node.title).strip()
+        section_id = _escape_section_id(title)
+        return (
+            f'<h{node.level}><span class="mw-headline" id="{section_id}">'
+            f"{title}</span></h{node.level}>"
+        )
 
     def visit_Wikilink(
         self,

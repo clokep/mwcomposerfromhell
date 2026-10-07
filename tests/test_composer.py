@@ -55,7 +55,21 @@ def test_heading():
     """Test a heading."""
     content = "=== Foobar ==="
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == "<h3> Foobar </h3>"
+    assert (
+        compose(wikicode)
+        == '<h3><span class="mw-headline" id="Foobar">Foobar</span></h3>'
+    )
+
+
+def test_heading_section_id():
+    """Heading text is trimmed and whitespace becomes underscores in the id."""
+    content = "== Section 1 ==\n\n== Test 2 ==\n"
+    wikicode = mwparserfromhell.parse(content)
+    assert (
+        compose(wikicode)
+        == '<h2><span class="mw-headline" id="Section_1">Section 1</span></h2>\n'
+        '<h2><span class="mw-headline" id="Test_2">Test 2</span></h2>\n'
+    )
 
 
 def test_entity():
