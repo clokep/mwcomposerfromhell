@@ -73,6 +73,9 @@ _NO_P_TAGS = {
 # Tags that represent a list or list items.
 LIST_TAGS = {"ul", "ol", "li", "dl", "dt", "dd"}
 
+# Tags that close a wiki list item.
+LIST_ITEM_CLOSING_TAGS = {"li", "dt", "dd"}
+
 # Table markup.
 TABLE_ROWS = {"!-", "|-"}
 TABLE_CELLS = {"!", "|"}
@@ -156,8 +159,16 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         self._pending_lists: list[str] = []
 
+        # The newline that trails a wiki list item is stashed -- it cannot be decided
+        # whether to emit it until the item is closed.
+        self._pending_list_item_newline = False
+
         # Track the currently open tags.
         self._stack: list[str] = []
+
+        # Whether each tag on the stack was opened by wiki markup (i.e. a
+        # list item from "*", "#", ";" or ":"). Only li/dt/dd entries are True.
+        self._opened_as_wiki: list[bool] = []
 
         # Track current templates to avoid a loop.
         self._open_templates = open_templates or set()
@@ -208,9 +219,15 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             for stack_node in reversed(stack_lists[i:]):
                 result += self._close_stack(stack_node)
 
+            # MediaWiki emits the newline that trailed a list item after the
+            # closing tag (e.g. "</li>\n<li>"). Any stashed newlines are
+            # flushed here, between closing and re-opening the list items.
+            result += self._take_buffered_newlines()
+
             # Open any items that are left from the pending list.
             for tag in self._pending_lists[i:]:
                 self._stack.append(tag)
+                self._opened_as_wiki.append(tag in LIST_ITEM_CLOSING_TAGS)
                 result += f"<{tag}>"
 
             # Reset the pending list.
@@ -220,6 +237,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         # Paragraphs do not go inside of other elements.
         if not self._stack:
             self._stack.append("p")
+            self._opened_as_wiki.append(False)
             return "<p>"
 
         # Otherwise, do nothing.
@@ -231,12 +249,29 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         result = ""
         while len(self._stack):
             current_tag = self._stack.pop()
+            self._opened_as_wiki.pop()
             result += f"</{current_tag}>"
 
             if current_tag == tag:
                 break
 
         return result
+
+    def _take_buffered_newlines(self) -> str:
+        """
+        Return the newline buffered after a wiki list item, resetting the buffer.
+        """
+        if self._pending_list_item_newline:
+            self._pending_list_item_newline = False
+            return "\n"
+        return ""
+
+    def _inside_wiki_list_item(self) -> bool:
+        """Whether the innermost open list item was created by wiki markup."""
+        for index in range(len(self._stack) - 1, -1, -1):
+            if self._stack[index] in LIST_ITEM_CLOSING_TAGS:
+                return self._opened_as_wiki[index]
+        return False
 
     def _get_last_table(self) -> int:
         """Return the index in the stack of the most recently opened table."""
@@ -257,6 +292,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             self._stack.index("tbody", self._get_last_table())
         except ValueError:
             self._stack.append("tbody")
+            self._opened_as_wiki.append(False)
             return "<tbody>"
         return ""
 
@@ -376,7 +412,9 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                     result += self._close_stack("ul")
 
         else:
-            tag = self.visit(node.tag).lower()
+            # The tag name is not part of the rendered content, so whitespace
+            # handling (including buffered newlines) is skipped for it.
+            tag = self.visit(node.tag, ignore_whitespace=True).lower()
 
             # nowiki tags do not end up in the resulting content, their contents
             # should appears as if this tag does not exist.
@@ -402,7 +440,20 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # Maybe wrap the tag in a paragraph. This applies to inline tags,
             # such as bold and italics, and line breaks.
             if tag not in _NO_P_TAGS:
-                result += self._maybe_open_tag(in_root)
+                if self._pending_lists:
+                    # A new list item is about to open, so any buffered newline
+                    # is emitted by _maybe_open_tag between the closing and
+                    # opening tags (e.g. "</li>\n<li>").
+                    result += self._maybe_open_tag(in_root)
+                else:
+                    # Inline content continues a list item, so a buffered
+                    # newline is emitted before it (as MediaWiki does).
+                    result += self._take_buffered_newlines()
+                    result += self._maybe_open_tag(in_root)
+            else:
+                # Block content ends the text of a list item, so a buffered
+                # newline is swallowed.
+                self._pending_list_item_newline = False
 
             # If a <tr> tag is being opened directly by its wikitext (e.g.
             # "|-"), ensure it is wrapped in a <tbody>.
@@ -419,6 +470,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                     # Ensure the row is wrapped in a <tbody>.
                     result += self._maybe_open_tbody()
                     self._stack.append("tr")
+                    self._opened_as_wiki.append(False)
                     result += "<tr>\n"
 
             # Because we sometimes open a new row without the contents directly
@@ -469,6 +521,7 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # If this is not a self-closing tag, add it to the stack.
             if not node.self_closing:
                 self._stack.append(tag)
+                self._opened_as_wiki.append(False)
 
         # Handle anything inside of the tag.
         if node.contents:
@@ -708,7 +761,12 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 line_breaks = len(chunk.replace(" ", ""))
 
                 if it > 0 or line_breaks == 1 or line_breaks == 2:
-                    result += "\n"
+                    if self._inside_wiki_list_item() and line_breaks == 1:
+                        # The newline that trails a wiki list item is buffered
+                        # and emitted after the item closes.
+                        self._pending_list_item_newline = True
+                    else:
+                        result += "\n"
 
                 # If more than two newlines exist, close previous paragraphs.
                 if line_breaks >= 2:
@@ -729,13 +787,21 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                     if not last_chunk or (last_chunk and line_breaks == 3):
                         result += "<p>"
                         self._stack.append("p")
+                        self._opened_as_wiki.append(False)
 
                         # An odd number of newlines get a line break inside of
                         # the paragraph.
                         if line_breaks > 1 and line_breaks % 2 == 1:
                             result += "<br />\n"
             else:
-                result += self._maybe_open_tag(in_root)
+                if self._pending_lists:
+                    result += self._maybe_open_tag(in_root)
+                else:
+                    # Buffered newlines are emitted at the start of any content
+                    # that continues a list item (e.g. between the lines of a
+                    # multi-line item).
+                    result += self._take_buffered_newlines()
+                    result += self._maybe_open_tag(in_root)
                 result += chunk
 
         return result

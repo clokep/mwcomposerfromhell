@@ -3,6 +3,13 @@ import mwparserfromhell
 from mwcomposerfromhell import compose
 
 
+def test_list_newlines():
+    """Trailing newlines of list items come after the closing tag."""
+    content = "*Item 1\n*Item 2\n"
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == "<ul><li>Item 1</li>\n<li>Item 2</li></ul>"
+
+
 def test_list():
     """Ensure a list is rendered properly."""
     content = "* Foobar"
@@ -23,7 +30,7 @@ def test_subitem_list_complex():
     wikicode = mwparserfromhell.parse(content)
     assert (
         compose(wikicode)
-        == "<ul><li> Foobar\n<ul><li> Subitem\n</li></ul></li><li> Barfoo</li></ul>"
+        == "<ul><li> Foobar\n<ul><li> Subitem</li></ul></li>\n<li> Barfoo</li></ul>"
     )
 
 
@@ -38,7 +45,7 @@ def test_abutting_lists():
     wikicode = mwparserfromhell.parse(content)
     assert (
         compose(wikicode)
-        == "<ul><li> List 1\n</li><li> List 1\n</li></ul><ul><li> List 2\n</li><li> List 2\n</li></ul>"
+        == "<ul><li> List 1</li>\n<li> List 1\n</li></ul><ul><li> List 2</li>\n<li> List 2</li></ul>"
     )
 
 
@@ -63,7 +70,7 @@ def test_definition_list_multiple_items():
 : Baz
 """
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == "<dl><dt>Foo\n</dt><dd> Bar\n</dd><dd> Baz\n</dd></dl>"
+    assert compose(wikicode) == "<dl><dt>Foo</dt>\n<dd> Bar</dd>\n<dd> Baz</dd></dl>"
 
 
 def test_nested_list():
@@ -87,7 +94,7 @@ def test_nested_list_types():
 *Bar
 """
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == "<dl><dt>Foo\n</dt></dl><ul><li>Bar\n</li></ul>"
+    assert compose(wikicode) == "<dl><dt>Foo</dt></dl>\n<ul><li>Bar</li></ul>"
 
 
 def test_nested_list_types2():
@@ -96,7 +103,7 @@ def test_nested_list_types2():
 ;Bar
 """
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == "<ul><li>Foo\n</li></ul><dl><dt>Bar\n</dt></dl>"
+    assert compose(wikicode) == "<ul><li>Foo</li></ul>\n<dl><dt>Bar</dt></dl>"
 
 
 def test_list_with_formatting():
@@ -107,9 +114,8 @@ def test_list_with_formatting():
     wikicode = mwparserfromhell.parse(content)
     assert (
         compose(wikicode)
-        == """<ul><li> <b>foo</b>
-</li><li><i>bar</i>
-</li></ul>"""
+        == """<ul><li> <b>foo</b></li>
+<li><i>bar</i></li></ul>"""
     )
 
 

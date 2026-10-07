@@ -3,6 +3,7 @@ Simple paragraph
 Paragraphs with extra newline spacing
 Extra newlines: More paragraphs with indented comment
 Parsing an URL
+Simple list
 Italics and possessives (1)
 Italics and possessives (2)
 Italics and bold: 2-quote opening sequence: (2,2)
@@ -38,6 +39,7 @@ Bare pipe character from a template (T54363)
 <nowiki> unordered list
 Don't parse <nowiki><span class="error"></nowiki> (T149622)
 Entities inside <nowiki>
+Nowiki with newlines in list
 Comment test 2a
 Comment test 2b
 Comment test 3
@@ -66,8 +68,16 @@ Serializing indent pre at sol
 Indent-Pre: Newlines in comments shouldn't affect sol state
 Indent pre with leading colon
 HTML-pre: big spaces
+Definition list for indentation only
+Malformed definition list with colon
+Definition lists: colon in HTML attribute
 T13748: Literal closing tags
 Nested definition lists using html syntax
+Definition Lists: No nesting: Multiple dd's
+Definition Lists: Indentation: Regular
+Definition Lists: Indentation: Missing 1st level
+Definition Lists: Indentation: Multi-level indent
+Definition Lists: Nesting: Test 4
 External links: non-bracketed
 External links: dollar sign in URL
 External links: open square bracket forbidden in URL (T6377)
@@ -141,6 +151,14 @@ Horizontal ruler -- 4+ dashes render hr
 Horizontal ruler -- eats additional dashes on the same line
 Horizontal ruler -- does not collapse dashes on consecutive lines
 Horizontal ruler -- <4 dashes render as plain text
+Common list
+Numbered list
+Mixed list
+Nested lists 1
+Nested lists 2
+Nested lists 7 (skip initial nesting levels)
+Nested lists 8 (multiple nesting transitions)
+Nested lists 10 (list and span siblings: wt2wt regression)
 Magic Word: {{CURRENTDAY}}
 Magic Word: {{CURRENTDAY2}}
 Magic Word: {{CURRENTDAYNAME}}
@@ -155,6 +173,7 @@ Magic Word: {{CURRENTHOUR}}
 Magic Word: {{CURRENTWEEK}} (T6594)
 Magic Word: {{CURRENTYEAR}}
 Magic Word: {{CURRENTTIMESTAMP}}
+Magic Words LOCAL (UTC)
 __proto__ is treated as normal wikitext (T105997)
 Magic links: internal link to RFC (T2479)
 Magic links: All disabled (T47942)
@@ -179,6 +198,7 @@ Empty <noinclude>
 1. includeonly in html attr key
 3. includeonly in part of an attr value
 Preprocessor precedence 4: left-most angle bracket
+Preprocessor precedence 5: tplarg takes precedence over template
 Preprocessor precedence 8: broken language converter is rightmost opening
 Preprocessor precedence 18: another rightmost wins scenario
 Preprocessor precedence 19: break syntax
@@ -244,6 +264,7 @@ Templates in extension attributes are not expanded
 Correct handling of <td>, <tr> (T8171)
 Parsing crashing regression (fr:JavaScript)
 Transclusion of nonexistent MediaWiki message
+Handling of %0A in URLs
 HTML Hex character encoding bogus encoding (T28437 regression check)
 ISBN followed by 5 spaces
 Double RFC with a wiki link
