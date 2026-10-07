@@ -242,6 +242,15 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
 
         return last_table
 
+    def _maybe_open_tbody(self) -> str:
+        """Return the HTML for opening a <tbody>, if one isn't already open."""
+        try:
+            self._stack.index("tbody", self._get_last_table())
+        except ValueError:
+            self._stack.append("tbody")
+            return "<tbody>"
+        return ""
+
     def _fix_nodes(
         self,
         nodes_iterator: Iterator[StringMixIn] | list[StringMixIn],
@@ -386,6 +395,11 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             if tag not in _NO_P_TAGS:
                 result += self._maybe_open_tag(in_root)
 
+            # If a <tr> tag is being opened directly by its wikitext (e.g.
+            # "|-"), ensure it is wrapped in a <tbody>.
+            if tag == "tr" and "table" in self._stack:
+                result += self._maybe_open_tbody()
+
             # If we're opening a table header or data element, ensure that a row
             # is already open.
             if node.wiki_markup in TABLE_CELLS:
@@ -393,6 +407,8 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
                 try:
                     self._stack.index("tr", self._get_last_table())
                 except ValueError:
+                    # Ensure the row is wrapped in a <tbody>.
+                    result += self._maybe_open_tbody()
                     self._stack.append("tr")
                     result += "<tr>\n"
 

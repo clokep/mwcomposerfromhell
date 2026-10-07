@@ -3,6 +3,22 @@ import mwparserfromhell
 from mwcomposerfromhell import compose
 
 
+def test_table_tbody():
+    """A table with rows wraps the rows in <tbody> (as Tidy does)."""
+    content = """{|
+|-
+| Cell
+|}"""
+    wikicode = mwparserfromhell.parse(content)
+    assert (
+        compose(wikicode)
+        == """<table>
+<tbody><tr>
+<td> Cell
+</td></tr></tbody></table>"""
+    )
+
+
 def test_table():
     """Test an wiki table."""
     content = """{|
@@ -17,13 +33,13 @@ def test_table():
     assert (
         compose(wikicode)
         == """<table>
-<tr>
+<tbody><tr>
 <th> Header 1 </th><th> Header 2 </th><th> Header 3
 </th></tr><tr>
 <td> Example 1a </td><td> Example 2a </td><td> Example 3a
 </td></tr><tr>
 <td> Example 1b </td><td> Example 2b </td><td> Example 3b
-</td></tr></table>"""
+</td></tr></tbody></table>"""
     )
 
 
@@ -39,11 +55,11 @@ def test_table_class():
     assert (
         compose(wikicode)
         == """<table class="wikitable">
-<tr>
+<tbody><tr>
 <th> Header 1 </th><th> Header 2
 </th></tr><tr>
 <td> Example 1 </td><td> Example 2
-</td></tr></table>"""
+</td></tr></tbody></table>"""
     )
 
 
@@ -55,8 +71,10 @@ def test_bad_syntax():
     wikicode = mwparserfromhell.parse(content)
     assert (
         compose(wikicode)
-        == """<table>\n<tr>\n<td>x
-</td></tr></table>"""
+        == """<table>
+<tbody><tr>
+<td>x
+</td></tr></tbody></table>"""
     )
 
 
@@ -71,9 +89,9 @@ def test_preformatted_table():
     assert (
         compose(wikicode)
         == """<table>
-<tr>
+<tbody><tr>
 <td> Foo
 <pre>Bar
 </pre>
-</td></tr></table>"""
+</td></tr></tbody></table>"""
     )
