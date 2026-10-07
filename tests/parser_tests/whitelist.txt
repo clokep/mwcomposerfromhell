@@ -116,6 +116,7 @@ Plain link, uncapitalized
 Piped link
 Piped link with comment in link text
 Piped link with multiple pipe characters in link text
+Piped link with empty link text
 Piped link with empty link text - 2
 Broken link
 Link with prefix
@@ -226,6 +227,7 @@ DIV IN UPPERCASE
 Non-ASCII pseudo-tags are rendered as text
 Pseudo-tag with URL 'name' renders as url link
 text with amp in the middle of nowhere
+text with character entity: eacute
 text with entity-escaped character entity-like string: eacute
 text with undefined character entity: xacute
 Text with HTML5 semicolon-less entity (should not decode)
@@ -273,6 +275,7 @@ ISBN with a dummy number
 ISBN with multiple spaces, no number
 Unclosed language converter markup "-{"
 Id starting with underscore
+Play a bit with r67090 and T5158
 T5158: Test for French spaces in attributes
 new support for bdi element (T33817)
 T36939 - Case insensitive link parsing (HttP://)

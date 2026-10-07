@@ -76,7 +76,28 @@ def test_entity():
     """Test HTML entities."""
     content = "&Sigma; &#931; &#x3a3;"
     wikicode = mwparserfromhell.parse(content)
-    assert compose(wikicode) == "<p>&Sigma; &#931; &#x3a3;</p>"
+    assert compose(wikicode) == "<p>&#931; &#931; &#x3a3;</p>"
+
+
+def test_entity_normalized():
+    """Named entities are normalized to numeric references (as MediaWiki does)."""
+    content = "&nbsp; &eacute; &mdash;"
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == "<p>&#160; &#233; &#8212;</p>"
+
+
+def test_entity_special_characters():
+    """The HTML-escaped characters keep their named entities."""
+    content = "&amp; &lt; &gt; &quot;"
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == "<p>&amp; &lt; &gt; &quot;</p>"
+
+
+def test_entity_in_attribute():
+    """Entities are normalized in attribute values as well."""
+    content = '<div style="&nbsp;">&nbsp;</div>'
+    wikicode = mwparserfromhell.parse(content)
+    assert compose(wikicode) == '<div style="&#160;">&#160;</div>'
 
 
 def test_entity_in_text():

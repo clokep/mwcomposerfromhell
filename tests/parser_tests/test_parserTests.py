@@ -116,6 +116,7 @@ def test_parser_tests(wikitext, html, resolver, options, expected_pass):
     result = composer.compose(wikicode)
 
     # Print out the results for comparison if the test fails.
+    print(repr(wikitext))
     print(repr(result))
     print(repr(html))
 

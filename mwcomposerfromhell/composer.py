@@ -1,4 +1,5 @@
 import html
+import html.entities
 import re
 from collections.abc import Generator, Iterator
 
@@ -76,6 +77,9 @@ LIST_TAGS = {"ul", "ol", "li", "dl", "dt", "dd"}
 # Tags that close a wiki list item.
 LIST_ITEM_CLOSING_TAGS = {"li", "dt", "dd"}
 
+# HTML entities for these characters are left in their named form.
+ENTITY_ESCAPE_CHARS = {"<", ">", "&", '"', "'"}
+
 # Table markup.
 TABLE_ROWS = {"!-", "|-"}
 TABLE_CELLS = {"!", "|"}
@@ -87,6 +91,23 @@ LINE_BREAK_SPACES_PATTERN = re.compile(r"\n *")
 SPACES_LINE_BREAK_PATTERN = re.compile(r" *\n")
 # Link trails are any words followed by a space or new-line.
 LINK_TRAIL_PATTERN = re.compile(r"^([a-zA-Z]+)\b")
+# Named HTML entities, such as "&nbsp;", that appear in plain text.
+NAMED_ENTITY_PATTERN = re.compile(r"&([a-zA-Z][a-zA-Z0-9]*);")
+
+
+def _normalize_named_entity(name: str) -> str:
+    """
+    Named entities are normalized to their numeric character reference
+    (e.g. "&nbsp;" becomes "&#160;") except for the HTML-escaped characters
+    (&amp; &lt; &gt; &quot;) and unknown entities.
+    """
+    try:
+        char = html.entities.html5[name + ";"]
+        if char in ENTITY_ESCAPE_CHARS:
+            return f"&{name};"
+        return f"&#{ord(char)};"
+    except KeyError:
+        return f"&{name};"
 
 
 def _escape_section_id(value: str) -> str:
@@ -555,8 +576,12 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
             # * Remove white space prefix / suffix.
             # * Replace new lines with spaces.
             # * Undo the HTML entity conversion for ampersands.
+            # * Normalize named entities to numeric character references.
             value = self.visit(node.value)
             value = value.strip().replace("\n", " ").replace("&amp;", "&")
+            value = NAMED_ENTITY_PATTERN.sub(
+                lambda match: _normalize_named_entity(match.group(1)), value
+            )
 
         else:
             # The value defaults to a blank string, if not provided.
@@ -959,8 +984,14 @@ class WikicodeToHtmlComposer(WikiNodeVisitor):
         in_root: bool = False,
         ignore_whitespace: bool = False,
     ) -> str:
-        # Write the original HTML entity.
-        return self._maybe_open_tag(in_root) + str(node)
+        # Write the original HTML entity, but normalize named entities to
+        # their numeric character reference, as MediaWiki does (e.g. "&nbsp;"
+        # becomes "&#160;"). The HTML-escaped characters (&amp; &lt; &gt;
+        # &quot;) keep their named form.
+        result = self._maybe_open_tag(in_root)
+        if node.named:
+            return result + _normalize_named_entity(node.value)
+        return result + str(node)
 
     def compose(self, node: StringMixIn) -> str:
         """Converts Wikicode or Node objects to HTML."""
