@@ -30,10 +30,10 @@ classifiers = [
 [project.optional-dependencies]
 dev = [
     # For running tests.
-    "pytest>=8.0",
+    "pytest>=9.0",
     "coverage",
     # Linting and formatting.
-    "ruff>=0.1.0",
+    "ruff>=0.17.6",
     # For Python 3.11+ compatibility.
     "importlib-metadata>=4.2.0",
     # Typing related.
